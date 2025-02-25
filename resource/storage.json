@@ -1,0 +1,10 @@
+{
+    "loads": 384,
+    "settings": {
+        "centerStraightened": false,
+        "debugMode": 1,
+        "interestingBounces": false,
+        "rampUpPaddleSpeed": false,
+        "unlimitedFrames": false
+    }
+}

@@ -1,0 +1,7 @@
+**/[Dd]ebug
+**/[Rr]elease
+
+*.exe
+
+/.idea/
+/cmake-build-debug-mingw/
