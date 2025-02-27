@@ -50,6 +50,10 @@
 #include "view.h"
 #include "text.h"
 
+#include "GameManager.h"
+#include "entity.h"
+#include "Player.h"
+
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
@@ -142,7 +146,18 @@ void CreateDebugText(std::function<void(const std::string& eventName, const json
 }
 
 void CreateGameEnvironment(std::function<void(const std::string& eventName, const json& eventData)> passFunc, ProcessManager& processManager){
+    auto* gM = new GameManager(passFunc);
+    processManager.attachProcess(gM);
 
+    // Create Player
+    auto* ppl = new Player(passFunc, entity::PLAYER, 5, {static_cast<float>(SCREEN_WIDTH / 2), static_cast<float>(SCREEN_HEIGHT / 2)});
+    processManager.attachProcess(ppl);
+    gM->attachEntity(ppl);
+
+    // Create NPC
+    auto* npc = new entity(passFunc, entity::ENEMY, 3, {static_cast<float>(SCREEN_WIDTH / 2 + 100), static_cast<float>(SCREEN_HEIGHT / 2)});
+    processManager.attachProcess(npc);
+    gM->attachEntity(npc);
 }
 
 
@@ -305,6 +320,7 @@ int main(int argc, char* argv[])
     });
 
     CreateDebugText(passFunc, processManager); // test for new game not pong
+    CreateGameEnvironment(passFunc, processManager); // test for new game not pong
 
     viewProcess->AddEventHandler("Pong::EndGame", [&viewProcess, passFunc, &processManager](int winner) {
         print("Ending Game: ", winner);

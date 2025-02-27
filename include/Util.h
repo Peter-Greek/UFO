@@ -40,17 +40,18 @@
 #include <cmath>
 
 template<class... Args>
-void print(Args... args)
+void print(Args&&... args)
 {
-    (std::cout << ... << args) << "\n";
+    ((std::cout << args << '\t'), ...) << '\n';
     std::cout.flush();  // Ensures output is printed immediately
 }
+
 
 template<class... Args>
 void error(Args... args)
 {
     std::cout << "SCRIPT ERROR: ";
-    (std::cout << ... << args) << "\n";
+    ((std::cout << args << '\t'), ...) << '\n';
     std::cout.flush();  // Ensures output is printed immediately
     exit(0);
 }

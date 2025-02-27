@@ -44,7 +44,7 @@ int view::initialize() {
     }
 
     // Create window
-    window = SDL_CreateWindow( "Peter's Pong", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+    window = SDL_CreateWindow( "UFO", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     if( window == NULL ) {
         error("Window could not be created!", SDL_GetError());
         return 0;
@@ -72,6 +72,13 @@ int view::initialize() {
     // Update the surface
     SDL_UpdateWindowSurface( window );
 
+
+    // Events List
+    AddEventHandler("SDL::Render::DrawRect", [this](int x, int y, int w, int h) {
+        drawRect(x, y, w, h);
+    });
+
+
     running = true;
 
 
@@ -96,17 +103,8 @@ void view::update(float deltaMs) {
         if( e.type == SDL_KEYDOWN )
         {
             if( e.key.keysym.sym == SDLK_q ) running = false;
-//            if (e.key.keysym.sym == SDLK_f) {
-//                unlimitedFrames = !unlimitedFrames;
-//                TriggerEvent("Pong::OnConfigUpdate", "unlimitedFrames");
-//            }
-            if (e.key.keysym.sym == SDLK_d) {
-                debugMode = debugMode == 1 ? 0 : 1;
-                TriggerEvent("Pong::OnConfigUpdate", "debugMode");
-            }
         }
         TriggerEvent("SDL::OnPollEvent", e.type, e.key.keysym.sym);
-//        SDL_UpdateWindowSurface( window );
     }
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White color
@@ -137,4 +135,10 @@ void view::postAbort() {
 
     // Quit SDL subsystems
     SDL_Quit();
+}
+
+
+void view::drawRect(int x, int y, int w, int h) {
+    SDL_Rect fillRect = { x, y, w, h };
+    SDL_RenderFillRect( renderer, &fillRect );
 }

@@ -110,8 +110,6 @@ int text::initialize_SDL_process(SDL_Window* passed_window) {
     print("Text: ", textInput, " is hidden: ", isHidden);
     running = !isHidden;
 
-    AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {});
-
 
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         // While application is running
