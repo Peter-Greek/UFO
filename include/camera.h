@@ -27,39 +27,51 @@
  *
  */
 
-#ifndef CSCI437_CONFIG_H
-#define CSCI437_CONFIG_H
+//
+// Created by xerxe on 3/2/2025.
+//
 
-#include <cmath>
-#include "Util.h"
+#ifndef CSCI437_CAMERA_H
+#define CSCI437_CAMERA_H
 
 
-// Declare global variables with extern
-extern bool unlimitedFrames;
-extern int debugMode;
+#include "xProcess.h"
+class camera : public xProcess {
+private:
+    bool gameRunning = false;
 
-extern bool centerStraightened;
-extern bool interestingBounces;
-extern bool rampUpPaddleSpeed;
+    // SDL Vars
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
 
-extern int SCREEN_WIDTH;
-extern int SCREEN_HEIGHT;
+    // Camera Variables
+    float cameraX = 0;
+    float cameraY = 0;
+    vector2 CAM_MIN;
+    vector2 CAM_MAX;
 
-extern vector2 WORLD_MIN;
-extern vector2 WORLD_MAX;
-extern float WORLD_MIN_X;
-extern float WORLD_MIN_Y;
-extern float WORLD_MAX_X;
-extern float WORLD_MAX_Y;
 
-extern int PADDLE_WIDTH;
-extern int PADDLE_HEIGHT;
-extern float PADDLE_SPEED;
+public:
+    explicit camera(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(true, func) {}
+    ~camera() override = default;
 
-extern int BALL_SIZE;
-extern float BALL_SPEED;
+    int initialize_SDL_process(SDL_Window* window) override;
+    void update(float deltaMs) override;
+    bool isDone() override {return !gameRunning;};
+    void postSuccess() override {};
+    void postFail() override {};
+    void postAbort() override {};
 
-// Function to update settings dynamically
-void updateSettings();
+    void updateCamera(float x, float y);
 
-#endif // CSCI437_CONFIG_H
+    void updateCamera(vector2 pos);
+
+    bool isPointInView(vector2 pos) const;
+    bool isPointInView(float x, float y) const;
+
+    vector2 worldToScreenCoords(vector2 pos) const;
+    vector2 worldToScreenCoords(float x, float y) const;
+};
+
+
+#endif //CSCI437_CAMERA_H

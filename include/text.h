@@ -70,6 +70,7 @@ public:
     std::string getText();
     void hideText();
     void showText();
+    void showText(std::string new_text);
 private:
     SDL_Event e;
     SDL_Window* window;
@@ -91,6 +92,8 @@ private:
 
     int textWidth;
     int textHeight;
+
+
 };
 
 #endif //CSCI437_TEXT_H

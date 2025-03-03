@@ -36,25 +36,31 @@
 
 #include "xProcess.h"
 #include "entity.h"
+#include "camera.h"
+#include "text.h"
 
 class GameManager : public xProcess {
+private:
+    bool gameRunning = false;
+    std::list<entity*> entityList;
+    std::map<std::string, text*> textMap;
+
+    std::ostringstream oss;
+
+    camera* cam;
 public:
     explicit GameManager(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {}
 
     int initialize() override;
     void update(float deltaMs) override;
-    bool isDone() override;
-    void postSuccess() override;
-    void postFail() override;
-    void postAbort() override;
+    bool isDone() override { return !gameRunning; };
+    void postSuccess() override {};
+    void postFail() override {};
+    void postAbort() override {};
 
-    void attachEntity(entity* e) {
-        entityList.push_back(e);
-    }
-
-private:
-    bool gameRunning = false;
-    std::list<entity*> entityList;
+    void attachEntity(entity* e);
+    void setCamera(camera* c);
+    void attachText(std::string name, text* t);
 };
 
 

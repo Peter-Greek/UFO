@@ -214,10 +214,8 @@ std::string text::getText() {
 }
 
 void text::hideText() {
-    print("Attempt Hide Text: ", textContent);
     isHidden = true;
     if (!running) return;
-    print("Hiding Text: ", textContent);
     running = false; // prevent further updates
     if (sText != nullptr) {
         SDL_FreeSurface( sText );
@@ -226,12 +224,15 @@ void text::hideText() {
     sText = nullptr;
 }
 void text::showText() {
-    print("Attempt Show Text: ", textContent);
     isHidden = false;
     if (running) return;
-    print("Showing Text: ", textContent);
     running = true;
     setText(textContent);
+}
+void text::showText(std::string new_text) {
+    isHidden = false;
+    running = true;
+    setText(std::move(new_text));
 }
 
 void text::setFontSize(int toFontSize) {

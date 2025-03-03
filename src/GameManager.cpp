@@ -42,14 +42,45 @@ int GameManager::initialize() {
         // Update Before render
         for (auto& e : entityList) {
             vector2 currentCoords = e->getPosition();
-            TriggerEvent("SDL::Render::DrawRect", currentCoords.x, currentCoords.y, 10, 10);
+            if  (cam != nullptr) {
+                if (cam->isPointInView(currentCoords)) {
+                    vector2 screenCoords = cam->worldToScreenCoords(currentCoords);
+                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
+                    if (e->isEntityAPlayer()) {
+                        if (debugMode) {
+                            // convert screenCoords.x and screenCoords.y to string with only 2 decimal places
+                            std::string xString = std::to_string(currentCoords.x);
+                            std::string yString = std::to_string(currentCoords.y);
+                            xString = xString.substr(0, xString.find(".") + 3);
+                            yString = yString.substr(0, yString.find(".") + 3);
+                            std::string coords = "X: " + xString + " Y: " + yString;
+                            textMap["CamCoords"]->showText(coords);
+                            textMap["CamCoords"]->setTextPosition(screenCoords.x, screenCoords.y - 40);
+                        }
+                        cam->updateCamera(currentCoords - vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
+                    }
+
+                }else {
+                    // Entity is not in view
+                    //print("Cant see entity: ", e, e->isEntityAPlayer(), e->isEntityAnEnemy(), e->isEntityAnEnemyBoss());
+                    if (debugMode && e->isEntityAPlayer()) {
+                        textMap["CamCoords"]->hideText();
+                    }
+                }
+            }else {
+                error("Camera not set in Game Manager");
+            }
         }
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         // Poll Event
-
-
+        if (eventType == SDL_KEYDOWN) {
+            if (key == SDLK_c) {
+                // print cur coords of the player
+                print("Player Coords: ", entityList.front()->getPosition());
+            }
+        }
     });
 
     return 1;
@@ -58,20 +89,16 @@ int GameManager::initialize() {
 void GameManager::update(float deltaMs) {
 }
 
-bool GameManager::isDone() {
-    return !gameRunning;
+void GameManager::attachEntity(entity* e) {
+    entityList.push_back(e);
 }
 
-void GameManager::postSuccess() {
-
+void GameManager::setCamera(camera* c) {
+    cam = c;
 }
 
-void GameManager::postFail() {
-
-}
-
-void GameManager::postAbort() {
-
+void GameManager::attachText(std::string name, text *t) {
+    textMap[name] = t;
 }
 
 

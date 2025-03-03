@@ -39,6 +39,9 @@
 #include <random>
 #include <cmath>
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 template<class... Args>
 void print(Args&&... args)
 {
@@ -179,8 +182,25 @@ public:
         return "vector2(" + std::to_string(x) + ", " + std::to_string(y) + ")";
     }
 
+    friend std::ostream& operator<<(std::ostream& os, const vector2& v) {
+        os << "(" << v.x << ", " << v.y << ")";
+        return os;
+    }
+
     float x, y;
 };
+
+inline void to_json(json &j, const vector2 &s)
+{
+    j["X"] = s.x;
+    j["Y"] = s.y;
+}
+
+inline void from_json(const json &j, vector2 &s)
+{
+    s.x = j.at("X").get<float>();
+    s.y = j.at("Y").get<float>();
+}
 
 float random(float min, float max);
 int random(int min, int max);

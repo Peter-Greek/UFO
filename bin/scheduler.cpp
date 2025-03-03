@@ -53,9 +53,7 @@
 #include "GameManager.h"
 #include "entity.h"
 #include "Player.h"
-
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
+#include "camera.h"
 
 // Scheduler Variables
 json gameStorage;
@@ -149,13 +147,24 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
     auto* gM = new GameManager(passFunc);
     processManager.attachProcess(gM);
 
+    // Create Camera
+    auto* cam = new camera(passFunc);
+    processManager.attachProcess(cam);
+    gM->setCamera(cam);
+
+    std::string coordsTextContent = "X: 0.0, Y: 0.0";
+    auto* cText = new text(passFunc, coordsTextContent, 35);
+    cText->setTextRelativePosition(0.0f, -0.8f);
+    processManager.attachProcess(cText);
+    gM->attachText("CamCoords", cText);
+
     // Create Player
-    auto* ppl = new Player(passFunc, entity::PLAYER, 5, {static_cast<float>(SCREEN_WIDTH / 2), static_cast<float>(SCREEN_HEIGHT / 2)});
+    auto* ppl = new Player(passFunc, entity::PLAYER, 5, {0.0f, 0.0f});
     processManager.attachProcess(ppl);
     gM->attachEntity(ppl);
 
     // Create NPC
-    auto* npc = new entity(passFunc, entity::ENEMY, 3, {static_cast<float>(SCREEN_WIDTH / 2 + 100), static_cast<float>(SCREEN_HEIGHT / 2)});
+    auto* npc = new entity(passFunc, entity::ENEMY, 3, {50.0f, 0.0f});
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
 }

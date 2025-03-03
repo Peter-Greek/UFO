@@ -105,8 +105,6 @@ void Player::update(float deltaMs) {
         }
     }
 
-    print("Player Vel: ", newVel.x, newVel.y);
-
     setVelocity(newVel);
     updateCoordsFromVelocity(deltaMs);
 }

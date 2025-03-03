@@ -111,10 +111,10 @@ vector2 entity::getPosition() {
 void entity::updateCoordsFromVelocity(float deltaMs) {
     coords += vel * deltaMs;
 
-    if (coords.y < 0) {
-        coords.y = 0;
-    } else if (coords.y > SCREEN_HEIGHT - 10) {
-        coords.y = SCREEN_HEIGHT - 10;
+    if (coords.y < WORLD_MIN_Y) {
+        coords.y = WORLD_MIN_Y;
+    } else if (coords.y > WORLD_MAX_Y - 10) {
+        coords.y = WORLD_MAX_Y - 10;
     }
 }
 

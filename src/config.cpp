@@ -44,6 +44,14 @@ bool rampUpPaddleSpeed = true; // paddle speeds up if held down
 int SCREEN_WIDTH = 1024;
 int SCREEN_HEIGHT = 768;
 
+vector2 WORLD_MIN = vector2(5.0f * -SCREEN_WIDTH, 5.0f * -SCREEN_HEIGHT);
+vector2 WORLD_MAX = vector2(5.0f * SCREEN_WIDTH, 5.0f * SCREEN_HEIGHT);
+float WORLD_MIN_X = WORLD_MIN.x;
+float WORLD_MIN_Y = WORLD_MIN.y;
+float WORLD_MAX_X = WORLD_MAX.x;
+float WORLD_MAX_Y = WORLD_MAX.y;
+
+
 int PADDLE_WIDTH = 15;
 int PADDLE_HEIGHT = 100;
 float PADDLE_SPEED = 1.0f;
