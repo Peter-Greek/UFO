@@ -54,6 +54,7 @@
 #include "entity.h"
 #include "Player.h"
 #include "camera.h"
+#include "AT.h"
 
 #include "AsepriteLoader.h"
 
@@ -165,10 +166,19 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
     processManager.attachProcess(fAnim);
     gM->attachAseprite("FSS", fAnim);
 
-    auto* ppl = new Player(passFunc, entity::PLAYER, 5, {0.0f, 0.0f});
+    auto* ppl = new Player(passFunc);
     processManager.attachProcess(ppl);
     gM->attachEntity(ppl);
+    ppl->spawn();
 
+
+    for (int i = 0; i < 200; i++) {
+        // random location for the AT
+        auto* at = new AT(passFunc, {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))});
+        processManager.attachProcess(at);
+        gM->attachEntity(at);
+        at->spawn();
+    }
 
 
 
@@ -176,6 +186,7 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
     auto* npc = new entity(passFunc, entity::ENEMY, 3, {50.0f, 0.0f});
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
+    npc->spawn();
 }
 
 

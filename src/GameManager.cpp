@@ -47,6 +47,11 @@ int GameManager::initialize() {
                     vector2 screenCoords = cam->worldToScreenCoords(currentCoords);
 
                     if (e->isEntityAPlayer()) {
+                        // cast to player
+                        auto* p = dynamic_cast<Player*>(e);
+
+
+
                         if (debugMode && 0) {
                             // convert screenCoords.x and screenCoords.y to string with only 2 decimal places
                             std::string xString = std::to_string(currentCoords.x);
@@ -58,6 +63,20 @@ int GameManager::initialize() {
                             textMap["CamCoords"]->setTextPosition(screenCoords.x, screenCoords.y - 40);
                         }else {
                             textMap["CamCoords"]->hideText();
+                        }
+
+                        for (auto& e2 : entityList) {
+                            if (e2->isEntityAPickup()) {
+                                vector2 enemyCoords = e2->getPosition();
+                                if ((currentCoords - enemyCoords).length() < 25) {
+                                    if (e2->getHearts() == 1) {
+                                        // is at
+                                        e2->setHearts(0);
+                                        e2->succeed();
+                                        p->addATCount();
+                                    }
+                                }
+                            }
                         }
 
                         cam->updateCamera(currentCoords - vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
@@ -98,7 +117,11 @@ int GameManager::initialize() {
                         SDL_Rect destRect = { static_cast<int>(screenCoords.x) - currentFrame.w, static_cast<int>(screenCoords.y) - currentFrame.h, currentFrame.w * 2, currentFrame.h * 2 };
                         asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
                     }else {
-                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
+                        if (!e->isDone() && e->getHearts() > 0) {
+                            TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
+                        }else {
+                            //TODO: Remove entity from list
+                        }
                     }
 
                 }else {

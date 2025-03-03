@@ -76,6 +76,9 @@ bool entity::isEntityAnEnemy() {
 bool entity::isEntityAnEnemyBoss() {
     return type == ENEMY_BOSS;
 };
+bool entity::isEntityAPickup() {
+    return type == ITEM_PICKUP;
+};
 
 // Health Methods
 int entity::getHearts() const {

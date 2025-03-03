@@ -28,45 +28,8 @@
  */
 
 //
-// Created by xerxe on 2/27/2025.
+// Created by xerxe on 3/3/2025.
 //
 
-#ifndef CSCI437_GAMEMANAGER_H
-#define CSCI437_GAMEMANAGER_H
-
-#include "xProcess.h"
-#include "Player.h"
 #include "AT.h"
-#include "camera.h"
-#include "text.h"
-#include "AsepriteLoader.h"
 
-class GameManager : public xProcess {
-private:
-    bool gameRunning = false;
-    std::list<entity*> entityList;
-    std::map<std::string, text*> textMap;
-    std::map<std::string, AsepriteLoader*> asepriteMap;
-    std::map<std::string, Animation*> animList;
-
-    std::ostringstream oss;
-
-    camera* cam;
-public:
-    explicit GameManager(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {}
-
-    int initialize() override;
-    void update(float deltaMs) override;
-    bool isDone() override { return !gameRunning; };
-    void postSuccess() override {};
-    void postFail() override {};
-    void postAbort() override {};
-
-    void attachEntity(entity* e);
-    void setCamera(camera* c);
-    void attachText(std::string name, text* t);
-    void attachAseprite(std::string name, AsepriteLoader *a);
-};
-
-
-#endif //CSCI437_GAMEMANAGER_H

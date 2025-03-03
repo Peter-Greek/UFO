@@ -28,71 +28,21 @@
  */
 
 //
-// Created by xerxe on 2/27/2025.
+// Created by xerxe on 3/3/2025.
 //
 
-#ifndef CSCI437_ENTITY_H
-#define CSCI437_ENTITY_H
+#ifndef CSCI437_AT_H
+#define CSCI437_AT_H
 
-#include "xProcess.h"
-
-class entity : public xProcess {
-public:
-    enum eType {
-        PLAYER,
-        ENEMY,
-        ENEMY_BOSS,
-        ITEM_PICKUP,
-    };
-
-    explicit entity(
-            const std::function<void(const std::string& eventName, const json& eventData)>& func,
-            int eTypeIndex,
-            int heartsMax,
-            vector2 position
-    ) : xProcess(false, func) {
-        type = static_cast<eType>(eTypeIndex);
-        hearts = heartsMax;
-        maxHearts = heartsMax;
-        coords = position;
-    }
-
-    int initialize() override;
-    void update(float deltaMs) override;
-    bool isDone() override;
-    void postSuccess() override;
-    void postFail() override;
-    void postAbort() override;
-
-    bool isEntityAPlayer();
-    bool isEntityAnEnemy();
-    bool isEntityAnEnemyBoss();
-    bool isEntityAPickup();
-    int getHearts() const;
-    void setHearts(int newHearts);
-    void addHearts(int heartsToAdd);
-    void removeHearts(int heartsToRemove);
-    int getMaxHearts() const;
-    void setMaxHearts(int newMaxHearts);
-
-    void setPosition(vector2 newPosition);
-    vector2 getPosition();
-    void updateCoordsFromVelocity(float deltaMs);
-
-    void setVelocity(vector2 newVelocity);
-    vector2 getVelocity();
-
-    void spawn();
-    bool inWorld();
+#include "entity.h"
+class AT : public entity {
 private:
-    bool created = false;
-    bool spawned = false;
-    eType type;
-    int hearts;
-    int maxHearts;
-    vector2 coords;
-    vector2 vel;
+public:
+    explicit AT(
+            const std::function<void(const std::string& eventName, const json& eventData)>& func,
+            vector2 position
+    ) : entity(func, entity::ITEM_PICKUP, 1, position) {}
 };
 
 
-#endif //CSCI437_ENTITY_H
+#endif //CSCI437_AT_H
