@@ -55,6 +55,8 @@
 #include "Player.h"
 #include "camera.h"
 
+#include "AsepriteLoader.h"
+
 // Scheduler Variables
 json gameStorage;
 bool threadDone = false;
@@ -159,9 +161,16 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
     gM->attachText("CamCoords", cText);
 
     // Create Player
+    auto* fAnim = new AsepriteLoader(passFunc, "../resource/FSS.png", "../resource/FSS.json");
+    processManager.attachProcess(fAnim);
+    gM->attachAseprite("FSS", fAnim);
+
     auto* ppl = new Player(passFunc, entity::PLAYER, 5, {0.0f, 0.0f});
     processManager.attachProcess(ppl);
     gM->attachEntity(ppl);
+
+
+
 
     // Create NPC
     auto* npc = new entity(passFunc, entity::ENEMY, 3, {50.0f, 0.0f});

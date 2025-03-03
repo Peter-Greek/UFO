@@ -45,9 +45,9 @@ int GameManager::initialize() {
             if  (cam != nullptr) {
                 if (cam->isPointInView(currentCoords)) {
                     vector2 screenCoords = cam->worldToScreenCoords(currentCoords);
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
+
                     if (e->isEntityAPlayer()) {
-                        if (debugMode) {
+                        if (debugMode && 0) {
                             // convert screenCoords.x and screenCoords.y to string with only 2 decimal places
                             std::string xString = std::to_string(currentCoords.x);
                             std::string yString = std::to_string(currentCoords.y);
@@ -56,8 +56,49 @@ int GameManager::initialize() {
                             std::string coords = "X: " + xString + " Y: " + yString;
                             textMap["CamCoords"]->showText(coords);
                             textMap["CamCoords"]->setTextPosition(screenCoords.x, screenCoords.y - 40);
+                        }else {
+                            textMap["CamCoords"]->hideText();
                         }
+
                         cam->updateCamera(currentCoords - vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
+
+                        vector2 playerVel = e->getVelocity();
+                        SDL_Rect currentFrame;
+
+                        if (!animList.count("FSS_IDLE")) {
+                            animList["FSS_IDLE"] = new Animation(asepriteMap["FSS"]->getJSONData(), "Ferret Sprite Sheet (Idle)");
+                        }
+
+                        if (!animList.count("FSS_MOVE")) {
+                            animList["FSS_MOVE"] = new Animation(asepriteMap["FSS"]->getJSONData(), "Ferret Sprite Sheet (Movement)");
+                        }
+
+                        bool flip = false;
+                        int angle = 0;
+
+                        if (playerVel.x != 0 || playerVel.y != 0) {
+                            currentFrame = animList["FSS_MOVE"]->getCurrentFrame(deltaMs);
+                            if (playerVel.x < 0) {
+                                flip = true;
+                            }
+
+
+                            if (playerVel.y != 0) {
+                                angle = playerVel.y > 0 ? 90 : -90;
+                                if (playerVel.x < 0) {
+                                    angle = playerVel.y > 0 ? -45 : 45;
+                                }else if (playerVel.x > 0) {
+                                    angle = playerVel.y > 0 ? 45 : -45;
+                                }
+                            }
+                        }else {
+                            currentFrame = animList["FSS_IDLE"]->getCurrentFrame(deltaMs);
+                        }
+
+                        SDL_Rect destRect = { static_cast<int>(screenCoords.x) - currentFrame.w, static_cast<int>(screenCoords.y) - currentFrame.h, currentFrame.w * 2, currentFrame.h * 2 };
+                        asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
+                    }else {
+                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
                     }
 
                 }else {
@@ -93,13 +134,14 @@ void GameManager::attachEntity(entity* e) {
     entityList.push_back(e);
 }
 
-void GameManager::setCamera(camera* c) {
-    cam = c;
+void GameManager::attachAseprite(std::string name, AsepriteLoader* a) {
+    asepriteMap[name] = a;
 }
 
 void GameManager::attachText(std::string name, text *t) {
     textMap[name] = t;
 }
 
-
-
+void GameManager::setCamera(camera* c) {
+    cam = c;
+}

@@ -51,16 +51,7 @@ float WORLD_MIN_Y = WORLD_MIN.y;
 float WORLD_MAX_X = WORLD_MAX.x;
 float WORLD_MAX_Y = WORLD_MAX.y;
 
-
-int PADDLE_WIDTH = 15;
-int PADDLE_HEIGHT = 100;
-float PADDLE_SPEED = 1.0f;
-
-int BALL_SIZE = 15;
-float BALL_SPEED = 0.4f;
-
 // Function to update settings dynamically
 void updateSettings() {
-    PADDLE_SPEED = unlimitedFrames ? 60.0f : 1.0f;
-    BALL_SPEED = unlimitedFrames ? 80.0f : 0.4f;
+
 }

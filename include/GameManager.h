@@ -38,12 +38,15 @@
 #include "entity.h"
 #include "camera.h"
 #include "text.h"
+#include "AsepriteLoader.h"
 
 class GameManager : public xProcess {
 private:
     bool gameRunning = false;
     std::list<entity*> entityList;
     std::map<std::string, text*> textMap;
+    std::map<std::string, AsepriteLoader*> asepriteMap;
+    std::map<std::string, Animation*> animList;
 
     std::ostringstream oss;
 
@@ -61,6 +64,7 @@ public:
     void attachEntity(entity* e);
     void setCamera(camera* c);
     void attachText(std::string name, text* t);
+    void attachAseprite(std::string name, AsepriteLoader *a);
 };
 
 

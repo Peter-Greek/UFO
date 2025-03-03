@@ -52,13 +52,6 @@ extern float WORLD_MIN_Y;
 extern float WORLD_MAX_X;
 extern float WORLD_MAX_Y;
 
-extern int PADDLE_WIDTH;
-extern int PADDLE_HEIGHT;
-extern float PADDLE_SPEED;
-
-extern int BALL_SIZE;
-extern float BALL_SPEED;
-
 // Function to update settings dynamically
 void updateSettings();
 
