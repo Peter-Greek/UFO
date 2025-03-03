@@ -246,6 +246,7 @@ void text::setFontSize(int toFontSize) {
 
 
 void text::setText(std::string basicString) {
+    textContent = std::move(basicString);
     if (!running) return;
 
 
@@ -254,7 +255,6 @@ void text::setText(std::string basicString) {
         SDL_DestroyTexture(texture);
     }
 
-    textContent = std::move(basicString);
     const char* textInput = textContent.c_str();
 
     int textWidth;

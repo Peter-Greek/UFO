@@ -171,7 +171,14 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
     gM->attachEntity(ppl);
     ppl->spawn();
 
+    std::string atScoreText = "AT: 0";
+    auto* atScore = new text(passFunc, atScoreText, 35);
+    atScore->setTextRelativePosition(-1.0f, -0.8f);
+    processManager.attachProcess(atScore);
+    gM->attachText("ATScore", atScore);
 
+
+    //TODO: anything above 700 starts to lag only when rendered on screen so view needs optimizations
     for (int i = 0; i < 200; i++) {
         // random location for the AT
         auto* at = new AT(passFunc, {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))});

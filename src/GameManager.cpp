@@ -40,6 +40,7 @@ int GameManager::initialize() {
 
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         // Update Before render
+        std::list<entity*> removalList;
         for (auto& e : entityList) {
             vector2 currentCoords = e->getPosition();
             if  (cam != nullptr) {
@@ -49,7 +50,6 @@ int GameManager::initialize() {
                     if (e->isEntityAPlayer()) {
                         // cast to player
                         auto* p = dynamic_cast<Player*>(e);
-
 
 
                         if (debugMode && 0) {
@@ -74,6 +74,7 @@ int GameManager::initialize() {
                                         e2->setHearts(0);
                                         e2->succeed();
                                         p->addATCount();
+                                        textMap["ATScore"]->setText("AT: " + std::to_string(p->getATCount()));
                                     }
                                 }
                             }
@@ -120,7 +121,7 @@ int GameManager::initialize() {
                         if (!e->isDone() && e->getHearts() > 0) {
                             TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
                         }else {
-                            //TODO: Remove entity from list
+                            removalList.push_back(e);
                         }
                     }
 
@@ -135,6 +136,10 @@ int GameManager::initialize() {
                 error("Camera not set in Game Manager");
             }
         }
+        for (auto e : removalList) {
+            entityList.remove(e);
+        }
+        removalList.clear();
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {

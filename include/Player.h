@@ -76,6 +76,10 @@ public:
         print("AT Count: ", AT_COUNT);
     }
 
+    int getATCount() const {
+        return AT_COUNT;
+    }
+
 private:
     int upgradeLevels[5] = {0, 0, 0, 0, 0}; // upgrade levels for each upgrade
     int BASE_OXYGEN_TIME = 3 * 60 * 1000; // base time for the player without any upgrades
