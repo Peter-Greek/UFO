@@ -177,6 +177,13 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
     processManager.attachProcess(atScore);
     gM->attachText("ATScore", atScore);
 
+    std::string heartsText = "Hearts: 5";
+    auto* pHearts = new text(passFunc, heartsText, 35);
+    pHearts->setTextRelativePosition(-1.0f, -0.9f);
+    processManager.attachProcess(pHearts);
+    gM->attachText("PlayerHearts", pHearts);
+
+
 
     //TODO: anything above 700 starts to lag only when rendered on screen so view needs optimizations
     for (int i = 0; i < 200; i++) {
@@ -194,6 +201,12 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
     npc->spawn();
+
+    // Create Heart Pickup
+    auto* heart = new entity(passFunc, entity::ITEM_PICKUP, 2, {-50.0f, 0.0f});
+    processManager.attachProcess(heart);
+    gM->attachEntity(heart);
+    heart->spawn();
 }
 
 

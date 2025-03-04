@@ -45,6 +45,13 @@ public:
         ITEM_PICKUP,
     };
 
+    enum pType {
+        AT,
+        HEART,
+        KEY_CARD,
+        OXY_TANK
+    };
+
     explicit entity(
             const std::function<void(const std::string& eventName, const json& eventData)>& func,
             int eTypeIndex,
@@ -68,6 +75,11 @@ public:
     bool isEntityAnEnemy();
     bool isEntityAnEnemyBoss();
     bool isEntityAPickup();
+
+    pType getPickupType();
+
+
+
     int getHearts() const;
     void setHearts(int newHearts);
     void addHearts(int heartsToAdd);

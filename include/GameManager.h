@@ -66,6 +66,8 @@ public:
     void setCamera(camera* c);
     void attachText(std::string name, text* t);
     void attachAseprite(std::string name, AsepriteLoader *a);
+
+    void bounceEntities(entity* e1, entity* e2);
 };
 
 

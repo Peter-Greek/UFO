@@ -86,12 +86,21 @@ int entity::getHearts() const {
 };
 void entity::setHearts(int newHearts) {
     hearts = newHearts;
+    if (hearts > maxHearts) {
+        hearts = maxHearts;
+    }
 };
 void entity::addHearts(int heartsToAdd) {
     hearts += heartsToAdd;
+    if (hearts > maxHearts) {
+        hearts = maxHearts;
+    }
 };
 void entity::removeHearts(int heartsToRemove) {
     hearts -= heartsToRemove;
+    if (hearts < 0) {
+        hearts = 0;
+    }
 };
 
 // Max Health Methods
@@ -128,4 +137,9 @@ void entity::setVelocity(vector2 newVelocity) {
 
 vector2 entity::getVelocity() {
     return vel;
+}
+
+entity::pType entity::getPickupType() {
+    int rel = getMaxHearts() - 1;
+    return (pType) rel;
 }

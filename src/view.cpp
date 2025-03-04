@@ -78,6 +78,14 @@ int view::initialize() {
         drawRect(x, y, w, h);
     });
 
+    AddEventHandler("SDL::Render::SetDrawColor", [this](int r, int g, int b, int a) {
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+    });
+
+    AddEventHandler("SDL::Render::ResetDrawColor", [this]() {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    });
+
 
     running = true;
 

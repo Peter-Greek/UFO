@@ -45,12 +45,11 @@ int GameManager::initialize() {
             vector2 currentCoords = e->getPosition();
             if  (cam != nullptr) {
                 if (cam->isPointInView(currentCoords)) {
-                    vector2 screenCoords = cam->worldToScreenCoords(currentCoords);
+                    vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
 
                     if (e->isEntityAPlayer()) {
                         // cast to player
                         auto* p = dynamic_cast<Player*>(e);
-
 
                         if (debugMode && 0) {
                             // convert screenCoords.x and screenCoords.y to string with only 2 decimal places
@@ -69,12 +68,38 @@ int GameManager::initialize() {
                             if (e2->isEntityAPickup()) {
                                 vector2 enemyCoords = e2->getPosition();
                                 if ((currentCoords - enemyCoords).length() < 25) {
-                                    if (e2->getHearts() == 1) {
-                                        // is at
+                                    if (e2->getPickupType() == entity::AT) {
                                         e2->setHearts(0);
                                         e2->succeed();
                                         p->addATCount();
                                         textMap["ATScore"]->setText("AT: " + std::to_string(p->getATCount()));
+                                    }else if (e2->getPickupType() == entity::HEART) {
+                                        e2->setHearts(0);
+                                        e2->succeed();
+                                        p->setHearts(p->getHearts() + 1);
+                                        textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
+                                    }
+                                }
+                            }else if (e2->isEntityAnEnemy()) {
+                                vector2 enemyCoords = e2->getPosition();
+                                if ((currentCoords - enemyCoords).length() < 20) {
+                                    if (e2->getHearts() > 0) {
+                                        if (p->doesPlayerHaveShield()) {
+                                            //TODO: Add shield hit sound and animation
+                                            p->hitShield();
+                                        }else {
+                                            //TODO: Add player hit sound and animation
+                                            p->setHearts(p->getHearts() - 1);
+                                        }
+
+                                        e2->setHearts(e2->getHearts() - 1);
+                                        if (e2->getHearts() == 0) {
+                                            e2->succeed();
+                                        }
+
+                                        bounceEntities(e, e2);
+
+                                        textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
                                     }
                                 }
                             }
@@ -112,6 +137,7 @@ int GameManager::initialize() {
                                 }
                             }
                         }else {
+                            flip = p->isFacingLeft();
                             currentFrame = animList["FSS_IDLE"]->getCurrentFrame(deltaMs);
                         }
 
@@ -119,15 +145,27 @@ int GameManager::initialize() {
                         asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
                     }else {
                         if (!e->isDone() && e->getHearts() > 0) {
-                            TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
+                            if (e->isEntityAnEnemy()) {
+                                TriggerEvent("SDL::Render::SetDrawColor", 0, 0, 255, 255);
+                                TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
+                                TriggerEvent("SDL::Render::ResetDrawColor");
+                            }else if (e->isEntityAPickup()) {
+                                if (e->getPickupType() == entity::AT) {
+                                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+                                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
+                                    TriggerEvent("SDL::Render::ResetDrawColor");
+                                }else if (e->getPickupType() == entity::HEART) {
+                                    TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+                                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
+                                    TriggerEvent("SDL::Render::ResetDrawColor");
+                                }
+                            }
                         }else {
                             removalList.push_back(e);
                         }
                     }
-
                 }else {
                     // Entity is not in view
-                    //print("Cant see entity: ", e, e->isEntityAPlayer(), e->isEntityAnEnemy(), e->isEntityAnEnemyBoss());
                     if (debugMode && e->isEntityAPlayer()) {
                         textMap["CamCoords"]->hideText();
                     }
@@ -172,4 +210,19 @@ void GameManager::attachText(std::string name, text *t) {
 
 void GameManager::setCamera(camera* c) {
     cam = c;
+}
+
+void GameManager::bounceEntities(entity *e1, entity *e2) {
+    //TODO: THIS NEEDS MAJOR REWORKING BUT IT WORKS FOR NOW
+    vector2 e1Pos = e1->getPosition();
+    vector2 e2Pos = e2->getPosition();
+
+    vector2 e1Vel = e1->getVelocity();
+    vector2 e2Vel = e2->getVelocity();
+
+    vector2 e1NewVel = (e2Pos - e1Pos) * (e1Vel - 120) * (e1Vel.dot(e2Pos - e1Pos) / (e2Pos - e1Pos).lengthSquared());
+    vector2 e2NewVel = (e1Pos - e2Pos) * (e2Vel - 120) * (e2Vel.dot(e1Pos - e2Pos) / (e1Pos - e2Pos).lengthSquared());
+
+    e1->setVelocity(e1NewVel);
+    e2->setVelocity(e2NewVel);
 }

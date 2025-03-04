@@ -41,11 +41,20 @@ void Player::update(float deltaMs) {
     bool leftPressed = keyboard_state_array[SDL_SCANCODE_A] || keyboard_state_array[SDL_SCANCODE_LEFT];
     bool rightPressed = keyboard_state_array[SDL_SCANCODE_D] || keyboard_state_array[SDL_SCANCODE_RIGHT];
 
+    if (inKnockback) {
+        upPressed = false;
+        downPressed = false;
+        leftPressed = false;
+        rightPressed = false;
+    }
+
     bool changeY = (upPressed  ^ downPressed);
     bool changeX = (leftPressed ^ rightPressed);
 
     vector2 newVel = vector2(0.0, 0.0);
     vector2 curVel = getVelocity();
+
+
 
     if (changeY) {
         if (upPressed) {
@@ -78,6 +87,7 @@ void Player::update(float deltaMs) {
 
     if (changeX) {
         if (leftPressed) {
+            facingLeft = true;
             if (curVel.x <= -PLAYER_SPEED) {
                 newVel.x = -PLAYER_SPEED;
             } else {
@@ -87,6 +97,7 @@ void Player::update(float deltaMs) {
                 }
             }
         } else {
+            facingLeft = false;
             if (curVel.x >= PLAYER_SPEED) {
                 newVel.x = PLAYER_SPEED;
             } else {
@@ -105,10 +116,19 @@ void Player::update(float deltaMs) {
         }
     }
 
+    if (newVel.x == 0.0f && newVel.y == 0.0f && inKnockback) {
+        inKnockback = false;
+    }
+
     setVelocity(newVel);
     updateCoordsFromVelocity(deltaMs);
 }
 
+bool Player::isFacingLeft() {
+    return facingLeft;
+}
+
+// Upgrade functions
 void Player::applyUpgrade(Player::UPGRADES upgrade, int level) {
     upgradeLevels[upgrade] = level;
 
@@ -178,6 +198,14 @@ void Player::addOxygen(int oxygenToAdd) {
     } else if (OXYGEN_LEVEL < 0) {
         OXYGEN_LEVEL = 0;
     }
+}
+
+bool Player::isKnockedBack() const {
+    return inKnockback;
+}
+
+void Player::setKnockedBack(bool knockedBack) {
+    inKnockback = knockedBack;
 }
 
 

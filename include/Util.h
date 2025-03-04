@@ -170,6 +170,10 @@ public:
         return sqrt(x * x + y * y);
     }
 
+    float lengthSquared() const {
+        return x * x + y * y;
+    }
+
     vector2 normalize() const
     {
         float l = length();
@@ -188,6 +192,8 @@ public:
     }
 
     float x, y;
+
+
 };
 
 inline void to_json(json &j, const vector2 &s)

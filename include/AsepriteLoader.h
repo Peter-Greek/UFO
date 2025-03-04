@@ -57,7 +57,7 @@ public:
         return frame;
     }
 
-    SDL_Rect getCurrentFrame(Uint32 deltaTime) {
+    SDL_Rect getCurrentFrame(float deltaTime) {
         elapsedTime += deltaTime;
         if (elapsedTime > durations[currentFrame]) {
             elapsedTime = 0;
@@ -69,7 +69,7 @@ private:
     std::vector<SDL_Rect> frames;
     std::vector<int> durations;
     int currentFrame;
-    Uint32 elapsedTime;
+    float elapsedTime;
     nlohmann::json& jsonData;
 };
 
