@@ -49,8 +49,8 @@ public:
     enum pType {
         AT,
         HEART,
+        OXY_TANK,
         KEY_CARD,
-        OXY_TANK
     };
 
 private:
@@ -76,9 +76,6 @@ private:
             width = 32;
         }
     }
-
-
-
 public:
     explicit entity(
             passFunc_t& func,

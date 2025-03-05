@@ -180,15 +180,21 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
 
     std::string atScoreText = "AT: 0";
     auto* atScore = new text(passFunc, atScoreText, 35);
-    atScore->setTextRelativePosition(-1.0f, -0.8f);
+    atScore->setTextRelativePosition(-1.0f, -0.7f);
     processManager.attachProcess(atScore);
     gM->attachText("ATScore", atScore);
 
     std::string heartsText = "Hearts: 5";
     auto* pHearts = new text(passFunc, heartsText, 35);
-    pHearts->setTextRelativePosition(-1.0f, -0.9f);
+    pHearts->setTextRelativePosition(-1.0f, -0.8f);
     processManager.attachProcess(pHearts);
     gM->attachText("PlayerHearts", pHearts);
+
+    std::string oxyTimeC = "Oxygen: 3:00";
+    auto* oxyTime = new text(passFunc, oxyTimeC, 35);
+    oxyTime->setTextRelativePosition(-1.0f, -0.9f);
+    processManager.attachProcess(oxyTime);
+    gM->attachText("OxyTimer", oxyTime);
 
 
 
@@ -233,6 +239,12 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     processManager.attachProcess(heart);
     gM->attachEntity(heart);
     heart->spawn();
+
+    // Create Oxy Pickup
+    auto* oxy = new entity(passFunc, entity::ITEM_PICKUP, 3, {0.0f, 50.0f});
+    processManager.attachProcess(oxy);
+    gM->attachEntity(oxy);
+    oxy->spawn();
 }
 
 

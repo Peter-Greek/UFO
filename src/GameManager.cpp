@@ -89,6 +89,10 @@ int GameManager::initialize() {
                         TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
                         TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                         TriggerEvent("SDL::Render::ResetDrawColor");
+                    }else if (e->getPickupType() == entity::OXY_TANK) {
+                        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
+                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                        TriggerEvent("SDL::Render::ResetDrawColor");
                     }
                 }else if (e->isEntityALaser()) {
                     auto* l = dynamic_cast<Laser*>(e);
@@ -168,7 +172,6 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
         return;
     }
 
-
     auto* p = dynamic_cast<Player*>(e);
     vector2 currentCoords = e->getPosition();
     vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
@@ -195,6 +198,8 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
         textMap["CamCoords"]->hideText();
         textMap["RelHeading"]->hideText();
     }
+
+    textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
 
     cam->updateCamera(currentCoords - vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
 
@@ -251,7 +256,7 @@ void GameManager::update(float deltaMs) {
 }
 
 void GameManager::playerTakeHit(Player* p, int damage) {
-
+    //TODO: move to player class
     if (p->doesPlayerHaveShield()) {
         //TODO: Add shield hit sound and animation
         p->hitShield();
@@ -272,13 +277,18 @@ void GameManager::handlePlayerUpdate(entity* e) {
                 if (e2->getPickupType() == entity::AT) {
                     e2->setHearts(0);
                     e2->succeed();
-                    p->addATCount();
+                    p->addATCount(); // adds 1 AT to player current loop total
                     textMap["ATScore"]->setText("AT: " + std::to_string(p->getATCount()));
                 }else if (e2->getPickupType() == entity::HEART) {
                     e2->setHearts(0);
                     e2->succeed();
-                    p->addHearts(1);
+                    p->addHearts(1); // adds 1 heart
                     textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
+                }else if (e2->getPickupType() == entity::OXY_TANK) {
+                    e2->setHearts(0);
+                    e2->succeed();
+                    p->addOxygen(30000.0f); // adds 30 seconds of oxygen
+                    textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
                 }
             }
         }else if (e2->isEntityAnEnemy()) {

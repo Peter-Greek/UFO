@@ -39,16 +39,17 @@
 class Player : public entity {
 private:
     int upgradeLevels[5] = {0, 0, 0, 0, 0}; // upgrade levels for each upgrade
-    int BASE_OXYGEN_TIME = 3 * 60 * 1000; // base time for the player without any upgrades
-    int MAX_OXYGEN_TIME = BASE_OXYGEN_TIME; // max oxy time the player has during this run after upgrades
 
-    int AT_COUNT = 0; // count of how much AT has been collected this run
+    float BASE_OXYGEN_TIME = 3 * 60 * 1000 + 0.0f; // base time for the player without any upgrades
+    float MAX_OXYGEN_TIME = BASE_OXYGEN_TIME; // max oxy time the player has during this run after upgrades
+    float OXYGEN_LEVEL = 3 * 60 * 1000; // current time left; max is MAX_OXYGEN_TIME during a run
 
-    int OXYGEN_LEVEL = 3 * 60 * 1000; // current time left max is MAX_OXYGEN_TIME during a run
     int SHIELD_COUNT = 0; // count of how many shields the player has
     float PLAYER_SPEED = 0.2; // base speed of the player
     int INVISIBILITY_DURATION = 2; // duration of invisibility
     int AT_CANNON_DAMAGE = 1; // damage of the AT cannon
+
+    int AT_COUNT = 0; // count of how much AT has been collected this run
 
     bool facingLeft = false; // facing left when idle after moving left
     bool isInvisible_v = false; // is the player invisible
@@ -81,9 +82,11 @@ public:
     void removeShield();
     void hitShield();
     float getPlayerSpeed();
-    int getOxygenLevel();
-    void setOxygenLevel(int newOxygenLevel);
-    void addOxygen(int oxygenToAdd);
+
+    float getOxygenLevel();
+    void updateOxygen(float ms);
+    void setOxygenLevel(float newOxygenLevel);
+    void addOxygen(float oxygenToAdd);
 
 
 
@@ -100,6 +103,8 @@ public:
 
 
     void updateInvisibility(float ms);
+
+    std::string getOxygenString() const;
 };
 
 

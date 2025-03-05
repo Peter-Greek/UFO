@@ -36,6 +36,7 @@
 void Player::update(float deltaMs) {
     updateInvincibility(deltaMs);
     updateInvisibility(deltaMs);
+    updateOxygen(deltaMs);
 
 
     const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
@@ -195,12 +196,12 @@ void Player::removeShield() {
 float Player::getPlayerSpeed() {
     return PLAYER_SPEED;
 }
-int Player::getOxygenLevel() {
+float Player::getOxygenLevel() {
     return OXYGEN_LEVEL;
 }
 
 // Oxygen functions
-void Player::setOxygenLevel(int newOxygenLevel) {
+void Player::setOxygenLevel(float newOxygenLevel) {
     OXYGEN_LEVEL = newOxygenLevel;
     if (OXYGEN_LEVEL > MAX_OXYGEN_TIME) {
         OXYGEN_LEVEL = MAX_OXYGEN_TIME;
@@ -208,13 +209,34 @@ void Player::setOxygenLevel(int newOxygenLevel) {
         OXYGEN_LEVEL = 0;
     }
 }
-void Player::addOxygen(int oxygenToAdd) {
+void Player::addOxygen(float oxygenToAdd) {
     OXYGEN_LEVEL += oxygenToAdd;
     if (OXYGEN_LEVEL > MAX_OXYGEN_TIME) {
         OXYGEN_LEVEL = MAX_OXYGEN_TIME;
     } else if (OXYGEN_LEVEL < 0) {
         OXYGEN_LEVEL = 0;
     }
+}
+
+void Player::updateOxygen(float ms) {
+    if (OXYGEN_LEVEL > 0) {
+        OXYGEN_LEVEL -= ms;
+        if (OXYGEN_LEVEL <= 0) {
+            // player dies
+            print("Player died from lack of oxygen");
+        }
+    }
+}
+
+std::string Player::getOxygenString() const {
+    int seconds = (int) (OXYGEN_LEVEL / 1000);
+    int minutes = seconds / 60;
+    seconds = seconds % 60;
+    std::string sec = std::to_string(seconds);
+    if (seconds < 10) {
+        sec = "0" + sec;
+    }
+    return std::to_string(minutes) + ":" + sec;
 }
 
 
