@@ -62,8 +62,12 @@ void entity::spawn() {
     spawned = true;
 }
 
-bool entity::inWorld() {
+bool entity::inWorld() const {
     return spawned;
+}
+
+vector2 entity::getSpawnCoords() {
+    return spawnCoords;
 }
 
 // Entity Type Methods
@@ -79,6 +83,11 @@ bool entity::isEntityAnEnemyBoss() {
 bool entity::isEntityAPickup() {
     return type == ITEM_PICKUP;
 };
+entity::pType entity::getPickupType() {
+    int rel = getMaxHearts() - 1;
+    return (pType) rel;
+}
+
 
 // Health Methods
 int entity::getHearts() const {
@@ -139,7 +148,11 @@ vector2 entity::getVelocity() {
     return vel;
 }
 
-entity::pType entity::getPickupType() {
-    int rel = getMaxHearts() - 1;
-    return (pType) rel;
+// Knockback Methods
+bool entity::isKnockedBack() const {
+    return inKnockback;
+}
+
+void entity::setKnockedBack(bool knockedBack) {
+    inKnockback = knockedBack;
 }

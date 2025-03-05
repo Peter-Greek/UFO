@@ -62,6 +62,7 @@ public:
         hearts = heartsMax;
         maxHearts = heartsMax;
         coords = position;
+        spawnCoords = {position.x, position.y};
     }
 
     int initialize() override;
@@ -77,6 +78,9 @@ public:
     bool isEntityAPickup();
 
     pType getPickupType();
+
+    bool isKnockedBack() const;
+    void setKnockedBack(bool knockedBack);
 
 
 
@@ -95,8 +99,10 @@ public:
     vector2 getVelocity();
 
     void spawn();
-    bool inWorld();
+    bool inWorld() const;
+    vector2 getSpawnCoords();
 private:
+    vector2 spawnCoords;
     bool created = false;
     bool spawned = false;
     eType type;
@@ -104,6 +110,7 @@ private:
     int maxHearts;
     vector2 coords;
     vector2 vel;
+    bool inKnockback = false;
 };
 
 

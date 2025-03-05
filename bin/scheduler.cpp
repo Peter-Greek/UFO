@@ -197,7 +197,7 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
 
 
     // Create NPC
-    auto* npc = new entity(passFunc, entity::ENEMY, 3, {50.0f, 0.0f});
+    auto* npc = new entity(passFunc, entity::ENEMY, 3, {200.0f, 0.0f});
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
     npc->spawn();

@@ -51,7 +51,6 @@ private:
     int AT_CANNON_DAMAGE = 1; // damage of the AT cannon
 
     bool facingLeft = false; // facing left when idle after moving left
-    bool inKnockback = false; // is the player in knockback
 public:
     enum UPGRADES { // DONT CHANGE ORDER
         OXYGEN,
@@ -96,9 +95,6 @@ public:
     }
 
     bool isFacingLeft();
-    bool isKnockedBack() const;
-    void setKnockedBack(bool knockedBack);
-
 };
 
 

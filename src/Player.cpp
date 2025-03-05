@@ -41,7 +41,7 @@ void Player::update(float deltaMs) {
     bool leftPressed = keyboard_state_array[SDL_SCANCODE_A] || keyboard_state_array[SDL_SCANCODE_LEFT];
     bool rightPressed = keyboard_state_array[SDL_SCANCODE_D] || keyboard_state_array[SDL_SCANCODE_RIGHT];
 
-    if (inKnockback) {
+    if (isKnockedBack()) {
         upPressed = false;
         downPressed = false;
         leftPressed = false;
@@ -116,8 +116,8 @@ void Player::update(float deltaMs) {
         }
     }
 
-    if (newVel.x == 0.0f && newVel.y == 0.0f && inKnockback) {
-        inKnockback = false;
+    if (newVel.x == 0.0f && newVel.y == 0.0f && isKnockedBack()) {
+        setKnockedBack(false);
     }
 
     setVelocity(newVel);
@@ -200,13 +200,7 @@ void Player::addOxygen(int oxygenToAdd) {
     }
 }
 
-bool Player::isKnockedBack() const {
-    return inKnockback;
-}
 
-void Player::setKnockedBack(bool knockedBack) {
-    inKnockback = knockedBack;
-}
 
 
 

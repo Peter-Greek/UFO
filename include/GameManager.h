@@ -68,6 +68,11 @@ public:
     void attachAseprite(std::string name, AsepriteLoader *a);
 
     void bounceEntities(entity* e1, entity* e2);
+
+    void handleEnemyUpdate(entity *e);
+    void handlePlayerUpdate(entity *e);
+
+    void updatePlayerView(bool isVisible, entity *e, float deltaMs);
 };
 
 
