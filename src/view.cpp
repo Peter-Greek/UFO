@@ -78,6 +78,19 @@ int view::initialize() {
         drawRect(x, y, w, h);
     });
 
+    AddEventHandler("SDL::Render::DrawLines", [this](std::vector<vector2> points, int thickness) {
+        SDL_Point p[5] = {
+                {static_cast<int>(points[0].x), static_cast<int>(points[0].y)},
+                {static_cast<int>(points[1].x), static_cast<int>(points[1].y)},
+                {static_cast<int>(points[2].x), static_cast<int>(points[2].y)},
+                {static_cast<int>(points[3].x), static_cast<int>(points[3].y)},
+                {static_cast<int>(points[0].x), static_cast<int>(points[0].y)}
+        };
+        if (SDL_RenderDrawLines(renderer, p, 5)) {
+            error("SDL_RenderDrawLines Error: ", SDL_GetError());
+        }
+    });
+
     AddEventHandler("SDL::Render::SetDrawColor", [this](int r, int g, int b, int a) {
         SDL_SetRenderDrawColor(renderer, r, g, b, a);
     });

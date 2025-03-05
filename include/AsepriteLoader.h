@@ -88,7 +88,7 @@ private:
 
     bool gameRunning = false;
 public:
-    AsepriteLoader(std::function<void(const std::string& eventName, const json& eventData)> passFunc, std::string imgPath, std::string jsonPath) : xProcess(true, passFunc) {
+    AsepriteLoader(passFunc_t passFunc, std::string imgPath, std::string jsonPath) : xProcess(true, passFunc) {
         asepritePath = imgPath;
         asepriteJsonPath = jsonPath;
     }

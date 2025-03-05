@@ -32,51 +32,89 @@
 //
 
 #include "GameManager.h"
+#include "Laser.h"
 
 int GameManager::initialize() {
-    gameRunning = true;
     print("Game Manager Initialize");
 
 
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
+        if (!gameRunning) {return;}
+        if (cam == nullptr) {error("Camera not set in Game Manager");}
         // Update Before render
         std::list<entity*> removalList;
         for (auto& e : entityList) {
+            bool isPlayer = e->isEntityAPlayer();
             vector2 currentCoords = e->getPosition();
-            if  (cam != nullptr) {
-                if (cam->isPointInView(currentCoords)) {
-                    if (e->isEntityAPlayer()) {
-                        updatePlayerView(true, e, deltaMs);
-                    }else {
-                        if (!e->isDone() && e->getHearts() > 0) {
-                            vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
-                            if (e->isEntityAnEnemy()) {
-                                TriggerEvent("SDL::Render::SetDrawColor", 0, 0, 255, 255);
-                                TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
-                                TriggerEvent("SDL::Render::ResetDrawColor");
-                            }else if (e->isEntityAPickup()) {
-                                if (e->getPickupType() == entity::AT) {
-                                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-                                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
-                                    TriggerEvent("SDL::Render::ResetDrawColor");
-                                }else if (e->getPickupType() == entity::HEART) {
-                                    TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
-                                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, 10, 10);
-                                    TriggerEvent("SDL::Render::ResetDrawColor");
-                                }
-                            }
-                        }else {
-                            removalList.push_back(e);
+            bool inView = cam->isPointInView(currentCoords);
+
+            if (isPlayer) {
+                updatePlayerView(inView, e, deltaMs);
+            }else {
+                if (e->isDone() || e->getHearts() <= 0) {
+                    removalList.push_back(e);
+                    continue;
+                }
+
+                if (!inView) {
+                    continue;
+                }
+
+                vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
+                vector2 dim = e->getDimensions();
+                if (e->isEntityAnEnemy()) {
+                    TriggerEvent("SDL::Render::SetDrawColor", 0, 0, 255, 255);
+                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                    TriggerEvent("SDL::Render::ResetDrawColor");
+                }else if (e->isEntityAPickup()) {
+                    if (e->getPickupType() == entity::AT) {
+                        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                        TriggerEvent("SDL::Render::ResetDrawColor");
+                    }else if (e->getPickupType() == entity::HEART) {
+                        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                        TriggerEvent("SDL::Render::ResetDrawColor");
+                    }
+                }else if (e->isEntityALaser()) {
+                    auto* l = dynamic_cast<Laser*>(e);
+                    if (l && l->isFiring()) {
+                        Heading h = l->getHeading(); // Number from 0 to 360
+                        vector2 laserStart = {screenCoords.x, screenCoords.y};
+                        int length = dim.x;
+                        int width = dim.y;
+
+                        // Check if the texture exists in txdMap
+                        auto it = txdMap.find("LASER::TEXTURE");
+                        if (it == txdMap.end() || !it->second) {
+                            return; // Skip rendering if texture doesn't exist
+                        }
+
+                        int textureSize = 32;
+                        int lasers = length / textureSize;
+
+                        // Convert heading into a direction vector
+                        vector2 direction = angleToVector2(h);
+                        for (int i = 0; i < lasers; i++) {
+                            // Compute new laser segment position in the correct direction
+                            vector2 laserEnd = laserStart + (direction * textureSize);
+
+                            SDL_Rect srcRect = {0, 0, textureSize, textureSize};
+
+                            SDL_Rect destRect = {
+                                    static_cast<int>(laserStart.x),
+                                    static_cast<int>(laserStart.y),
+                                    textureSize, textureSize
+                            };
+
+                            // Render laser segment with rotation
+                            txdMap["LASER::TEXTURE"]->render(srcRect, destRect, h, SDL_FLIP_NONE);
+
+                            // Move to the next segment
+                            laserStart = laserEnd;
                         }
                     }
-                }else {
-                    // Entity is not in view
-                    if (e->isEntityAPlayer()) {
-                        updatePlayerView(false, e, deltaMs);
-                    }
                 }
-            }else {
-                error("Camera not set in Game Manager");
             }
         }
         for (auto e : removalList) {
@@ -95,9 +133,11 @@ int GameManager::initialize() {
         }
     });
 
+    gameRunning = true;
     return 1;
 }
 
+// Update View Functions
 void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     if (!isVisible) {
         textMap["CamCoords"]->hideText();
@@ -110,6 +150,15 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
 
     if (debugMode) {
+
+        // RelHeading
+        int x, y;
+        SDL_GetMouseState(&x, &y);
+        vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
+        Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
+        textMap["RelHeading"]->showText("Heading: " + std::to_string(h.get()));
+
+
         // convert screenCoords.x and screenCoords.y to string with only 2 decimal places
         std::string xString = std::to_string(currentCoords.x);
         std::string yString = std::to_string(currentCoords.y);
@@ -120,6 +169,7 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
         textMap["CamCoords"]->setTextPosition(screenCoords.x, screenCoords.y - 40);
     }else {
         textMap["CamCoords"]->hideText();
+        textMap["RelHeading"]->hideText();
     }
 
     cam->updateCamera(currentCoords - vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
@@ -161,6 +211,7 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
 }
 
+// Update Logic Functions
 void GameManager::update(float deltaMs) {
     for (auto& e : entityList) {
         if (e->isEntityAnEnemy()) {
@@ -168,6 +219,18 @@ void GameManager::update(float deltaMs) {
         }else if (e->isEntityAPlayer()) {
             handlePlayerUpdate(e);
         }
+    }
+}
+
+void GameManager::playerTakeHit(Player* p, int damage) {
+
+    if (p->doesPlayerHaveShield()) {
+        //TODO: Add shield hit sound and animation
+        p->hitShield();
+    }else {
+        //TODO: Add player hit sound and animation
+        p->removeHearts(damage);
+        textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
     }
 }
 
@@ -186,23 +249,26 @@ void GameManager::handlePlayerUpdate(entity* e) {
                 }else if (e2->getPickupType() == entity::HEART) {
                     e2->setHearts(0);
                     e2->succeed();
-                    p->setHearts(p->getHearts() + 1);
+                    p->addHearts(1);
                     textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
                 }
             }
         }else if (e2->isEntityAnEnemy()) {
             vector2 enemyCoords = e2->getPosition();
+
+            if (e2->isKnockedBack()) {
+                continue;
+            }
+
+            if (p->isKnockedBack()) {
+                continue;
+            }
+
             if ((currentCoords - enemyCoords).length() < 20) {
                 if (e2->getHearts() > 0) {
-                    if (p->doesPlayerHaveShield()) {
-                        //TODO: Add shield hit sound and animation
-                        p->hitShield();
-                    }else {
-                        //TODO: Add player hit sound and animation
-                        p->setHearts(p->getHearts() - 1);
-                    }
+                    playerTakeHit(p, 1);
 
-                    e2->setHearts(e2->getHearts() - 1);
+                    e2->removeHearts(1);
                     if (e2->getHearts() == 0) {
                         e2->succeed();
                     }
@@ -212,6 +278,34 @@ void GameManager::handlePlayerUpdate(entity* e) {
                     textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
                 }
             }
+        }else if (e2->isEntityALaser()) {
+            auto* l = dynamic_cast<Laser*>(e2);
+            if (l && l->isFiring()) {
+                // Get the laser start and end points
+                vector2 p1 = l->getPosition();
+                vector2 direction = angleToVector2(l->getHeading());  // Normalized direction vector
+                vector2 p2 = p1 + direction * l->getLength();  // Laser extends in this direction
+                // Calculate perpendicular vector to get the width of the laser
+                vector2 perp(-direction.y, direction.x);  // Rotates 90 degrees to get width
+                perp = perp * (l->getWidth() / 2.0f);  // Scale perpendicular by half width
+                std::vector<vector2> laserBox = {
+                        p1 - perp,  // Bottom-left
+                        p1 + perp,  // Bottom-right
+                        p2 + perp,  // Top-right
+                        p2 - perp   // Top-left
+                };
+                if (isPointInBounds(currentCoords, laserBox)) {
+                    playerTakeHit(p, l->getDamage());
+                    if (!p->isEntityInvincible()) {
+                        if (l->isSpinning()) {
+                            p->setEntityInvincible(true, 16.0f * l->getSpeed() * l->getWidth());
+                        } else {
+                            p->setEntityInvincible(true, std::min(l->timeLeft(), l->getInterval()));
+                        }
+                    }
+                }
+            }
+
         }
     }
 }
@@ -221,7 +315,8 @@ void GameManager::handleEnemyUpdate(entity* e) {
     vector2 curVel = e->getVelocity();
     vector2 newVel = vector2(0.0f, 0.0f);
     bool isClose = false;
-    if (!e->isKnockedBack()) {
+    bool inKnockback = e->isKnockedBack();
+    if (!inKnockback) {
         // get the closest player if < 60 units away start to move towards player
         for (auto& e2 : entityList) {
             if (e2->isEntityAPlayer()) {
@@ -248,7 +343,7 @@ void GameManager::handleEnemyUpdate(entity* e) {
         }
     }
 
-    if (!isClose) {
+    if (!isClose || inKnockback) {
         if (curVel.y != 0.0f) {
             newVel.y = curVel.y * 0.25f; // reduce velocity
             if (newVel.y < 0.1f && newVel.y > -0.1f) {
@@ -267,8 +362,7 @@ void GameManager::handleEnemyUpdate(entity* e) {
     e->setVelocity(newVel);
 }
 
-
-
+// Attach Functions
 void GameManager::attachEntity(entity* e) {
     entityList.push_back(e);
 }
@@ -285,17 +379,22 @@ void GameManager::setCamera(camera* c) {
     cam = c;
 }
 
+void GameManager::attachTxd(std::string name, TxdLoader* txd) {
+    txdMap[name] = txd;
+}
+
+// Helper Functions
 void GameManager::bounceEntities(entity *e1, entity *e2) {
-    //TODO: THIS NEEDS MAJOR REWORKING BUT IT WORKS FOR NOW
     vector2 e1Pos = e1->getPosition();
     vector2 e2Pos = e2->getPosition();
-
-    vector2 e1Vel = e1->getVelocity();
-    vector2 e2Vel = e2->getVelocity();
-
-    vector2 e1NewVel = (e2Pos - e1Pos) * (e1Vel - 120) * (e1Vel.dot(e2Pos - e1Pos) / (e2Pos - e1Pos).lengthSquared());
-    vector2 e2NewVel = (e1Pos - e2Pos) * (e2Vel - 120) * (e2Vel.dot(e1Pos - e2Pos) / (e1Pos - e2Pos).lengthSquared());
-
-    e1->setVelocity(e1NewVel);
-    e2->setVelocity(e2NewVel);
+    Heading h = getHeadingFromVectors(e1Pos, e2Pos);
+    print("Bounce Heading: ", h.get());
+    vector2 newVel = angleToVector2(h) * 9.9f;
+    h.set(h.get() + 180);
+    print("Rebounce Heading: ", h.get());
+    vector2 otherVel = angleToVector2(h) * 9.9f;
+    e1->setVelocity(otherVel);
+    e2->setVelocity(newVel);
+    e1->setKnockedBack(true);
+    e2->setKnockedBack(true);
 }

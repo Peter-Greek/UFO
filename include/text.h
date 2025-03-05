@@ -39,12 +39,12 @@
 #include <SDL_ttf.h>
 class text : public xProcess {
 public:
-    explicit text(const std::function<void(const std::string& eventName, const json& eventData)>& func, std::string textContentInput) : xProcess(true, func) {
+    explicit text(passFunc_t& func, std::string textContentInput) : xProcess(true, func) {
         print("Text Constructor: ", textContentInput);
         textContent = textContentInput;
         setTextRelativePosition(0.0, 0.5);
     }
-    explicit text(const std::function<void(const std::string& eventName, const json& eventData)>& func, std::string textContentInput, int toFontSize) : xProcess(true, func) {
+    explicit text(passFunc_t& func, std::string textContentInput, int toFontSize) : xProcess(true, func) {
         print("Text Constructor: ", textContentInput);
         textContent = textContentInput;
         setTextRelativePosition(0.0, 0.5);

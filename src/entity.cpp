@@ -40,22 +40,11 @@ int entity::initialize() {
 
 void entity::update(float deltaMs) {
     updateCoordsFromVelocity(deltaMs);
+    updateInvincibility(deltaMs);
 }
 
 bool entity::isDone() {
     return created && !spawned;
-}
-
-void entity::postSuccess() {
-
-}
-
-void entity::postFail() {
-
-}
-
-void entity::postAbort() {
-
 }
 
 void entity::spawn() {
@@ -71,18 +60,11 @@ vector2 entity::getSpawnCoords() {
 }
 
 // Entity Type Methods
-bool entity::isEntityAPlayer() {
-    return type == PLAYER;
-};
-bool entity::isEntityAnEnemy() {
-    return type == ENEMY;
-};
-bool entity::isEntityAnEnemyBoss() {
-    return type == ENEMY_BOSS;
-};
-bool entity::isEntityAPickup() {
-    return type == ITEM_PICKUP;
-};
+bool entity::isEntityAPlayer() {return type == PLAYER;};
+bool entity::isEntityAnEnemy() {return type == ENEMY;};
+bool entity::isEntityAnEnemyBoss() {return type == ENEMY_BOSS;};
+bool entity::isEntityALaser() {return type == LASER;}
+bool entity::isEntityAPickup() {return type == ITEM_PICKUP;};
 entity::pType entity::getPickupType() {
     int rel = getMaxHearts() - 1;
     return (pType) rel;
@@ -106,6 +88,7 @@ void entity::addHearts(int heartsToAdd) {
     }
 };
 void entity::removeHearts(int heartsToRemove) {
+    if (isInvincible) {return;}
     hearts -= heartsToRemove;
     if (hearts < 0) {
         hearts = 0;
@@ -155,4 +138,47 @@ bool entity::isKnockedBack() const {
 
 void entity::setKnockedBack(bool knockedBack) {
     inKnockback = knockedBack;
+}
+
+int entity::getLength() {
+    return length;
+}
+
+int entity::getWidth() {
+    return width;
+}
+
+vector2 entity::getCenter() {
+    return {coords.x + length / 2, coords.y + width / 2};
+}
+
+vector2 entity::getDimensions() {
+    return {static_cast<float>(length), static_cast<float>(width)};
+}
+
+bool entity::isEntityInvincible() {
+    return isInvincible;
+}
+
+void entity::setEntityInvincible(bool invincible) {
+    isInvincible = invincible;
+}
+
+void entity::setEntityInvincible(bool invincible, float time) {
+    isInvincible = invincible;
+    invincibleTime = time;
+}
+
+void entity::setEntityInvincibleTime(float time) {
+    invincibleTime = time;
+}
+
+void entity::updateInvincibility(float deltaMs) {
+    if (invincibleTime > 0) {
+        invincibleTime -= deltaMs;
+        if (invincibleTime <= 0) {
+            invincibleTime = 0;
+            isInvincible = false;
+        }
+    }
 }

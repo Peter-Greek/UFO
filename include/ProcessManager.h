@@ -8,22 +8,31 @@
 #include <list>
 #include "xProcess.h"
 
+
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 class ProcessManager {
+
+private:
+    std::list<xProcess*> processList;
+    std::list<UUID> uuidList;
 public:
 
 
-    std::list<xProcess*> processList;
+
     int updateProcessList(float deltaMs, SDL_Window* window);
     void attachProcess(xProcess* p);
     void abortAllProcess();
     int removeProcess(xProcess* p);
     void triggerEventInAll(const std::string& eventName, const json& eventData);
 
+    UUID generateUUID();
+
     ProcessManager() = default;
     ~ProcessManager() = default;
+
+    bool containsUUID(UUID uuid);
 };
 
 

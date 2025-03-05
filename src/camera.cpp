@@ -115,6 +115,10 @@ vector2 camera::worldToScreenCoords(float x, float y) const {
     return {x - cameraX, y - cameraY};
 }
 
+vector2 camera::screenToWorldCoords(vector2 screenPos) const {
+    return {screenPos.x + cameraX, screenPos.y + cameraY};
+}
+
 
 
 

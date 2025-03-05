@@ -40,6 +40,7 @@
 #include "camera.h"
 #include "text.h"
 #include "AsepriteLoader.h"
+#include "TxdLoader.h"
 
 class GameManager : public xProcess {
 private:
@@ -48,12 +49,13 @@ private:
     std::map<std::string, text*> textMap;
     std::map<std::string, AsepriteLoader*> asepriteMap;
     std::map<std::string, Animation*> animList;
-
+    std::map<std::string, TxdLoader*> txdMap;
     std::ostringstream oss;
-
     camera* cam;
+
+    passFunc_t passFunc;
 public:
-    explicit GameManager(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {}
+    explicit GameManager(passFunc_t& func) : xProcess(false, func), passFunc(func) {}
 
     int initialize() override;
     void update(float deltaMs) override;
@@ -66,13 +68,17 @@ public:
     void setCamera(camera* c);
     void attachText(std::string name, text* t);
     void attachAseprite(std::string name, AsepriteLoader *a);
+    void attachTxd(std::string name, TxdLoader *txd);
 
-    void bounceEntities(entity* e1, entity* e2);
+    static void bounceEntities(entity* e1, entity* e2);
 
     void handleEnemyUpdate(entity *e);
     void handlePlayerUpdate(entity *e);
 
     void updatePlayerView(bool isVisible, entity *e, float deltaMs);
+
+
+    void playerTakeHit(Player *p, int damage);
 };
 
 

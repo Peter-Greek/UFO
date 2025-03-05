@@ -28,52 +28,72 @@
  */
 
 //
-// Created by xerxe on 3/2/2025.
+// Created by xerxe on 3/4/2025.
 //
 
-#ifndef CSCI437_CAMERA_H
-#define CSCI437_CAMERA_H
+#ifndef CSCI437_LASER_H
+#define CSCI437_LASER_H
 
-
-#include "xProcess.h"
-class camera : public xProcess {
+#include "entity.h"
+class Laser : public entity {
 private:
-    bool gameRunning = false;
+    Heading dir;
+    float interval;
+    float duration;
+    int damage;
+    int speed;
 
-    // SDL Vars
-    SDL_Window* window = nullptr;
-    SDL_Renderer* renderer = nullptr;
+    bool spinning = false;
+    bool clockWise = false;
 
-    // Camera Variables
-    float cameraX = 0;
-    float cameraY = 0;
-    vector2 CAM_MIN;
-    vector2 CAM_MAX;
-
-
+    // Time vars
+    float lastFired = 0;
+    float inFire = 0;
 public:
-    explicit camera(passFunc_t& func) : xProcess(true, func) {}
-    ~camera() override = default;
+    explicit Laser(
+            passFunc_t& func,
+            vector2 position,
+            Heading h,
+            int length,
+            int width,
+            float interval,
+            float duration,
+            int damage,
+            int speed
+    ) : entity(func, entity::LASER, damage, position, length, width),
+        dir(h),
+        interval(interval),
+        duration(duration),
+        damage(damage),
+        speed(speed)
+    {}
 
-    int initialize_SDL_process(SDL_Window* window) override;
     void update(float deltaMs) override;
-    bool isDone() override {return !gameRunning;};
-    void postSuccess() override {};
-    void postFail() override {};
-    void postAbort() override {};
 
-    void updateCamera(float x, float y);
+    void fire();
 
-    void updateCamera(vector2 pos);
+    void stopFire();
 
-    bool isPointInView(vector2 pos) const;
-    bool isPointInView(float x, float y) const;
+    bool isFiring();
 
-    vector2 worldToScreenCoords(vector2 pos) const;
-    vector2 worldToScreenCoords(float x, float y) const;
+    Heading getHeading();
+    void setHeading(Heading h);
 
-    vector2 screenToWorldCoords(vector2 vector21) const;
+    void setSpin(bool s);
+    bool isSpinning() const;
+
+    int getDamage() const;
+    void setDamage(int d);
+
+    int getSpeed() const;
+    void setSpeed(int s);
+
+    float getInterval() const;
+    float getDuration() const;
+
+
+    float timeLeft();
 };
 
 
-#endif //CSCI437_CAMERA_H
+#endif //CSCI437_LASER_H

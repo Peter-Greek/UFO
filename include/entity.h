@@ -42,6 +42,7 @@ public:
         PLAYER,
         ENEMY,
         ENEMY_BOSS,
+        LASER,
         ITEM_PICKUP,
     };
 
@@ -52,36 +53,75 @@ public:
         OXY_TANK
     };
 
+private:
+    vector2 spawnCoords;
+    bool created = false;
+    bool spawned = false;
+    eType type;
+    int hearts;
+    int maxHearts;
+    vector2 coords;
+    vector2 vel;
+
+    bool inKnockback = false;
+    bool isInvincible = false; // is the player invincible
+    float invincibleTime = 0; // time left of invincibility
+
+    int length = 10;
+    int width = 10;
+
+    void setDefaultLengthWidth() {
+        if (type == PLAYER) {
+            length = 32;
+            width = 32;
+        }
+    }
+
+
+
+public:
     explicit entity(
-            const std::function<void(const std::string& eventName, const json& eventData)>& func,
-            int eTypeIndex,
-            int heartsMax,
-            vector2 position
-    ) : xProcess(false, func) {
+            passFunc_t& func,
+            int eTypeIndex, int hearts, vector2 position
+    ) : xProcess(false, func),hearts(hearts), maxHearts(hearts), coords(position) {
         type = static_cast<eType>(eTypeIndex);
-        hearts = heartsMax;
-        maxHearts = heartsMax;
-        coords = position;
         spawnCoords = {position.x, position.y};
+        setDefaultLengthWidth();
+    }
+
+    explicit entity(
+            passFunc_t& func,
+            int eTypeIndex, int hearts, vector2 position,
+            int length, int width
+    ) : xProcess(false, func), length(length), width(width), hearts(hearts), maxHearts(hearts), coords(position) {
+        type = static_cast<eType>(eTypeIndex);
+        spawnCoords = {position.x, position.y};
+        setDefaultLengthWidth();
     }
 
     int initialize() override;
     void update(float deltaMs) override;
     bool isDone() override;
-    void postSuccess() override;
-    void postFail() override;
-    void postAbort() override;
+    void postSuccess() override {};
+    void postFail() override {};
+    void postAbort() override {};
+
+    // get length and width
+    int getLength();
+    int getWidth();
+    vector2 getCenter();
+    vector2 getDimensions();
 
     bool isEntityAPlayer();
     bool isEntityAnEnemy();
     bool isEntityAnEnemyBoss();
+    bool isEntityALaser();
     bool isEntityAPickup();
 
     pType getPickupType();
 
     bool isKnockedBack() const;
     void setKnockedBack(bool knockedBack);
-
 
 
     int getHearts() const;
@@ -101,16 +141,12 @@ public:
     void spawn();
     bool inWorld() const;
     vector2 getSpawnCoords();
-private:
-    vector2 spawnCoords;
-    bool created = false;
-    bool spawned = false;
-    eType type;
-    int hearts;
-    int maxHearts;
-    vector2 coords;
-    vector2 vel;
-    bool inKnockback = false;
+
+    void updateInvincibility(float deltaMs);
+    bool isEntityInvincible();
+    void setEntityInvincible(bool invincible);
+    void setEntityInvincible(bool invincible, float time);
+    void setEntityInvincibleTime(float time);
 };
 
 

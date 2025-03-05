@@ -41,6 +41,14 @@
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+using UUID = std::string;
+using passFunc_t = std::function<void(const std::string& eventName, const json& eventData)>;
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
 
 template<class... Args>
 void print(Args&&... args)
@@ -60,6 +68,8 @@ void error(Args... args)
 }
 
 float map_range(float s, float a1, float a2, float b1, float b2);
+double map_range(double s, double a1, double a2, double b1, double b2);
+int map_range(int s, int a1, int a2, int b1, int b2);
 
 class vector2 {
 public:
@@ -196,6 +206,9 @@ public:
 
 };
 
+using vectorList_t = std::vector<vector2>;
+
+// Vector2 JSON Serialization
 inline void to_json(json &j, const vector2 &s)
 {
     j["X"] = s.x;
@@ -208,6 +221,79 @@ inline void from_json(const json &j, vector2 &s)
     s.y = j.at("Y").get<float>();
 }
 
+
+// Heading Class
+class BoundedInt {
+private:
+    int value;
+    const int min;
+    const int max;
+
+    // Helper function to enforce bounds
+    int clamp(int v) const {
+        if (v < min) return min;
+        if (v > max) return max;
+        return v;
+    }
+
+    // Helper function to wrap within bounds (for cyclic values like heading)
+    int wrap(int v) const {
+        int range = max - min + 1;
+        return ((v - min) % range + range) % range + min;
+    }
+
+public:
+    BoundedInt(int v, int minVal, int maxVal) : min(minVal), max(maxVal) {
+        value = wrap(v);
+    }
+
+    // Getters
+    int get() const { return value; }
+
+    // Set value with clamping
+    void set(int v) { value = wrap(v); }
+
+    // Operators
+    BoundedInt& operator=(int v) {
+        set(v);
+        return *this;
+    }
+
+    BoundedInt& operator+=(int v) {
+        set(value + v);
+        return *this;
+    }
+
+    BoundedInt& operator-=(int v) {
+        set(value - v);
+        return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const BoundedInt& bi) {
+        os << bi.value;
+        return os;
+    }
+};
+
+// Specialization for heading (0-360)
+class Heading : public BoundedInt {
+public:
+    Heading(int v = 0) : BoundedInt(v, 0, 360) {}
+};
+
+Heading getHeadingFromVector(const vector2& v);
+
+Heading getHeadingFromVectors(const vector2& v1, const vector2& v2);
+
+vector2 angleToVector2(float angle);
+vector2 angleToVector2(Heading angle);
+
+
+vectorList_t calculateBoundingBox(const vector2& min, const vector2& max);
+std::pair<float, float> calculateDimensions(const std::vector<vector2>& points);
+bool isPointInBounds(const vector2& point, const vectorList_t& polygon);
+
+// random number generator
 float random(float min, float max);
 int random(int min, int max);
 vector2 random(vector2 minVec, vector2 maxVec);

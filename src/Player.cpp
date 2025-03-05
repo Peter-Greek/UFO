@@ -34,6 +34,9 @@
 #include "Player.h"
 
 void Player::update(float deltaMs) {
+    updateInvincibility(deltaMs);
+
+
     const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
 
     bool upPressed = keyboard_state_array[SDL_SCANCODE_W] || keyboard_state_array[SDL_SCANCODE_UP];
@@ -162,13 +165,11 @@ void Player::applyUpgrade(Player::UPGRADES upgrade, int level) {
 bool Player::doesPlayerHaveShield() {
     return SHIELD_COUNT > 0;
 }
-
 void Player::hitShield() {
     if (doesPlayerHaveShield()) {
         SHIELD_COUNT--;
     }
 }
-
 void Player::removeShield() {
     SHIELD_COUNT = 0;
 }
@@ -177,11 +178,11 @@ void Player::removeShield() {
 float Player::getPlayerSpeed() {
     return PLAYER_SPEED;
 }
-
 int Player::getOxygenLevel() {
     return OXYGEN_LEVEL;
 }
 
+// Oxygen functions
 void Player::setOxygenLevel(int newOxygenLevel) {
     OXYGEN_LEVEL = newOxygenLevel;
     if (OXYGEN_LEVEL > MAX_OXYGEN_TIME) {
@@ -190,7 +191,6 @@ void Player::setOxygenLevel(int newOxygenLevel) {
         OXYGEN_LEVEL = 0;
     }
 }
-
 void Player::addOxygen(int oxygenToAdd) {
     OXYGEN_LEVEL += oxygenToAdd;
     if (OXYGEN_LEVEL > MAX_OXYGEN_TIME) {
@@ -202,6 +202,12 @@ void Player::addOxygen(int oxygenToAdd) {
 
 
 
-
-
+// AT functions
+void Player::addATCount() {
+    AT_COUNT++;
+    print("AT Count: ", AT_COUNT);
+}
+int Player::getATCount() const {
+    return AT_COUNT;
+}
 

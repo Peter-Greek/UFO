@@ -8,7 +8,7 @@
 #include "xProcess.h"
 class view : public xProcess {
 public:
-    explicit view(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {};
+    explicit view(passFunc_t& func) : xProcess(false, func) {};
     ~view() override = default;
 
     SDL_Window* getWindow() { return window; }

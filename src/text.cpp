@@ -201,7 +201,7 @@ void text::setCurrentPositionBasedOnRelativePosition() {
     }
 
     if (y > 0.0f) {
-        toY = map_range(y, 0.0f, 1.0f, baseY, 0);
+        toY = map_range(y, 0.0f, 1.0f, baseY, 0.0f);
     } else if (y < 0.0f) {
         toY = map_range(y, -1.0f, 0.0f, screenH, baseY);
     }

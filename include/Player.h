@@ -60,10 +60,10 @@ public:
         AT_CANNON
     };
     explicit Player(
-            const std::function<void(const std::string& eventName, const json& eventData)>& func
+            passFunc_t& func
     ) : entity(func, entity::PLAYER, 5, {0.0f, 0.0f}) {}
     explicit Player(
-            const std::function<void(const std::string& eventName, const json& eventData)>& func, const int upgradesSet[5]
+            passFunc_t& func, const int upgradesSet[5]
     ) : entity(func, entity::PLAYER, 5, {0.0f, 0.0f}) {
         // for each enum upgrade, set the upgrade level to the level passed in
         for (int i = 0; i < 5; i++) {
@@ -71,30 +71,27 @@ public:
         }
     }
 
+    void update(float deltaMs) override;
+
     void applyUpgrade(UPGRADES upgrade, int level);
 
     bool doesPlayerHaveShield();
     void removeShield();
     void hitShield();
-
     float getPlayerSpeed();
-
     int getOxygenLevel();
     void setOxygenLevel(int newOxygenLevel);
     void addOxygen(int oxygenToAdd);
 
-    void update(float deltaMs) override;
 
-    void addATCount() {
-        AT_COUNT++;
-        print("AT Count: ", AT_COUNT);
-    }
 
-    int getATCount() const {
-        return AT_COUNT;
-    }
+    void addATCount();
+
+    int getATCount() const;
 
     bool isFacingLeft();
+
+
 };
 
 

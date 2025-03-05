@@ -54,6 +54,7 @@
 #include "entity.h"
 #include "Player.h"
 #include "camera.h"
+#include "Laser.h"
 #include "AT.h"
 
 #include "AsepriteLoader.h"
@@ -89,7 +90,7 @@ void Update(float deltaMs)
     // main scheduler update function idk add stuff if u want
 }
 
-void CreateDebugText(std::function<void(const std::string& eventName, const json& eventData)> passFunc, ProcessManager& processManager)
+void CreateDebugText(passFunc_t passFunc, ProcessManager& processManager)
 {
     std::string frameTextContent = "Unlimited Frames: " + std::to_string(unlimitedFrames);
     print("New Frame Text: ", frameTextContent);
@@ -146,7 +147,7 @@ void CreateDebugText(std::function<void(const std::string& eventName, const json
     }
 }
 
-void CreateGameEnvironment(std::function<void(const std::string& eventName, const json& eventData)> passFunc, ProcessManager& processManager){
+void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     auto* gM = new GameManager(passFunc);
     processManager.attachProcess(gM);
 
@@ -160,6 +161,12 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
     cText->setTextRelativePosition(0.0f, -0.8f);
     processManager.attachProcess(cText);
     gM->attachText("CamCoords", cText);
+
+    std::string rHeadingC = "Heading: 0";
+    auto* rHeading = new text(passFunc, rHeadingC, 35);
+    rHeading->setTextRelativePosition(0.0f, -0.7f);
+    processManager.attachProcess(rHeading);
+    gM->attachText("RelHeading", rHeading);
 
     // Create Player
     auto* fAnim = new AsepriteLoader(passFunc, "../resource/FSS.png", "../resource/FSS.json");
@@ -194,10 +201,25 @@ void CreateGameEnvironment(std::function<void(const std::string& eventName, cons
         at->spawn();
     }
 
+    // Create Laser
+    auto* lTxd = new TxdLoader(passFunc, "../resource/laser.png");
+    processManager.attachProcess(lTxd);
+    gM->attachTxd("LASER::TEXTURE", lTxd);
+
+    auto* laser = new Laser(passFunc, {-700.0f, 0.0f}, Heading (360 - 45 * 6), 500, 20, 10, 200000, 1, 1);
+    processManager.attachProcess(laser);
+    gM->attachEntity(laser);
+    laser->setSpin(true);
+    laser->spawn();
+
+    auto* laser2 = new Laser(passFunc, {50.0f, 0.0f}, Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
+    processManager.attachProcess(laser2);
+    gM->attachEntity(laser2);
+    laser2->spawn();
 
 
     // Create NPC
-    auto* npc = new entity(passFunc, entity::ENEMY, 3, {200.0f, 0.0f});
+    auto* npc = new entity(passFunc, entity::ENEMY, 3, {350.0f, 0.0f});
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
     npc->spawn();
@@ -302,7 +324,7 @@ int main(int argc, char* argv[])
     // Create Main Processes
 
     // Pass function to all processes to trigger events in the rest of the processes
-    std::function<void(const std::string& eventName, const json& eventData)> passFunc = [&processManager](const std::string& eventName, const json& eventData) {
+    passFunc_t passFunc = [&processManager](const std::string& eventName, const json& eventData) {
         processManager.triggerEventInAll(eventName, eventData);
     };
 

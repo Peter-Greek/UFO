@@ -53,15 +53,23 @@ public:
         FAIL,
         ABORT
     };
-
-    xProcess(bool isSDL, std::function<void(const std::string& eventName, const json& eventData)> func) : EventManager(std::move(func)) {
+private:
+    UUID id;
+    State state_;
+    xProcess* child_;
+    bool isSDLProcess = false;
+public:
+    xProcess(bool isSDL, passFunc_t func) : EventManager(std::move(func)) {
         state_ = UNINITIALIZED;
         child_ = nullptr;
         isSDLProcess = isSDL;
     }
     virtual ~xProcess() = default;
 
-    bool isSDLSubProcess() { return isSDLProcess; }
+    UUID getId() const { return id; }
+    void setId(UUID UID) { id = std::move(UID); }
+
+    bool isSDLSubProcess() const { return isSDLProcess; }
 
     void initialized() {state_ = RUNNING;}
     virtual int initialize() { state_ = RUNNING; return 1;}
@@ -84,10 +92,6 @@ public:
     bool hasChild() const { return child_ != nullptr; }
     xProcess* getChild() { return child_; }
     void attachChild(xProcess* child) { child_ = child; }
-private:
-    State state_;
-    xProcess* child_;
-    bool isSDLProcess = false;
 };
 
 

@@ -39,7 +39,7 @@ class AT : public entity {
 private:
 public:
     explicit AT(
-            const std::function<void(const std::string& eventName, const json& eventData)>& func,
+            passFunc_t& func,
             vector2 position
     ) : entity(func, entity::ITEM_PICKUP, 1, position) {}
 };

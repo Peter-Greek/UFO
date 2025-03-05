@@ -32,6 +32,7 @@
 //
 
 #include "ProcessManager.h"
+#include <algorithm> // Required for std::find
 
 int ProcessManager::updateProcessList(float deltaMs, SDL_Window *window) {
     std::list<xProcess*> removalList;
@@ -73,6 +74,7 @@ int ProcessManager::updateProcessList(float deltaMs, SDL_Window *window) {
 }
 
 void ProcessManager::attachProcess(xProcess *p) {
+    p->setId(generateUUID());
     processList.push_back(p);
 }
 
@@ -93,4 +95,25 @@ void ProcessManager::triggerEventInAll(const std::string &eventName, const json 
     for (auto p : processList) {
         p->onTriggerEvent(eventName, eventData);
     }
+}
+
+bool ProcessManager::containsUUID(UUID uuid) {
+    return std::find(uuidList.begin(), uuidList.end(), uuid) != uuidList.end();
+}
+
+UUID ProcessManager::generateUUID() {
+    UUID uuid;
+    do {
+        uuid = "";
+        uuid = "pm-xxxxxx-4xxx-yxxx";
+        for (int i = 0; i < uuid.length(); i++) {
+            if (uuid[i] == 'x') {
+                uuid[i] = "0123456789abcdef"[rand() % 16];
+            }else if (uuid[i] == 'y') {
+                uuid[i] = "89ab"[rand() % 4];
+            }
+        }
+    } while (containsUUID(uuid));
+    uuidList.push_back(uuid);
+    return uuid;
 }
