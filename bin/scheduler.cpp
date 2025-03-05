@@ -120,7 +120,7 @@ void CreateDebugText(passFunc_t passFunc, ProcessManager& processManager)
     processManager.attachProcess(gameTimeText);
 
 
-    frameText->AddEventHandler("Pong::OnConfigUpdate", [frameText, fpsText, gameTimeText](const std::string configName) {
+    frameText->AddEventHandler("UFO::OnConfigUpdate", [frameText, fpsText, gameTimeText](const std::string configName) {
         if (configName == "unlimitedFrames") {
             print("Frame Text Update: ", configName);
             std::string frameTextContent = "Unlimited Frames: " + std::to_string(unlimitedFrames);
@@ -202,7 +202,7 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     }
 
     // Create Laser
-    auto* lTxd = new TxdLoader(passFunc, "../resource/laser.png");
+    auto* lTxd = new TxdLoader(passFunc, "../resource/LaserBeams.png");
     processManager.attachProcess(lTxd);
     gM->attachTxd("LASER::TEXTURE", lTxd);
 
@@ -219,6 +219,10 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
 
 
     // Create NPC
+    auto* aTxd = new TxdLoader(passFunc, "../resource/Alien1.png");
+    processManager.attachProcess(aTxd);
+    gM->attachTxd("ALIEN::TEXTURE", aTxd);
+
     auto* npc = new entity(passFunc, entity::ENEMY, 3, {350.0f, 0.0f});
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
@@ -354,7 +358,7 @@ int main(int argc, char* argv[])
     });
 
     // On Config Change
-    viewProcess->AddEventHandler("Pong::OnConfigUpdate", [](const std::string configName) {
+    viewProcess->AddEventHandler("UFO::OnConfigUpdate", [](const std::string configName) {
         updateSettings(); // Update settings based on global variables
 
         if (configName == "unlimitedFrames") {
@@ -366,7 +370,7 @@ int main(int argc, char* argv[])
         }
     });
 
-    viewProcess->AddEventHandler("Pong::ChangeConfigValue", [viewProcess](const std::string configName) {
+    viewProcess->AddEventHandler("UFO::ChangeConfigValue", [viewProcess](const std::string configName) {
         updateSettings(); // Update settings based on global variables
 
         if (configName == "unlimitedFrames") {
@@ -375,7 +379,7 @@ int main(int argc, char* argv[])
             debugMode = debugMode == 0 ? 1 : 0;
         }
 
-        viewProcess->TriggerEvent("Pong::OnConfigUpdate", configName);
+        viewProcess->TriggerEvent("UFO::OnConfigUpdate", configName);
     });
 
     // Create Main Menu

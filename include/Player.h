@@ -51,6 +51,8 @@ private:
     int AT_CANNON_DAMAGE = 1; // damage of the AT cannon
 
     bool facingLeft = false; // facing left when idle after moving left
+    bool isInvisible_v = false; // is the player invisible
+    float invisibilityTime = 0; // time the player has been invisible
 public:
     enum UPGRADES { // DONT CHANGE ORDER
         OXYGEN,
@@ -91,7 +93,13 @@ public:
 
     bool isFacingLeft();
 
+    void setInvisible(bool invisible);
+    bool isInvisible() const;
+    void setInvisibilityTime(float time);
+    float getInvisibilityTime() const;
 
+
+    void updateInvisibility(float ms);
 };
 
 

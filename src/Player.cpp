@@ -35,9 +35,26 @@
 
 void Player::update(float deltaMs) {
     updateInvincibility(deltaMs);
+    updateInvisibility(deltaMs);
 
 
     const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
+
+    // Use upgrades
+    bool key1Pressed = keyboard_state_array[SDL_SCANCODE_1];
+    bool key2Pressed = keyboard_state_array[SDL_SCANCODE_2];
+    bool key3Pressed = keyboard_state_array[SDL_SCANCODE_3];
+    bool key4Pressed = keyboard_state_array[SDL_SCANCODE_4];
+
+    if (key1Pressed) {
+        if (!isInvisible()) {
+            print("Player is invisible");
+            setInvisible(true);
+        }
+    }
+
+
+
 
     bool upPressed = keyboard_state_array[SDL_SCANCODE_W] || keyboard_state_array[SDL_SCANCODE_UP];
     bool downPressed = keyboard_state_array[SDL_SCANCODE_S] || keyboard_state_array[SDL_SCANCODE_DOWN];
@@ -211,3 +228,30 @@ int Player::getATCount() const {
     return AT_COUNT;
 }
 
+void Player::setInvisible(bool invisible) {
+    isInvisible_v = invisible;
+    if (isInvisible_v) {
+        invisibilityTime = 0;
+    }
+}
+
+bool Player::isInvisible() const {
+    return isInvisible_v;
+}
+
+void Player::setInvisibilityTime(float time) {
+    invisibilityTime = time;
+}
+
+float Player::getInvisibilityTime() const {
+    return invisibilityTime;
+}
+
+void Player::updateInvisibility(float ms) {
+    if (isInvisible()) {
+        invisibilityTime += ms;
+        if (invisibilityTime >= INVISIBILITY_DURATION * 1000) {
+            setInvisible(false);
+        }
+    }
+}

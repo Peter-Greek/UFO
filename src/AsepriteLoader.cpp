@@ -91,14 +91,16 @@ void AsepriteLoader::update(float deltaMs) {
 
 }
 
+void AsepriteLoader::setTextureAlpha(int alpha) {
+    SDL_SetTextureAlphaMod(texture, alpha);
+}
+
+void AsepriteLoader::resetTextureAlpha() {
+    SDL_SetTextureAlphaMod(texture, 255);
+}
+
 void AsepriteLoader::renderFrame(SDL_Rect srcRect, SDL_Rect destRect, bool flip, int angle) {
     SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, angle, nullptr, flip ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE );
-
-
-//    SDL_RenderCopy(renderer, ferretTexture, &currentFrame, &destRect);
-
-
-//    SDL_RenderCopyEx(renderer, texture, nullptr, &srcRect, angle, &rot, SDL_FLIP_NONE);
 }
 
 SDL_Rect AsepriteLoader::getFrame(const std::string& frameName) {

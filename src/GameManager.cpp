@@ -63,6 +63,20 @@ int GameManager::initialize() {
                 vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
                 vector2 dim = e->getDimensions();
                 if (e->isEntityAnEnemy()) {
+                    auto it = txdMap.find("ALIEN::TEXTURE");
+                    if (it == txdMap.end() || !it->second) {
+                        continue;
+                    }
+                    int textureSize = 160;
+                    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+
+                    SDL_Rect destRect = {
+                            static_cast<int>(screenCoords.x),
+                            static_cast<int>(screenCoords.y),
+                            32, 32 // down scale the texture
+                    };
+                    txdMap["ALIEN::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+
                     TriggerEvent("SDL::Render::SetDrawColor", 0, 0, 255, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                     TriggerEvent("SDL::Render::ResetDrawColor");
@@ -87,24 +101,34 @@ int GameManager::initialize() {
                         // Check if the texture exists in txdMap
                         auto it = txdMap.find("LASER::TEXTURE");
                         if (it == txdMap.end() || !it->second) {
-                            return; // Skip rendering if texture doesn't exist
+                            continue;
                         }
 
-                        int textureSize = 32;
-                        int lasers = length / textureSize;
+                        // Green Laser 40 41 --> 380 76
+                            // Green Laser no ball 72 42 --> 380 76
+
+                        int textureSize = 128;
+                        int lasers = std::max(1, length / textureSize); // Number of laser segments to render
+
 
                         // Convert heading into a direction vector
                         vector2 direction = angleToVector2(h);
                         for (int i = 0; i < lasers; i++) {
                             // Compute new laser segment position in the correct direction
                             vector2 laserEnd = laserStart + (direction * textureSize);
+                            SDL_Rect srcRect;
+                            SDL_Rect destRect;
 
-                            SDL_Rect srcRect = {0, 0, textureSize, textureSize};
+                            if (i == 0) {
+                                srcRect = {40, 41, 380 - 40, 76 - 41};
+                            }else {
+                                srcRect = {73, 41, 380 - 72, 76 - 41};
+                            }
 
-                            SDL_Rect destRect = {
+                            destRect = {
                                     static_cast<int>(laserStart.x),
                                     static_cast<int>(laserStart.y),
-                                    textureSize, textureSize
+                                    textureSize, width
                             };
 
                             // Render laser segment with rotation
@@ -208,7 +232,11 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     }
 
     SDL_Rect destRect = { static_cast<int>(screenCoords.x) - currentFrame.w, static_cast<int>(screenCoords.y) - currentFrame.h, currentFrame.w * 2, currentFrame.h * 2 };
+    if (p->isInvisible()) {
+        asepriteMap["FSS"]->setTextureAlpha(80);
+    }
     asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
+    asepriteMap["FSS"]->resetTextureAlpha();
 }
 
 // Update Logic Functions
@@ -261,6 +289,14 @@ void GameManager::handlePlayerUpdate(entity* e) {
             }
 
             if (p->isKnockedBack()) {
+                continue;
+            }
+
+            if (p->isEntityInvincible()) {
+                continue;
+            }
+
+            if (p->isInvisible()) { // enemy cant see you to attack you
                 continue;
             }
 
@@ -320,6 +356,10 @@ void GameManager::handleEnemyUpdate(entity* e) {
         // get the closest player if < 60 units away start to move towards player
         for (auto& e2 : entityList) {
             if (e2->isEntityAPlayer()) {
+                auto* p = dynamic_cast<Player*>(e2);
+                if (p->isInvisible()) { // cant see invisible players so no follow
+                    break;
+                }
                 vector2 playerCoords = e2->getPosition();
                 if ((currentCoords - playerCoords).length() < (SCREEN_WIDTH / 4)) {
                     newVel = (playerCoords - currentCoords).normalize() * 0.05f;

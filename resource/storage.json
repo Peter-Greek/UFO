@@ -1,8 +1,8 @@
 {
-    "loads": 625,
+    "loads": 654,
     "settings": {
         "centerStraightened": false,
-        "debugMode": 1,
+        "debugMode": 0,
         "interestingBounces": false,
         "rampUpPaddleSpeed": false,
         "unlimitedFrames": false

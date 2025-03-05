@@ -105,6 +105,10 @@ public:
     json& getJSONData() { return asepriteData; }
 
     void renderFrame(SDL_Rect srcRect, SDL_Rect destRect, bool flip, int angle);
+
+    void setTextureAlpha(int alpha);
+
+    void resetTextureAlpha();
 };
 
 

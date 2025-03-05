@@ -124,6 +124,9 @@ void view::update(float deltaMs) {
         if( e.type == SDL_KEYDOWN )
         {
             if( e.key.keysym.sym == SDLK_q ) running = false;
+            if ( e.key.keysym.sym == SDLK_b ) {
+                TriggerEvent("UFO::ChangeConfigValue", "debugMode");
+            }
         }
         TriggerEvent("SDL::OnPollEvent", e.type, e.key.keysym.sym);
     }
