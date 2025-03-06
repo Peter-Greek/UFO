@@ -244,7 +244,7 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     asepriteMap["FSS"]->resetTextureAlpha();
 }
 
-// Update Logic Functions
+// Update Controller Functions
 void GameManager::update(float deltaMs) {
     for (auto& e : entityList) {
         if (e->isEntityAnEnemy()) {

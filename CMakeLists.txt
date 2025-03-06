@@ -30,13 +30,17 @@ endif()
 set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
 
 # Set include directories
-include_directories(${csci437_SOURCE_DIR}/include)
+#include_directories(${csci437_SOURCE_DIR}/include)
+include_directories(${csci437_SOURCE_DIR}/include/Component)
+include_directories(${csci437_SOURCE_DIR}/include/Controller)
+include_directories(${csci437_SOURCE_DIR}/include/Model)
+include_directories(${csci437_SOURCE_DIR}/include/View)
 
 # Get CPP files
-file(GLOB SRC src/*cpp)
+file(GLOB_RECURSE SRC src/*cpp)
 
 # Get executable files
-file(GLOB EXECLIST bin/*cpp)
+file(GLOB_RECURSE EXECLIST bin/*cpp)
 
 
 #################################################

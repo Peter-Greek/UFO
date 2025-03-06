@@ -44,6 +44,7 @@ public:
         ENEMY_BOSS,
         LASER,
         ITEM_PICKUP,
+        PROJECTILE,
     };
 
     enum pType {
