@@ -32,131 +32,70 @@
 //
 
 #include "GameManager.h"
-#include "Laser.h"
 
 int GameManager::initialize() {
     print("Game Manager Initialize");
-
 
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         if (!gameRunning) {return;}
         if (cam == nullptr) {error("Camera not set in Game Manager");}
         // Update Before render
-        std::list<entity*> removalList;
+
         for (auto& e : entityList) {
             bool isPlayer = e->isEntityAPlayer();
             vector2 currentCoords = e->getPosition();
             bool inView = cam->isPointInView(currentCoords);
 
+            // Update Player View
             if (isPlayer) {
                 updatePlayerView(inView, e, deltaMs);
-            }else {
-                if (e->isDone() || e->getHearts() <= 0) {
-                    removalList.push_back(e);
-                    continue;
-                }
+                continue;
+            }
 
-                if (!inView) {
-                    continue;
-                }
+            // If entity is done or out of hearts
+            if (e->isDone() || e->getHearts() <= 0) {
+                continue;
+            }
 
-                vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
-                vector2 dim = e->getDimensions();
-                if (e->isEntityAnEnemy()) {
-                    auto it = txdMap.find("ALIEN::TEXTURE");
-                    if (it == txdMap.end() || !it->second) {
-                        continue;
-                    }
-                    int textureSize = 160;
-                    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+            // If not in view, skip rendering
+            if (!inView) {
+                continue;
+            }
 
-                    SDL_Rect destRect = {
-                            static_cast<int>(screenCoords.x),
-                            static_cast<int>(screenCoords.y),
-                            32, 32 // down scale the texture
-                    };
-                    txdMap["ALIEN::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
-
-                    TriggerEvent("SDL::Render::SetDrawColor", 0, 0, 255, 255);
+            vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
+            vector2 dim = e->getDimensions(); // get the dimensions of the entity (length, width)
+            if (e->isEntityAnEnemy()) {
+                renderEnemy(screenCoords, dim, e);
+            }else if (e->isEntityAPickup()) {
+                if (e->getPickupType() == entity::AT) {
+                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                     TriggerEvent("SDL::Render::ResetDrawColor");
-                }else if (e->isEntityAPickup()) {
-                    if (e->getPickupType() == entity::AT) {
-                        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                        TriggerEvent("SDL::Render::ResetDrawColor");
-                    }else if (e->getPickupType() == entity::HEART) {
-                        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
-                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                        TriggerEvent("SDL::Render::ResetDrawColor");
-                    }else if (e->getPickupType() == entity::OXY_TANK) {
-                        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
-                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                        TriggerEvent("SDL::Render::ResetDrawColor");
-                    }
-                }else if (e->isEntityALaser()) {
-                    auto* l = dynamic_cast<Laser*>(e);
-                    if (l && l->isFiring()) {
-                        Heading h = l->getHeading(); // Number from 0 to 360
-                        vector2 laserStart = {screenCoords.x, screenCoords.y};
-                        int length = dim.x;
-                        int width = dim.y;
-
-                        // Check if the texture exists in txdMap
-                        auto it = txdMap.find("LASER::TEXTURE");
-                        if (it == txdMap.end() || !it->second) {
-                            continue;
-                        }
-
-                        // Green Laser 40 41 --> 380 76
-                            // Green Laser no ball 72 42 --> 380 76
-
-                        int textureSize = 128;
-                        int lasers = std::max(1, length / textureSize); // Number of laser segments to render
-
-
-                        // Convert heading into a direction vector
-                        vector2 direction = angleToVector2(h);
-                        for (int i = 0; i < lasers; i++) {
-                            // Compute new laser segment position in the correct direction
-                            vector2 laserEnd = laserStart + (direction * textureSize);
-                            SDL_Rect srcRect;
-                            SDL_Rect destRect;
-
-                            if (i == 0) {
-                                srcRect = {40, 41, 380 - 40, 76 - 41};
-                            }else {
-                                srcRect = {73, 41, 380 - 72, 76 - 41};
-                            }
-
-                            destRect = {
-                                    static_cast<int>(laserStart.x),
-                                    static_cast<int>(laserStart.y),
-                                    textureSize, width
-                            };
-
-                            // Render laser segment with rotation
-                            txdMap["LASER::TEXTURE"]->render(srcRect, destRect, h, SDL_FLIP_NONE);
-
-                            // Move to the next segment
-                            laserStart = laserEnd;
-                        }
-                    }
+                }else if (e->getPickupType() == entity::HEART) {
+                    TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                    TriggerEvent("SDL::Render::ResetDrawColor");
+                }else if (e->getPickupType() == entity::OXY_TANK) {
+                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
+                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                    TriggerEvent("SDL::Render::ResetDrawColor");
+                }
+            }else if (e->isEntityALaser()) {
+                auto* l = dynamic_cast<Laser*>(e);
+                if (l && l->isFiring()) {
+                    renderLaser(screenCoords, dim, l);
                 }
             }
         }
-        for (auto e : removalList) {
-            entityList.remove(e);
-        }
-        removalList.clear();
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
-        // Poll Event
-        if (eventType == SDL_KEYDOWN) {
-            if (key == SDLK_c) {
-                // print cur coords of the player
-                print("Player Coords: ", entityList.front()->getPosition());
+        if (debugMode == 1) {
+            if (eventType == SDL_KEYDOWN) {
+                if (key == SDLK_c) {
+                    // print cur coords of the player
+                    print("Player Coords: ", entityList.front()->getPosition());
+                }
             }
         }
     });
@@ -244,15 +183,91 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     asepriteMap["FSS"]->resetTextureAlpha();
 }
 
+void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
+    auto it = txdMap.find("ALIEN::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+    int textureSize = 160;
+    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
+            32, 32 // down scale the texture
+    };
+    txdMap["ALIEN::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+
+    TriggerEvent("SDL::Render::SetDrawColor", 0, 0, 255, 255);
+    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+    TriggerEvent("SDL::Render::ResetDrawColor");
+}
+
+void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
+    Heading h = l->getHeading(); // Number from 0 to 360
+    vector2 laserStart = {screenCoords.x, screenCoords.y};
+    int length = dim.x;
+    int width = dim.y;
+
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("LASER::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    // Green Laser 40 41 --> 380 76
+    // Green Laser no ball 72 42 --> 380 76
+
+    int textureSize = 128;
+    int lasers = std::max(1, length / textureSize); // Number of laser segments to render
+
+
+    // Convert heading into a direction vector
+    vector2 direction = angleToVector2(h);
+    for (int i = 0; i < lasers; i++) {
+        // Compute new laser segment position in the correct direction
+        vector2 laserEnd = laserStart + (direction * textureSize);
+        SDL_Rect srcRect;
+        SDL_Rect destRect;
+
+        if (i == 0) {
+            srcRect = {40, 41, 380 - 40, 76 - 41};
+        }else {
+            srcRect = {73, 41, 380 - 72, 76 - 41};
+        }
+
+        destRect = {
+                static_cast<int>(laserStart.x),
+                static_cast<int>(laserStart.y),
+                textureSize, width
+        };
+
+        // Render laser segment with rotation
+        txdMap["LASER::TEXTURE"]->render(srcRect, destRect, h, SDL_FLIP_NONE);
+
+        // Move to the next segment
+        laserStart = laserEnd;
+    }
+}
+
 // Update Controller Functions
 void GameManager::update(float deltaMs) {
+    std::list<entity*> removalList;
     for (auto& e : entityList) {
+        if (e->isDone() || e->getHearts() <= 0) {
+            removalList.push_back(e);
+            continue;
+        }
         if (e->isEntityAnEnemy()) {
             handleEnemyUpdate(e);
         }else if (e->isEntityAPlayer()) {
             handlePlayerUpdate(e);
         }
     }
+    for (auto e : removalList) {
+        entityList.remove(e);
+    }
+    removalList.clear();
 }
 
 void GameManager::playerTakeHit(Player* p, int damage) {
@@ -433,7 +448,7 @@ void GameManager::attachTxd(std::string name, TxdLoader* txd) {
     txdMap[name] = txd;
 }
 
-// Helper Functions
+// Logic Functions
 void GameManager::bounceEntities(entity *e1, entity *e2) {
     vector2 e1Pos = e1->getPosition();
     vector2 e2Pos = e2->getPosition();

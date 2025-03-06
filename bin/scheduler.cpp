@@ -255,6 +255,15 @@ int applySettings() {
         debugMode = gameStorage["settings"]["debugMode"].get<int>();
     }
 
+    updateSettings(); // Update non stored settings based on the new changes
+    return 0;
+}
+
+int loadGameStorage() {
+    gameStorage.update();
+    applySettings(); // Apply the settings from the storage file
+    gameStorage["loads"] = gameStorage["loads"] != nullptr ? gameStorage["loads"].get<int>() + 1 : 1; // Increment the loads counter
+    gameStorage.save();
     return 0;
 }
 
@@ -277,11 +286,7 @@ int main(int argc, char* argv[])
     processManager.attachProcess(viewProcess);
 
     // Load JSON storage file
-    gameStorage.update();
-    applySettings(); // Apply the settings from the storage file
-    updateSettings(); // Update non stored settings based on the new changes
-    gameStorage["loads"] = gameStorage["loads"] != nullptr ? gameStorage["loads"].get<int>() + 1 : 1; // Increment the loads counter
-    gameStorage.save();
+    loadGameStorage();
 
     // Seed the random number generator
     if (debugMode == 1) {
@@ -291,7 +296,7 @@ int main(int argc, char* argv[])
         srand(static_cast<unsigned int>(startTime.time_since_epoch().count()));
     }
 
-    // On Config Change
+    // Config Changes
     viewProcess->AddEventHandler("UFO::OnConfigUpdate", [](const std::string configName) {
         updateSettings(); // Update settings based on global variables
 
@@ -323,9 +328,6 @@ int main(int argc, char* argv[])
         CreateDebugText(passFunc, processManager);
     });
 
-    CreateDebugText(passFunc, processManager); // test for new game
-    CreateGameEnvironment(passFunc, processManager); // test for new game
-
     viewProcess->AddEventHandler("UFO::EndGame", [&viewProcess, passFunc, &processManager](int winner) {
         print("Ending Game Loop: ", winner);
         viewProcess->TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
@@ -350,6 +352,7 @@ int main(int argc, char* argv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1 ms to allow the view process to initialize fully
         SDL_Window* window = viewProcess->getWindow();
         float deltaMs = 0;
+        viewProcess->TriggerEvent("UFO::StartGame"); // debug start game (later on we will have a main menu)
         while (!threadDone) {
             deltaMs = getTimeElapsed();
             deltaMs *= gameTimeFactor;

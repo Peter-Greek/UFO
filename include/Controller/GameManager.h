@@ -37,10 +37,12 @@
 #include "xProcess.h"
 #include "Player.h"
 #include "AT.h"
+#include "Laser.h"
 #include "camera.h"
 #include "text.h"
 #include "AsepriteLoader.h"
 #include "TxdLoader.h"
+#include "vector2.h"
 
 class GameManager : public xProcess {
 private:
@@ -79,6 +81,10 @@ public:
 
 
     void playerTakeHit(Player *p, int damage);
+
+    void renderLaser(vector2 screenCoords, vector2 dim, Laser *l);
+
+    void renderEnemy(vector2 screenCoords, vector2 dim, entity *e);
 };
 
 
