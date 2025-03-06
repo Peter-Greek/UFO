@@ -91,6 +91,14 @@ int view::initialize() {
         }
     });
 
+    AddEventHandler("SDL::Render::DrawPoint", [this](int x, int y) {
+        SDL_RenderDrawPoint(renderer, x, y);
+    });
+
+    AddEventHandler("SDL::Render::DrawPointFromVector", [this](vector2 point) {
+        SDL_RenderDrawPoint(renderer, static_cast<int>(point.x), static_cast<int>(point.y));
+    });
+
     AddEventHandler("SDL::Render::SetDrawColor", [this](int r, int g, int b, int a) {
         SDL_SetRenderDrawColor(renderer, r, g, b, a);
     });

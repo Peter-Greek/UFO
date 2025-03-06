@@ -104,8 +104,8 @@ void AsepriteLoader::renderFrame(SDL_Rect srcRect, SDL_Rect destRect, bool flip,
 
 SDL_Rect AsepriteLoader::getFrame(const std::string& frameName) {
     SDL_Rect frame;
-    frame.x = asepriteData["frames"][frameName]["frame"]["x"];
     frame.y = asepriteData["frames"][frameName]["frame"]["y"];
+    frame.x = asepriteData["frames"][frameName]["frame"]["x"];
     frame.w = asepriteData["frames"][frameName]["frame"]["w"];
     frame.h = asepriteData["frames"][frameName]["frame"]["h"];
     return frame;

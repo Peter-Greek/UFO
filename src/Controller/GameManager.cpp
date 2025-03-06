@@ -40,7 +40,7 @@ int GameManager::initialize() {
         if (!gameRunning) {return;}
         if (cam == nullptr) {error("Camera not set in Game Manager");}
         // Update Before render
-
+        renderWorld();
         for (auto& e : entityList) {
             bool isPlayer = e->isEntityAPlayer();
             vector2 currentCoords = e->getPosition();
@@ -247,6 +247,45 @@ void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
 
         // Move to the next segment
         laserStart = laserEnd;
+    }
+}
+
+void GameManager::renderWorld() {
+    // loop through worldData.rooms and then draw each wall in it
+    if (worldMap == nullptr) {
+        error("World Map not set in Game Manager");
+        return;
+    }
+
+    if (debugMode == 1) {
+        print("Draw World");
+        jsonLoader worldData = worldMap->getWorldData();
+        if (worldData["rooms"].empty() == 0) {
+            for (auto& room : worldData["rooms"]) {
+                for (auto& wall : room["walls"]) {
+                    // make dashed line for each wall in the direction of center following h till length
+                    // use triggerevent SDL::Render::DrawPoint
+                    auto h = (Heading)wall["h"].get<int>();
+                    int len = wall["l"].get<int>();
+                    int wid = wall["w"].get<int>();
+                    vector2 startPoint = wall["coords"].get<vector2>();
+                    for (int w = 0; w < wid; ++w) {
+                        auto h2 =  Heading (h.get() + 90);
+                        vector2 curPoint = startPoint + (angleToVector2(h2) * (float) w);
+                        for (int l = 0; l < len; ++l) {
+                            vector2 dir = angleToVector2(h);
+                            vector2 thisPoint = curPoint + (dir * (float) l);
+                            if (l % 6) {
+                                if (cam->isPointInView(thisPoint)) {
+                                    vector2 screenCoords = cam->worldToScreenCoords(thisPoint);
+                                    TriggerEvent("SDL::Render::DrawPoint", (int) screenCoords.x, (int) screenCoords.y);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -462,4 +501,8 @@ void GameManager::bounceEntities(entity *e1, entity *e2) {
     e2->setVelocity(newVel);
     e1->setKnockedBack(true);
     e2->setKnockedBack(true);
+}
+
+void GameManager::setWorld(world *w) {
+    worldMap = w;
 }

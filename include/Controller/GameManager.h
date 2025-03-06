@@ -39,6 +39,7 @@
 #include "AT.h"
 #include "Laser.h"
 #include "camera.h"
+#include "world.h"
 #include "text.h"
 #include "AsepriteLoader.h"
 #include "TxdLoader.h"
@@ -54,6 +55,7 @@ private:
     std::map<std::string, TxdLoader*> txdMap;
     std::ostringstream oss;
     camera* cam;
+    world* worldMap;
 
     passFunc_t passFunc;
 public:
@@ -68,6 +70,7 @@ public:
 
     void attachEntity(entity* e);
     void setCamera(camera* c);
+    void setWorld(world *w);
     void attachText(std::string name, text* t);
     void attachAseprite(std::string name, AsepriteLoader *a);
     void attachTxd(std::string name, TxdLoader *txd);
@@ -85,6 +88,8 @@ public:
     void renderLaser(vector2 screenCoords, vector2 dim, Laser *l);
 
     void renderEnemy(vector2 screenCoords, vector2 dim, entity *e);
+
+    void renderWorld();
 };
 
 

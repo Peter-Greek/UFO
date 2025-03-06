@@ -50,6 +50,9 @@ public:
         i >> jsonData;
     }
 
+    // add a default constructor
+    jsonLoader() = default;
+
     nlohmann::json& get() {
         return jsonData;
     }
