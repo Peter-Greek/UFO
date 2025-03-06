@@ -40,12 +40,10 @@
 class text : public xProcess {
 public:
     explicit text(passFunc_t& func, std::string textContentInput) : xProcess(true, func) {
-        print("Text Constructor: ", textContentInput);
         textContent = textContentInput;
         setTextRelativePosition(0.0, 0.5);
     }
     explicit text(passFunc_t& func, std::string textContentInput, int toFontSize) : xProcess(true, func) {
-        print("Text Constructor: ", textContentInput);
         textContent = textContentInput;
         setTextRelativePosition(0.0, 0.5);
         fontSize = toFontSize;

@@ -27,28 +27,52 @@
  *
  */
 
-#ifndef CSCI437_CONFIG_H
-#define CSCI437_CONFIG_H
+//
+// Created by xerxe on 3/6/2025.
+//
 
-#include <cmath>
-#include "Util.h"
+#ifndef CSCI437_JSONLOADER_H
+#define CSCI437_JSONLOADER_H
 
+#include <string>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <utility>
+using json = nlohmann::json;
 
-// Declare global variables with extern
-extern bool unlimitedFrames;
-extern int debugMode;
+class jsonLoader {
+private:
+    std::string jsonPath;
+    nlohmann::json jsonData;
+public:
+    explicit jsonLoader(std::string path) : jsonPath(std::move(path)) {
+        std::ifstream i(jsonPath);
+        i >> jsonData;
+    }
 
-extern int SCREEN_WIDTH;
-extern int SCREEN_HEIGHT;
+    nlohmann::json& get() {
+        return jsonData;
+    }
 
-extern vector2 WORLD_MIN;
-extern vector2 WORLD_MAX;
-extern float WORLD_MIN_X;
-extern float WORLD_MIN_Y;
-extern float WORLD_MAX_X;
-extern float WORLD_MAX_Y;
+    void set(nlohmann::json data) {
+        jsonData = std::move(data);
+    }
 
-// Function to update settings dynamically
-void updateSettings();
+    void save() {
+        std::ofstream o(jsonPath);
+        o << std::setw(4) << jsonData << std::endl;
+    }
 
-#endif // CSCI437_CONFIG_H
+    void update() {
+        std::ifstream i(jsonPath);
+        i >> jsonData;
+    }
+
+    // Overload operator[] for getting/setting values
+    json& operator[](const std::string& key) {
+        return jsonData[key];
+    }
+};
+using jLoader = jsonLoader;
+
+#endif //CSCI437_JSONLOADER_H

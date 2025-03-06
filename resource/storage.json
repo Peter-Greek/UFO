@@ -1,10 +1,7 @@
 {
-    "loads": 666,
+    "loads": 670,
     "settings": {
-        "centerStraightened": false,
         "debugMode": 0,
-        "interestingBounces": false,
-        "rampUpPaddleSpeed": false,
         "unlimitedFrames": false
     }
 }

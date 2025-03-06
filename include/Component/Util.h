@@ -40,15 +40,17 @@
 #include <cmath>
 
 #include <nlohmann/json.hpp>
+#include "vector2.h"
+#include "heading.h"
+
 using json = nlohmann::json;
 using UUID = std::string;
 using passFunc_t = std::function<void(const std::string& eventName, const json& eventData)>;
+using vectorList_t = std::vector<vector2>;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
-
 
 template<class... Args>
 void print(Args&&... args)
@@ -71,143 +73,6 @@ float map_range(float s, float a1, float a2, float b1, float b2);
 double map_range(double s, double a1, double a2, double b1, double b2);
 int map_range(int s, int a1, int a2, int b1, int b2);
 
-class vector2 {
-public:
-    vector2(): x(0.0f), y(0.0f) {}
-
-    vector2(float x, float y): x(x), y(y){}
-
-    vector2 operator+(float f) const
-    {
-        return {x + f, y + f};
-    }
-
-    vector2 operator-(float f) const
-    {
-        return {x - f, y - f};
-    }
-
-    vector2 operator*(float f) const
-    {
-        return {x * f, y * f};
-    }
-
-    vector2 operator/(float f) const
-    {
-        return {x / f, y / f};
-    }
-
-    vector2 operator-() const
-    {
-        return {-x, -y};
-    }
-
-    vector2 operator+(vector2 v2) const
-    {
-        return {x + v2.x, y + v2.y};
-    }
-
-    vector2 operator-(vector2 v2) const
-    {
-        return {x - v2.x, y - v2.y};
-    }
-
-    vector2 operator*(vector2 v2) const
-    {
-        return {x * v2.x, y * v2.y};
-    }
-
-    vector2 operator/(vector2 v2) const
-    {
-        return {x / v2.x, y / v2.y};
-    }
-
-    vector2& operator+=(const vector2 v2)
-    {
-        x += v2.x;
-        y += v2.y;
-        return *this;
-    }
-
-    vector2& operator-=(const vector2 v2)
-    {
-        x -= v2.x;
-        y -= v2.y;
-        return *this;
-    }
-
-    vector2& operator*=(const vector2 v2)
-    {
-        x *= v2.x;
-        y *= v2.y;
-        return *this;
-    }
-
-    vector2& operator/=(const vector2 v2)
-    {
-        x /= v2.x;
-        y /= v2.y;
-        return *this;
-    }
-
-    bool operator==(const vector2 v2) const
-    {
-        return x == v2.x && y == v2.y;
-    }
-
-    bool operator!=(const vector2 v2) const
-    {
-        return x != v2.x || y != v2.y;
-    }
-
-    float dot(const vector2 v2) const
-    {
-        return x * v2.x + y * v2.y;
-    }
-
-    float cross(const vector2 v2) const
-    {
-        return x * v2.y - y * v2.x;
-    }
-
-    float length() const
-    {
-        return sqrt(x * x + y * y);
-    }
-
-    float len() const
-    {
-        return sqrt(x * x + y * y);
-    }
-
-    float lengthSquared() const {
-        return x * x + y * y;
-    }
-
-    vector2 normalize() const
-    {
-        float l = length();
-        return {x / l, y / l};
-    }
-
-    // tostring
-    std::string to_string() const
-    {
-        return "vector2(" + std::to_string(x) + ", " + std::to_string(y) + ")";
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const vector2& v) {
-        os << "(" << v.x << ", " << v.y << ")";
-        return os;
-    }
-
-    float x, y;
-
-
-};
-
-using vectorList_t = std::vector<vector2>;
-
 // Vector2 JSON Serialization
 inline void to_json(json &j, const vector2 &s)
 {
@@ -221,74 +86,11 @@ inline void from_json(const json &j, vector2 &s)
     s.y = j.at("Y").get<float>();
 }
 
-
-// Heading Class
-class BoundedInt {
-private:
-    int value;
-    const int min;
-    const int max;
-
-    // Helper function to enforce bounds
-    int clamp(int v) const {
-        if (v < min) return min;
-        if (v > max) return max;
-        return v;
-    }
-
-    // Helper function to wrap within bounds (for cyclic values like heading)
-    int wrap(int v) const {
-        int range = max - min + 1;
-        return ((v - min) % range + range) % range + min;
-    }
-
-public:
-    BoundedInt(int v, int minVal, int maxVal) : min(minVal), max(maxVal) {
-        value = wrap(v);
-    }
-
-    // Getters
-    int get() const { return value; }
-
-    // Set value with clamping
-    void set(int v) { value = wrap(v); }
-
-    // Operators
-    BoundedInt& operator=(int v) {
-        set(v);
-        return *this;
-    }
-
-    BoundedInt& operator+=(int v) {
-        set(value + v);
-        return *this;
-    }
-
-    BoundedInt& operator-=(int v) {
-        set(value - v);
-        return *this;
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const BoundedInt& bi) {
-        os << bi.value;
-        return os;
-    }
-};
-
-// Specialization for heading (0-360)
-class Heading : public BoundedInt {
-public:
-    Heading(int v = 0) : BoundedInt(v, 0, 360) {}
-};
-
+// Vector and Heading Functions
 Heading getHeadingFromVector(const vector2& v);
-
 Heading getHeadingFromVectors(const vector2& v1, const vector2& v2);
-
 vector2 angleToVector2(float angle);
 vector2 angleToVector2(Heading angle);
-
-
 vectorList_t calculateBoundingBox(const vector2& min, const vector2& max);
 std::pair<float, float> calculateDimensions(const std::vector<vector2>& points);
 bool isPointInBounds(const vector2& point, const vectorList_t& polygon);

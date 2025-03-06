@@ -44,6 +44,7 @@
 #include <fstream>
 
 #include <SDL.h>
+#include "jsonLoader.h"
 #include "Util.h"
 #include "config.h"
 #include "ProcessManager.h"
@@ -56,19 +57,14 @@
 #include "camera.h"
 #include "Laser.h"
 #include "AT.h"
-
 #include "AsepriteLoader.h"
 
 // Scheduler Variables
-json gameStorage;
+jLoader gameStorage("../resource/storage.json");
 bool threadDone = false;
 long gameTimeFactor = 1;
 float gameTime = 0;
 static auto startTime = std::chrono::high_resolution_clock::now();
-
-// Game Variables
-int gameMode = 1; // 1 for pve, 2 for pvp
-int difficulty = 2; // 1 for easy, 2 for medium, 3 for hard
 
 // Scheduler Functions
 float getTimeElapsed()
@@ -85,22 +81,27 @@ float GetGameTimer() {
     return gameTime;
 }
 
-void Update(float deltaMs)
-{
-    // main scheduler update function idk add stuff if u want
+// Timeout System
+std::mutex m;
+void setTimeout(int delay, std::function<void()> function) {
+    std::thread t([delay, function]() {
+        // mutex to lock the thread
+        std::lock_guard<std::mutex> lock(m);
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+        function();
+    });
+    t.detach();
 }
 
 void CreateDebugText(passFunc_t passFunc, ProcessManager& processManager)
 {
     std::string frameTextContent = "Unlimited Frames: " + std::to_string(unlimitedFrames);
-    print("New Frame Text: ", frameTextContent);
     text* frameText = new text(passFunc, frameTextContent);
     frameText->setTextRelativePosition(0.0f, 0.8f);
     processManager.attachProcess(frameText);
 
 
     std::string fpsTextContent = "FPS: " + std::to_string(unlimitedFrames);
-    print("New Frame Text: ", fpsTextContent);
     text* fpsText = new text(passFunc, fpsTextContent);
     fpsText->setTextRelativePosition(0.0f, -0.8f);
     fpsText->AddEventHandler("SDL::OnUpdate", [fpsText](float deltaMs) {
@@ -110,7 +111,6 @@ void CreateDebugText(passFunc_t passFunc, ProcessManager& processManager)
     processManager.attachProcess(fpsText);
 
     std::string gameTimeContent = "Time: " + std::to_string(gameTime);
-    print("New Frame Text: ", gameTimeContent);
     text* gameTimeText = new text(passFunc, gameTimeContent);
     gameTimeText->setTextRelativePosition(0.0f, 0.6f);
     gameTimeText->AddEventHandler("SDL::OnUpdate", [gameTimeText](float deltaMs) {
@@ -122,9 +122,7 @@ void CreateDebugText(passFunc_t passFunc, ProcessManager& processManager)
 
     frameText->AddEventHandler("UFO::OnConfigUpdate", [frameText, fpsText, gameTimeText](const std::string configName) {
         if (configName == "unlimitedFrames") {
-            print("Frame Text Update: ", configName);
             std::string frameTextContent = "Unlimited Frames: " + std::to_string(unlimitedFrames);
-            print("New Frame Text: ", frameTextContent);
             frameText->setText(frameTextContent);
         }else if (configName == "debugMode") {
             if (debugMode == 1) {
@@ -247,49 +245,6 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     oxy->spawn();
 }
 
-
-// JSON and Settings Functions
-int loadJsonStorage() {
-    std::string jPath = "../resource/storage.json";
-    std::ifstream f(jPath);
-
-    if (!f.is_open()) {
-        error("Failed to open JSON storage file: ", jPath);
-        return 1;
-    }
-
-    json data = json::parse(f);
-    gameStorage = data;
-
-    print("Loaded JSON storage file: ", data.dump());
-
-    return 0;
-}
-
-int saveJsonStorage() {
-    std::string jPath = "../resource/storage.json";
-
-    // Open file stream for writing
-    std::ofstream f(jPath);
-    if (!f.is_open()) {
-        error("Failed to open JSON storage file for saving: ", jPath);
-        return 1;
-    }
-
-    // Serialize and write JSON data to file
-    try {
-        f << gameStorage.dump(4); // Pretty-print with 4-space indentation
-        f.close();
-        print("Successfully saved JSON storage file.");
-        return 0;
-    } catch (const std::exception& e) {
-        error("Failed to save JSON storage file: ", e.what());
-        return 1;
-    }
-
-    return 0;
-}
-
 int applySettings() {
     gameStorage["settings"] = gameStorage["settings"] != nullptr ? gameStorage["settings"] : json::object();
     if (gameStorage["settings"]["unlimitedFrames"] != nullptr) {
@@ -300,32 +255,7 @@ int applySettings() {
         debugMode = gameStorage["settings"]["debugMode"].get<int>();
     }
 
-    if (gameStorage["settings"]["interestingBounces"] != nullptr) {
-        interestingBounces = gameStorage["settings"]["interestingBounces"].get<bool>();
-    }
-
-    if (gameStorage["settings"]["centerStraightened"] != nullptr) {
-        centerStraightened = gameStorage["settings"]["centerStraightened"].get<bool>();
-    }
-
-    if (gameStorage["settings"]["rampUpPaddleSpeed"] != nullptr) {
-        rampUpPaddleSpeed = gameStorage["settings"]["rampUpPaddleSpeed"].get<bool>();
-    }
-
     return 0;
-}
-
-
-// Timeout System
-std::mutex m;
-void setTimeout(int delay, std::function<void()> function) {
-    std::thread t([delay, function]() {
-        // mutex to lock the thread
-        std::lock_guard<std::mutex> lock(m);
-        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-        function();
-    });
-    t.detach();
 }
 
 
@@ -337,8 +267,6 @@ int main(int argc, char* argv[])
     // Game Init
     print("Game Init");
 
-    // Create Main Processes
-
     // Pass function to all processes to trigger events in the rest of the processes
     passFunc_t passFunc = [&processManager](const std::string& eventName, const json& eventData) {
         processManager.triggerEventInAll(eventName, eventData);
@@ -349,12 +277,13 @@ int main(int argc, char* argv[])
     processManager.attachProcess(viewProcess);
 
     // Load JSON storage file
-    loadJsonStorage();
+    gameStorage.update();
     applySettings(); // Apply the settings from the storage file
     updateSettings(); // Update non stored settings based on the new changes
     gameStorage["loads"] = gameStorage["loads"] != nullptr ? gameStorage["loads"].get<int>() + 1 : 1; // Increment the loads counter
-    saveJsonStorage();
+    gameStorage.save();
 
+    // Seed the random number generator
     if (debugMode == 1) {
         srand(69420);
     }else {
@@ -362,23 +291,16 @@ int main(int argc, char* argv[])
         srand(static_cast<unsigned int>(startTime.time_since_epoch().count()));
     }
 
-    // Timeouts
-    viewProcess->AddEventHandler("Pong::TriggerEventWithTimeout", [viewProcess](std::string eventName, int delay) {
-        setTimeout(delay, [eventName, viewProcess]() {
-            viewProcess->TriggerEvent(eventName);
-        });
-    });
-
     // On Config Change
     viewProcess->AddEventHandler("UFO::OnConfigUpdate", [](const std::string configName) {
         updateSettings(); // Update settings based on global variables
 
         if (configName == "unlimitedFrames") {
             gameStorage["settings"]["unlimitedFrames"] = unlimitedFrames;
-            saveJsonStorage();
+            gameStorage.save();
         } else if (configName == "debugMode") {
             gameStorage["settings"]["debugMode"] = debugMode;
-            saveJsonStorage();
+            gameStorage.save();
         }
     });
 
@@ -395,27 +317,22 @@ int main(int argc, char* argv[])
     });
 
     // Create Main Menu
-    viewProcess->AddEventHandler("Pong::StartGame", [&processManager, passFunc](int gameModePass, int difficultyPass) {
-        // abort main menu
-
-        gameMode = gameModePass;
-        difficulty = difficultyPass;
-
+    viewProcess->AddEventHandler("UFO::StartGame", [&processManager, passFunc]() {
         // Create Game Environment
         CreateGameEnvironment(passFunc, processManager);
         CreateDebugText(passFunc, processManager);
     });
 
-    CreateDebugText(passFunc, processManager); // test for new game not pong
-    CreateGameEnvironment(passFunc, processManager); // test for new game not pong
+    CreateDebugText(passFunc, processManager); // test for new game
+    CreateGameEnvironment(passFunc, processManager); // test for new game
 
-    viewProcess->AddEventHandler("Pong::EndGame", [&viewProcess, passFunc, &processManager](int winner) {
-        print("Ending Game: ", winner);
-        viewProcess->TriggerEvent("Pong::OnGameEnd"); // clean up the current game environment
+    viewProcess->AddEventHandler("UFO::EndGame", [&viewProcess, passFunc, &processManager](int winner) {
+        print("Ending Game Loop: ", winner);
+        viewProcess->TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
         // Create a new main menu with the winner
     });
 
-    viewProcess->AddEventHandler("Pong::Quit", [&viewProcess, &processManager]() {
+    viewProcess->AddEventHandler("UFO::Quit", [&viewProcess, &processManager]() {
         print("Quitting Game");
         threadDone = true;
     });
@@ -441,7 +358,6 @@ int main(int argc, char* argv[])
                 processManager.updateProcessList(deltaMs, window);
             }
             viewProcess->update(deltaMs); // Update the view process last as all the logic gets updated before this
-            Update(deltaMs);
             if (!unlimitedFrames) std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
             if (viewProcess->isDone()) {

@@ -37,7 +37,6 @@
 #include <utility>
 
 int TxdLoader::initialize_SDL_process(SDL_Window *passed_window) {
-    print("TxdLoader Initialize SDL Process: ", passed_window);
     window = passed_window;
 
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {

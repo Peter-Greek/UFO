@@ -34,7 +34,6 @@
 #include <utility>
 
 int text::initialize_SDL_process(SDL_Window* passed_window) {
-    print("Text Initialize SDL Process: ", passed_window);
     window = passed_window;
 
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -90,35 +89,20 @@ int text::initialize_SDL_process(SDL_Window* passed_window) {
         return 0;
     }
 
-
-//    TTF_SizeText(font, textInput, &textWidth, &textHeight);
     SDL_QueryTexture(texture, nullptr, nullptr, &textWidth, &textHeight);
 
-
-
-    print("Pre-Render Text: ", textInput, ' ', textWidth, ' ', textHeight);
     dst.x = position.x;
     dst.y = position.y;
     dst.w = textWidth;
     dst.h = textHeight;
 
-
-    // delete image
-
-
-    /*** Main Loop ***/
-    print("Text: ", textInput, " is hidden: ", isHidden);
     running = !isHidden;
-
-
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         // While application is running
         if (!running) return;
         SDL_SetTextureColorMod(texture, red * 255, green * 255, blue * 255);
         SDL_RenderCopyEx(renderer, texture, nullptr, &dst, angle, &rot, SDL_FLIP_NONE);
     });
-
-
 
     if (isHidden) {
         SDL_FreeSurface( sText );
