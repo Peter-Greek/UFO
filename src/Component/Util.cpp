@@ -119,6 +119,49 @@ bool isPointInBounds(const vector2& point, const vectorList_t& polygon) {
     return oddNodes;
 }
 
+bool doLinesIntercept(vector2 v1, vector2 v2, vector2 v3, vector2 v4) {
+    float d = (v4.y - v3.y) * (v2.x - v1.x) - (v4.x - v3.x) * (v2.y - v1.y);
+    float n_a = (v4.x - v3.x) * (v1.y - v3.y) - (v4.y - v3.y) * (v1.x - v3.x);
+    float n_b = (v2.x - v1.x) * (v1.y - v3.y) - (v2.y - v1.y) * (v1.x - v3.x);
+
+    if (d == 0) {
+        return false;
+    }
+
+    float ua = n_a / d;
+    float ub = n_b / d;
+
+    return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
+}
+
+int getInterceptDist(vector2 v1, vector2 v2, vector2 v3, vector2 v4) {
+    float d = (v4.y - v3.y) * (v2.x - v1.x) - (v4.x - v3.x) * (v2.y - v1.y);
+    float n_a = (v4.x - v3.x) * (v1.y - v3.y) - (v4.y - v3.y) * (v1.x - v3.x);
+    float n_b = (v2.x - v1.x) * (v1.y - v3.y) - (v2.y - v1.y) * (v1.x - v3.x);
+
+    if (d == 0) {
+        return -1;
+    }
+
+    float ua = n_a / d;
+    float ub = n_b / d;
+
+    if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+        return ua * (v2 - v1).length();
+    }
+
+    return -1;
+}
+
+float getPerpendicularDistance(vector2 point, vector2 lineStart, vector2 lineEnd) {
+    float numerator = std::abs((lineEnd.x - lineStart.x) * (lineStart.y - point.y) -
+                               (lineStart.x - point.x) * (lineEnd.y - lineStart.y));
+
+    float denominator = (lineEnd - lineStart).length(); // Distance between start and end
+
+    return (denominator == 0.0f) ? 0.0f : numerator / denominator;
+}
+
 // Singleton random engine
 std::random_device rd;
 std::mt19937 gen(rd());

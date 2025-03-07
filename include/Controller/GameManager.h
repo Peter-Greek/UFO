@@ -34,6 +34,7 @@
 #ifndef CSCI437_GAMEMANAGER_H
 #define CSCI437_GAMEMANAGER_H
 
+#include <SDL.h>
 #include "xProcess.h"
 #include "Player.h"
 #include "AT.h"
@@ -46,6 +47,8 @@
 #include "vector2.h"
 
 class GameManager : public xProcess {
+public:
+    enum db_WCS {CREATION_NOT_STARTED, COORDS_SET, LENGTH_SET, WIDTH_SET, WALL_CREATED};
 private:
     bool gameRunning = false;
     std::list<entity*> entityList;
@@ -58,6 +61,15 @@ private:
     world* worldMap;
 
     passFunc_t passFunc;
+
+
+    wall* debugWall = nullptr;
+    // debug wall creation state
+    db_WCS debugWallSate = CREATION_NOT_STARTED;
+    bool inClick = false;
+    int db_room_index = -1;
+    int db_wall_index = -1;
+
 public:
     explicit GameManager(passFunc_t& func) : xProcess(false, func), passFunc(func) {}
 
@@ -89,7 +101,11 @@ public:
 
     void renderEnemy(vector2 screenCoords, vector2 dim, entity *e);
 
-    void renderWorld();
+    void renderWorld(float deltaMs);
+
+    void handleDebugWorldCreator(float deltaMs);
+
+    void drawWall(wall *cur_wall);
 };
 
 

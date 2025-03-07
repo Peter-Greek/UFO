@@ -39,7 +39,6 @@ int entity::initialize() {
 }
 
 void entity::update(float deltaMs) {
-    updateCoordsFromVelocity(deltaMs);
     updateInvincibility(deltaMs);
 }
 
@@ -113,6 +112,7 @@ vector2 entity::getPosition() {
 }
 
 void entity::updateCoordsFromVelocity(float deltaMs) {
+    lastCoords = {coords.x, coords.y};
     coords += vel * deltaMs;
 
     if (coords.y < WORLD_MIN_Y) {
@@ -120,6 +120,10 @@ void entity::updateCoordsFromVelocity(float deltaMs) {
     } else if (coords.y > WORLD_MAX_Y - 10) {
         coords.y = WORLD_MAX_Y - 10;
     }
+}
+
+vector2 entity::getLastCoords() {
+    return lastCoords;
 }
 
 // Velocity Methods

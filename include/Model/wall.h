@@ -39,15 +39,20 @@
 class wall {
 public:
     vector2 position;
-    float length;
-    float width;
-    float angle; // Rotation in degrees
+    int length;
+    int width;
+    Heading heading = Heading(0); // Rotation in degrees
+    std::vector<vector2> corners;
 
-    wall(const vector2& pos, float len, float w, float a)
-            : position(pos), length(len), width(w), angle(a) {}
+    wall(const vector2& pos, int len, int w, int h)
+            : position(pos), length(len), width(w), heading(h) {
+        corners = getCorners();
+    }
 
-    [[nodiscard]] std::array<vector2, 4> getCorners() const {
-        vector2 dir = angleToVector2(angle); // Convert angle to unit direction
+    wall() = default;
+
+    [[nodiscard]] std::vector<vector2> getCorners() const {
+        vector2 dir = angleToVector2(heading); // Convert angle to unit direction
         vector2 perp(-dir.y, dir.x); // Perpendicular for width
 
         vector2 p1 = position - (perp * (width / 2)); // Bottom-left
@@ -57,6 +62,28 @@ public:
 
         return {p1, p2, p3, p4};
     }
+
+    [[nodiscard]] bool isPointInWall(vector2 vec) const {
+        return isPointInBounds(vec, corners);
+    }
+
+    void to_json(json& j) const {
+        j = json {
+            {"coords", position},
+            {"l", length},
+            {"w", width},
+            {"h", heading.get()}
+        };
+    }
+
+    void from_json(const json& j) {
+        position = j.at("coords").get<vector2>();
+        length = j.at("l").get<int>();
+        width = j.at("w").get<int>();
+        heading = Heading(j.at("h").get<int>());
+        corners = getCorners();
+    }
+
 };
 
 #endif //CSCI437_WALL_H

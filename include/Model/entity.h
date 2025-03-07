@@ -62,6 +62,7 @@ private:
     int hearts;
     int maxHearts;
     vector2 coords;
+    vector2 lastCoords;
     vector2 vel;
 
     bool inKnockback = false;
@@ -84,6 +85,7 @@ public:
     ) : xProcess(false, func),hearts(hearts), maxHearts(hearts), coords(position) {
         type = static_cast<eType>(eTypeIndex);
         spawnCoords = {position.x, position.y};
+        lastCoords = {position.x, position.y};
         setDefaultLengthWidth();
     }
 
@@ -94,6 +96,7 @@ public:
     ) : xProcess(false, func), length(length), width(width), hearts(hearts), maxHearts(hearts), coords(position) {
         type = static_cast<eType>(eTypeIndex);
         spawnCoords = {position.x, position.y};
+        lastCoords = {position.x, position.y};
         setDefaultLengthWidth();
     }
 
@@ -132,6 +135,7 @@ public:
     void setPosition(vector2 newPosition);
     vector2 getPosition();
     void updateCoordsFromVelocity(float deltaMs);
+    vector2 getLastCoords();
 
     void setVelocity(vector2 newVelocity);
     vector2 getVelocity();
@@ -145,6 +149,8 @@ public:
     void setEntityInvincible(bool invincible);
     void setEntityInvincible(bool invincible, float time);
     void setEntityInvincibleTime(float time);
+
+
 };
 
 

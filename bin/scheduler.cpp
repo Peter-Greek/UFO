@@ -155,9 +155,19 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     auto* w = new world(passFunc);
     processManager.attachProcess(w);
     gM->setWorld(w);
-//    auto* wTxd = new TxdLoader(passFunc, "../resource/wall.png");
-//    processManager.attachProcess(wTxd);
-//    gM->attachTxd("WALL::TEXTURE", wTxd);
+
+    auto* wTxd = new TxdLoader(passFunc, "../resource/wall.png");
+    processManager.attachProcess(wTxd);
+    gM->attachTxd("WALL::TEXTURE", wTxd);
+
+    for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
+        std::string coordsTextContent = "WALL: " + std::to_string(i);
+        auto* cText = new text(passFunc, coordsTextContent, 35);
+        cText->setTextRelativePosition(-1.0f, (-0.1f * (i + 1)));
+        processManager.attachProcess(cText);
+        gM->attachText("DEBUG::WALL::" + std::to_string(i), cText);
+        cText->hideText();
+    }
 
     // Create Camera
     auto* cam = new camera(passFunc);
@@ -269,28 +279,10 @@ int applySettings() {
     return 0;
 }
 
-int loadWorld() {
-    gameStorage["world"] = gameStorage["world"] != nullptr ? gameStorage["world"] : json::object();
-    if (gameStorage["world"]["rooms"] == nullptr) {
-        gameStorage["world"]["rooms"] = json::array();
-    }
-
-    if (gameStorage["world"]["doors"] == nullptr) {
-        gameStorage["world"]["doors"] = json::array();
-    }
-
-    if (gameStorage["world"]["startPoint"] == nullptr) {
-        gameStorage["world"]["startPoint"] = vector2 {0.0f, 0.0f};
-    }
-
-    return 0;
-}
-
 int loadGameStorage() {
     gameStorage.update();
     applySettings(); // Apply the settings from the storage file
     gameStorage["loads"] = gameStorage["loads"] != nullptr ? gameStorage["loads"].get<int>() + 1 : 1; // Increment the loads counter
-    loadWorld();
     gameStorage.save();
     return 0;
 }

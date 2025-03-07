@@ -1,15 +1,7 @@
 {
-    "loads": 697,
+    "loads": 732,
     "settings": {
         "debugMode": 1,
         "unlimitedFrames": false
-    },
-    "world": {
-        "doors": [],
-        "rooms": [],
-        "startPoint": {
-            "X": 0.0,
-            "Y": 0.0
-        }
     }
 }

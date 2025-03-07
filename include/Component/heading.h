@@ -40,8 +40,8 @@
 class BoundedInt {
 private:
     int value;
-    const int min;
-    const int max;
+    int min;
+    int max;
 
     // Helper function to enforce bounds
     [[nodiscard]] int clamp(int v) const {
@@ -59,6 +59,12 @@ private:
 public:
     BoundedInt(int v, int minVal, int maxVal) : min(minVal), max(maxVal) {
         value = wrap(v);
+    }
+
+    BoundedInt() {
+        value = 0;
+        min = 0;
+        max = 0;
     }
 
     // Getters
@@ -93,6 +99,25 @@ public:
 class Heading : public BoundedInt {
 public:
     explicit Heading(int v = 0) : BoundedInt(v, 0, 360) {}
+    // keep the default constructor
+    Heading() : BoundedInt(0, 0, 360) {}
+
+    bool isWithin(int a1, int a2) const {
+        // check if the current heading is within the range of angles
+        if (a1 < a2) {
+            return get() >= a1 && get() <= a2;
+        } else {
+            return get() >= a1 || get() <= a2;
+        }
+    }
+    bool isWithin(Heading a1, Heading a2) const {
+        // check if the current heading is within the range of angles
+        if (a1.get() < a2.get()) {
+            return get() >= a1.get() && get() <= a2.get();
+        } else {
+            return get() >= a1.get() || get() <= a2.get();
+        }
+    }
 };
 
 #endif //CSCI437_HEADING_H

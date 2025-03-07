@@ -142,7 +142,6 @@ void Player::update(float deltaMs) {
     }
 
     setVelocity(newVel);
-    updateCoordsFromVelocity(deltaMs);
 }
 
 bool Player::isFacingLeft() {
@@ -238,8 +237,6 @@ std::string Player::getOxygenString() const {
     }
     return std::to_string(minutes) + ":" + sec;
 }
-
-
 
 // AT functions
 void Player::addATCount() {
