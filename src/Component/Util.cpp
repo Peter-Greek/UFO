@@ -162,6 +162,13 @@ float getPerpendicularDistance(vector2 point, vector2 lineStart, vector2 lineEnd
     return (denominator == 0.0f) ? 0.0f : numerator / denominator;
 }
 
+vectorList_t getMinMaxFromVectors(vector2 v, vector2 v2) {
+    return {
+        {std::min(v.x, v2.x), std::min(v.y, v2.y)},
+        {std::max(v.x, v2.x), std::max(v.y, v2.y)}
+    };
+}
+
 // Singleton random engine
 std::random_device rd;
 std::mt19937 gen(rd());

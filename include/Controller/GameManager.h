@@ -69,6 +69,8 @@ private:
     bool inClick = false;
     int db_room_index = -1;
     int db_wall_index = -1;
+    bool inShiftFind = false;
+    vector2 shiftFindStart;
 
 public:
     explicit GameManager(passFunc_t& func) : xProcess(false, func), passFunc(func) {}

@@ -43,13 +43,24 @@ public:
     void loadWorld();
     void saveWorld();
 
-    jsonLoader getWorldData();
+    jsonLoader& getWorldData();
 
     wallList_t getWallList();
 
     roomList_t getRoomList();
 
     bool isPointInWall(vector2 vector21);
+
+
+    int addRoom();
+
+    void updateWall(int roomId, int wallId, wall *w);
+
+    int addWall(int roomId, wall *w);
+
+    void deleteWall(int roomId, int wallId);
+
+    void deleteRoom(int roomId);
 };
 
 

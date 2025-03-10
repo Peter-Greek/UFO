@@ -97,6 +97,7 @@ bool isPointInBounds(const vector2& point, const vectorList_t& polygon);
 bool doLinesIntercept(vector2 v1, vector2 v2, vector2 v3, vector2 v4);
 int getInterceptDist(vector2 v1, vector2 v2, vector2 v3, vector2 v4);
 float getPerpendicularDistance(vector2 point, vector2 lineStart, vector2 lineEnd);
+vectorList_t getMinMaxFromVectors(vector2 v, vector2 v2);
 
 // random number generator
 float random(float min, float max);

@@ -66,24 +66,40 @@ public:
     [[nodiscard]] bool isPointInWall(vector2 vec) const {
         return isPointInBounds(vec, corners);
     }
-
-    void to_json(json& j) const {
-        j = json {
-            {"coords", position},
-            {"l", length},
-            {"w", width},
-            {"h", heading.get()}
-        };
-    }
-
-    void from_json(const json& j) {
-        position = j.at("coords").get<vector2>();
-        length = j.at("l").get<int>();
-        width = j.at("w").get<int>();
-        heading = Heading(j.at("h").get<int>());
-        corners = getCorners();
-    }
-
 };
+
+inline void to_json(json& j, wall &s) {
+    j = json {
+            {"coords", s.position},
+            {"l", s.length},
+            {"w", s.width},
+            {"h", s.heading.get()}
+    };
+}
+
+inline void from_json(const json& j, wall &s) {
+    s.position = j.at("coords").get<vector2>();
+    s.length = j.at("l").get<int>();
+    s.width = j.at("w").get<int>();
+    s.heading = Heading(j.at("h").get<int>());
+    s.corners = s.getCorners();
+}
+
+inline void to_json(json& j, wall* s) {
+    j = json {
+            {"coords", s->position},
+            {"l", s->length},
+            {"w", s->width},
+            {"h", s->heading.get()}
+    };
+}
+
+inline void from_json(const json& j, wall* s) {
+    s->position = j.at("coords").get<vector2>();
+    s->length = j.at("l").get<int>();
+    s->width = j.at("w").get<int>();
+    s->heading = Heading(j.at("h").get<int>());
+    s->corners = s->getCorners();
+}
 
 #endif //CSCI437_WALL_H
