@@ -66,6 +66,7 @@ private:
     vector2 vel;
 
     bool inKnockback = false;
+    int knockbackRemaining = 0;
     bool isInvincible = false; // is the player invincible
     float invincibleTime = 0; // time left of invincibility
 
@@ -122,7 +123,8 @@ public:
     pType getPickupType();
 
     bool isKnockedBack() const;
-    void setKnockedBack(bool knockedBack);
+    int remainingKnockback() const;
+    void setKnockedBack(bool knockedBack, int knockbackTime);
 
 
     int getHearts() const;

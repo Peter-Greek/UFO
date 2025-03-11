@@ -706,7 +706,7 @@ void GameManager::handleEnemyUpdate(entity* e) {
 
     }else {
         if (curVel.length() == 0.0f) {
-            e->setKnockedBack(false);
+            e->setKnockedBack(false, 0);
         }
     }
 
@@ -772,14 +772,14 @@ void GameManager::bounceEntities(entity *e1, entity *e2) {
     vector2 e2Pos = e2->getPosition();
     Heading h = getHeadingFromVectors(e1Pos, e2Pos);
     print("Bounce Heading: ", h.get());
-    vector2 newVel = angleToVector2(h) * 9.9f;
+    vector2 newVel = angleToVector2(h) * 0.5f;
     h.set(h.get() + 180);
     print("Rebounce Heading: ", h.get());
-    vector2 otherVel = angleToVector2(h) * 9.9f;
+    vector2 otherVel = angleToVector2(h) * 0.5f;
     e1->setVelocity(otherVel);
     e2->setVelocity(newVel);
-    e1->setKnockedBack(true);
-    e2->setKnockedBack(true);
+    e1->setKnockedBack(true, 250);
+    e2->setKnockedBack(true, 250);
 }
 
 

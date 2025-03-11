@@ -140,8 +140,13 @@ bool entity::isKnockedBack() const {
     return inKnockback;
 }
 
-void entity::setKnockedBack(bool knockedBack) {
+int entity::remainingKnockback() const {
+    return knockbackRemaining;
+}
+
+void entity::setKnockedBack(bool knockedBack, int knockbackTime) {
     inKnockback = knockedBack;
+    knockbackRemaining = knockbackTime;
 }
 
 int entity::getLength() {

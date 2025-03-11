@@ -137,8 +137,12 @@ void Player::update(float deltaMs) {
         }
     }
 
-    if (newVel.x == 0.0f && newVel.y == 0.0f && isKnockedBack()) {
-        setKnockedBack(false);
+    if (/*newVel.x == 0.0f && newVel.y == 0.0f*/remainingKnockback() - deltaMs > 0 && isKnockedBack()) {
+        setKnockedBack(true, remainingKnockback() - deltaMs);
+        newVel = curVel;
+    } 
+    else {
+        setKnockedBack(false, 0);
     }
 
     setVelocity(newVel);
