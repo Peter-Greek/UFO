@@ -202,3 +202,11 @@ bool entity::isPointInEntity(vector2 point) const {
 
     return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
 }
+
+void entity::setLength(int newLength) {
+    length = newLength;
+}
+
+void entity::setWidth(int newWidth) {
+    width = newWidth;
+}

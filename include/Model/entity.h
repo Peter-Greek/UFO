@@ -73,19 +73,13 @@ private:
     int length = 10;
     int width = 10;
 
+    int appliedLength = 10; // length applied to the entity
+    int appliedWidth = 10; // width applied to the entity
+
     void setDefaultLengthWidth() {
-        switch (type) {
-            case PLAYER:
-                length = 64;
-                width = 48;
-                break;
-            case ENEMY:
-                length = 32;
-                width = 32;
-                break;
-            default:
-                break;
-        }
+        vector2 def = getDefLengthWidth();
+        length = def.x;
+        width = def.y;
     }
 public:
     explicit entity(
@@ -103,6 +97,8 @@ public:
             int eTypeIndex, int hearts, vector2 position,
             int length, int width
     ) : xProcess(false, func), length(length), width(width), hearts(hearts), maxHearts(hearts), coords(position) {
+        appliedLength = length;
+        appliedWidth = width;
         type = static_cast<eType>(eTypeIndex);
         spawnCoords = {position.x, position.y};
         lastCoords = {position.x, position.y};
@@ -119,8 +115,20 @@ public:
     // get length and width
     [[nodiscard]] int getLength() const;
     [[nodiscard]] int getWidth() const;
+    void setLength(int newLength);
+    void setWidth(int newWidth);
     [[nodiscard]] vector2 getCenter() const;
     [[nodiscard]] vector2 getDimensions() const;
+    vector2 getDefLengthWidth() {
+        switch (type) {
+            case PLAYER:
+                return {64, 48};
+            case ENEMY:
+                return {32, 32};
+            default:
+                return {static_cast<float>(appliedLength), static_cast<float>(appliedWidth)};
+        }
+    }
 
     [[nodiscard]] bool isPointInEntity(vector2 point) const;
 

@@ -182,8 +182,8 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     }
 
     SDL_Rect destRect = {
-            static_cast<int>(screenCoords.x - (32)) ,
-            static_cast<int>(screenCoords.y - (48)) ,
+            static_cast<int>(screenCoords.x - (angle == 90 ? 16.0f : (angle == -90 ? 48.0f : 32.0f))) ,
+            static_cast<int>(screenCoords.y - (std::abs(angle) == 90 ? 32.0f : 48.0f)) ,
             64, // 64 px
             64, // 64 px
     };
