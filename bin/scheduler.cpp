@@ -150,6 +150,13 @@ void CreateDebugText(passFunc_t passFunc, ProcessManager& processManager)
 void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     auto* gM = new GameManager(passFunc);
     processManager.attachProcess(gM);
+    // attach the process manager to the game manager so new entities can be created on the fly
+    gM->attachProcessManager(&processManager);
+
+    gM->AddEventHandler("UFO::CHECK::UUID", [&processManager](UUID id) {
+        print("Checking UUID: ", id);
+        print(processManager.containsUUID(id));
+    });
 
     // Create World
     auto* w = new world(passFunc);
@@ -191,7 +198,14 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     processManager.attachProcess(fAnim);
     gM->attachAseprite("FSS", fAnim);
 
-    auto* ppl = new Player(passFunc);
+    upgradeList_t upgrades = {0, 0, 0, 0, 0}; // for debug purposes eventually will be loaded from json storage
+    upgrades[Player::UPGRADES::OXYGEN]       = 0;
+    upgrades[Player::UPGRADES::SHIELD]       = 0;
+    upgrades[Player::UPGRADES::SPEED]        = 0;
+    upgrades[Player::UPGRADES::INVISIBILITY] = 1;
+    upgrades[Player::UPGRADES::AT_CANNON]    = 1;
+
+    auto* ppl = new Player(passFunc, upgrades);
     processManager.attachProcess(ppl);
     gM->attachEntity(ppl);
     ppl->spawn();

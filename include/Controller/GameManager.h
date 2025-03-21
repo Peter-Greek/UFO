@@ -45,11 +45,13 @@
 #include "AsepriteLoader.h"
 #include "TxdLoader.h"
 #include "vector2.h"
+#include "ProcessManager.h"
 
 class GameManager : public xProcess {
 public:
     enum db_WCS {CREATION_NOT_STARTED, COORDS_SET, LENGTH_SET, WIDTH_SET, WALL_CREATED};
 private:
+    ProcessManager* PM;
     bool gameRunning = false;
     std::list<entity*> entityList;
     std::map<std::string, text*> textMap;
@@ -82,6 +84,7 @@ public:
     void postFail() override {};
     void postAbort() override {};
 
+    void attachProcessManager(ProcessManager* pm);
     void attachEntity(entity* e);
     void setCamera(camera* c);
     void setWorld(world *w);

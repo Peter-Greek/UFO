@@ -85,13 +85,17 @@ int GameManager::initialize() {
                 if (l && l->isFiring()) {
                     renderLaser(screenCoords, dim, l);
                 }
+            }else if (e->isEntityAProjectile()) {
+                TriggerEvent("SDL::Render::SetDrawColor", 255, 255, 255, 255);
+                TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                TriggerEvent("SDL::Render::ResetDrawColor");
             }
         }
-        handleDebugWorldCreator(deltaMs);
+        handleDebugWorldCreator(deltaMs); // handle the debug world creator (used to create walls)
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
-        if (debugMode == 1) {
+        if (isDebug()) {
             if (eventType == SDL_KEYDOWN) {
                 if (key == SDLK_c) {
                     // print cur coords of the player
@@ -116,7 +120,7 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     vector2 currentCoords = e->getPosition();
     vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
 
-    if (debugMode) {
+    if (isDebug()) {
 
         // RelHeading
         int x, y;
@@ -253,7 +257,7 @@ void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
 
 
 void GameManager::handleDebugWorldCreator(float deltaMs) {
-    if (debugMode == 1) {
+    if (isDebug()) {
         // If Ctrl + left click, start create a wall or place point
         // If Ctrl + right click, Undo last point
         // P place point at player coords
@@ -489,7 +493,7 @@ void GameManager::drawWall(wall* cur_wall) {
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x + 5, screenCoords.y, 1, 1);
                 }
 
-                txdMap["WALL::TEXTURE"]->render(srcRect, destRect, h, SDL_FLIP_NONE);
+//                txdMap["WALL::TEXTURE"]->render(srcRect, destRect, h, SDL_FLIP_NONE);
             }
             len += cur_len;
         }
@@ -530,7 +534,7 @@ void GameManager::renderWorld(float deltaMs) {
         return;
     }
 
-    if (debugMode == 1) {
+    if (isDebug()) {
         roomList_t roomList = worldMap->getRoomList();
 
 
@@ -671,6 +675,45 @@ void GameManager::handlePlayerUpdate(entity* e) {
 
         }
     }
+
+    if (p->getOxygenLevel() <= 0.0f && !isDebug()) { // if oxygen level is 0 remove hearts if not in debug mode
+        p->removeHearts(1);
+        textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
+        p->setOxygenLevel(0.0f);
+    }
+
+    if (p->getHearts() <= 0) {
+        gameRunning = false;
+        print("Game Over");
+    }
+
+    if (p->isATCannonFire()) {
+        // create new entity with projectile type and shoot it in front of the player in the direction of the mouse
+        // set the vel of it to be 3x npc speed or player base speed
+
+        if (p->getATCount() > 0 && !p->isProjectileCreated()) {
+            print("Creating Projectile for AT Cannon fire");
+            int damage = p->getATCannonDamage();
+            p->removeATCount(damage); //TODO: might want to change this later on and set it to always be 1
+            print("Removing AT Count FOR SHOOT: ", damage);
+            textMap["ATScore"]->setText("AT: " + std::to_string(p->getATCount()));
+            vector2 playerCoords = p->getPosition();
+            int x, y; SDL_GetMouseState(&x, &y);
+            vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
+            Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
+            vector2 newVel = angleToVector2(h) * 0.15f;
+            auto* proj = new entity(passFunc, entity::PROJECTILE, damage, playerCoords);
+            PM->attachProcess(proj);
+            attachEntity(proj);
+            proj->setVelocity(newVel);
+            p->setProjectileCreated(true);
+            proj->spawn();
+
+            if (p->isInvisible()) {
+                p->setInvisible(false); // leave invisibility when you shoot
+            }
+        }
+    }
 }
 
 void GameManager::handleEnemyUpdate(entity* e) {
@@ -706,7 +749,7 @@ void GameManager::handleEnemyUpdate(entity* e) {
 
     }else {
         if (curVel.length() == 0.0f) {
-            e->setKnockedBack(false, 0);
+            e->setKnockedBack(false, 0.0f);
         }
     }
 
@@ -730,6 +773,10 @@ void GameManager::handleEnemyUpdate(entity* e) {
 }
 
 // Attach Functions
+void GameManager::attachProcessManager(ProcessManager *pm) {
+    PM = pm;
+}
+
 void GameManager::attachEntity(entity* e) {
     entityList.push_back(e);
 }
@@ -778,8 +825,8 @@ void GameManager::bounceEntities(entity *e1, entity *e2) {
     vector2 otherVel = angleToVector2(h) * 0.5f;
     e1->setVelocity(otherVel);
     e2->setVelocity(newVel);
-    e1->setKnockedBack(true, 250);
-    e2->setKnockedBack(true, 250);
+    e1->setKnockedBack(true, 250.0f);
+    e2->setKnockedBack(true, 250.0f);
 }
 
 

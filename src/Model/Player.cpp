@@ -37,20 +37,37 @@ void Player::update(float deltaMs) {
     updateInvincibility(deltaMs);
     updateInvisibility(deltaMs);
     updateOxygen(deltaMs);
+    updateATCannonFire(deltaMs);
 
 
     const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
 
     // Use upgrades
-    bool key1Pressed = keyboard_state_array[SDL_SCANCODE_1];
-    bool key2Pressed = keyboard_state_array[SDL_SCANCODE_2];
-    bool key3Pressed = keyboard_state_array[SDL_SCANCODE_3];
-    bool key4Pressed = keyboard_state_array[SDL_SCANCODE_4];
+    bool invisibilityPressed = keyboard_state_array[UPGRADE_KEYS::INVISIBILITY_KEY];
+    bool atCannonPressed = keyboard_state_array[UPGRADE_KEYS::AT_CANNON_KEY];
 
-    if (key1Pressed) {
-        if (!isInvisible()) {
+    // idk if the bellow will do anything when pressed
+    bool shieldPressed = keyboard_state_array[UPGRADE_KEYS::SHIELD_KEY];
+    bool speedPressed = keyboard_state_array[UPGRADE_KEYS::SPEED_KEY];
+    bool oxygenPressed = keyboard_state_array[UPGRADE_KEYS::OXYGEN_KEY];
+
+
+    //TODO: eventually make it so each key is changeable
+    if (invisibilityPressed) {
+        if (getUpgradeLevel(Player::UPGRADES::INVISIBILITY) > 0 && !isInvisible()) {
             print("Player is invisible");
             setInvisible(true);
+        }
+    }
+
+    if (atCannonPressed) {
+        if (getUpgradeLevel(Player::UPGRADES::AT_CANNON) > 0 && !isATCannonFire()) {
+            if (getATCount() > 0) {
+                print("Player is firing AT Cannon");
+                setATCannonFire(true);
+            }else {
+                print("Player has no AT to fire");
+            }
         }
     }
 
@@ -137,12 +154,13 @@ void Player::update(float deltaMs) {
         }
     }
 
-    if (/*newVel.x == 0.0f && newVel.y == 0.0f*/remainingKnockback() - deltaMs > 0 && isKnockedBack()) {
+    /*newVel.x == 0.0f && newVel.y == 0.0f*/
+    if (remainingKnockback() - deltaMs > 0 && isKnockedBack()) {
         setKnockedBack(true, remainingKnockback() - deltaMs);
         newVel = curVel;
     } 
     else {
-        setKnockedBack(false, 0);
+        setKnockedBack(false, 0.0f);
     }
 
     setVelocity(newVel);
@@ -181,6 +199,13 @@ void Player::applyUpgrade(Player::UPGRADES upgrade, int level) {
     }
 
 }
+int Player::getUpgradeLevel(Player::UPGRADES upgrade) {
+    return upgradeLevels[upgrade];
+}
+
+bool Player::doesPlayerHaveUpgrade(Player::UPGRADES upgrade) {
+    return upgradeLevels[upgrade] > 0;
+}
 
 // Shield functions
 bool Player::doesPlayerHaveShield() {
@@ -199,11 +224,11 @@ void Player::removeShield() {
 float Player::getPlayerSpeed() {
     return PLAYER_SPEED;
 }
+
+// Oxygen functions
 float Player::getOxygenLevel() {
     return OXYGEN_LEVEL;
 }
-
-// Oxygen functions
 void Player::setOxygenLevel(float newOxygenLevel) {
     OXYGEN_LEVEL = newOxygenLevel;
     if (OXYGEN_LEVEL > MAX_OXYGEN_TIME) {
@@ -220,7 +245,6 @@ void Player::addOxygen(float oxygenToAdd) {
         OXYGEN_LEVEL = 0;
     }
 }
-
 void Player::updateOxygen(float ms) {
     if (OXYGEN_LEVEL > 0) {
         OXYGEN_LEVEL -= ms;
@@ -230,7 +254,6 @@ void Player::updateOxygen(float ms) {
         }
     }
 }
-
 std::string Player::getOxygenString() const {
     int seconds = (int) (OXYGEN_LEVEL / 1000);
     int minutes = seconds / 60;
@@ -250,26 +273,29 @@ void Player::addATCount() {
 int Player::getATCount() const {
     return AT_COUNT;
 }
+void Player::removeATCount(int count) {
+    AT_COUNT -= count;
+    if (AT_COUNT < 0) {
+        AT_COUNT = 0;
+    }
+}
 
+// Invisibility functions
 void Player::setInvisible(bool invisible) {
     isInvisible_v = invisible;
     if (isInvisible_v) {
         invisibilityTime = 0;
     }
 }
-
 bool Player::isInvisible() const {
     return isInvisible_v;
 }
-
 void Player::setInvisibilityTime(float time) {
     invisibilityTime = time;
 }
-
 float Player::getInvisibilityTime() const {
     return invisibilityTime;
 }
-
 void Player::updateInvisibility(float ms) {
     if (isInvisible()) {
         invisibilityTime += ms;
@@ -278,3 +304,39 @@ void Player::updateInvisibility(float ms) {
         }
     }
 }
+
+// AT Cannon functions
+void Player::setATCannonFire(bool fire) {
+    inATCannonFire = fire;
+    if (inATCannonFire) {
+        atCannonFireTime = atCannonFireInterval;
+    }else {
+        atCannonFireTime = 0;
+    }
+    projectileCreated = false;
+}
+bool Player::isATCannonFire() const {
+    return inATCannonFire;
+}
+void Player::updateATCannonFire(float ms) {
+    if (isATCannonFire()) {
+        atCannonFireTime -= ms;
+        if (atCannonFireTime <= 0) {
+            setATCannonFire(false);
+        }
+    }
+}
+float Player::getATCannonFireTime() const {
+    return atCannonFireTime;
+}
+void Player::setProjectileCreated(bool created) {
+    projectileCreated = created;
+}
+bool Player::isProjectileCreated() const {
+    return projectileCreated;
+}
+int Player::getATCannonDamage() const {
+    return AT_CANNON_DAMAGE;
+}
+
+

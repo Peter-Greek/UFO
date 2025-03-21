@@ -31,6 +31,10 @@
 
 #include "Util.h"
 
+bool isDebug() {
+    return debugMode == 1;
+}
+
 double map_range(double s, double a1, double a2, double b1, double b2) {
     return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
 }

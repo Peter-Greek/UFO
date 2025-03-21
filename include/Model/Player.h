@@ -35,10 +35,10 @@
 #define CSCI437_PLAYER_H
 
 #include "entity.h"
-
+using upgradeList_t = std::array<int, 5>;
 class Player : public entity {
 private:
-    int upgradeLevels[5] = {0, 0, 0, 0, 0}; // upgrade levels for each upgrade
+    upgradeList_t upgradeLevels = {0, 0, 0, 0, 0}; // upgrade levels for each upgrade
 
     float BASE_OXYGEN_TIME = 3 * 60 * 1000 + 0.0f; // base time for the player without any upgrades
     float MAX_OXYGEN_TIME = BASE_OXYGEN_TIME; // max oxy time the player has during this run after upgrades
@@ -54,7 +54,22 @@ private:
     bool facingLeft = false; // facing left when idle after moving left
     bool isInvisible_v = false; // is the player invisible
     float invisibilityTime = 0; // time the player has been invisible
+
+    bool inATCannonFire = false; // is the player in the middle of firing the AT cannon
+    float atCannonFireTime = 0; // time the player has been firing the AT cannon
+    bool projectileCreated = false; // has the projectile been created for this fire
+    const float atCannonFireInterval = 1000; // time the player has to wait between AT cannon shots
+
 public:
+    enum UPGRADE_KEYS {
+        INVISIBILITY_KEY = SDL_SCANCODE_1,
+        AT_CANNON_KEY = SDL_SCANCODE_2,
+
+        SHIELD_KEY = SDL_SCANCODE_3,
+        SPEED_KEY = SDL_SCANCODE_4,
+        OXYGEN_KEY = SDL_SCANCODE_5,
+    };
+
     enum UPGRADES { // DONT CHANGE ORDER
         OXYGEN,
         SHIELD,
@@ -66,45 +81,57 @@ public:
             passFunc_t& func
     ) : entity(func, entity::PLAYER, 5, {0.0f, 0.0f}) {}
     explicit Player(
-            passFunc_t& func, const int upgradesSet[5]
+            passFunc_t& func, upgradeList_t upgradesSet
     ) : entity(func, entity::PLAYER, 5, {0.0f, 0.0f}) {
         // for each enum upgrade, set the upgrade level to the level passed in
         for (int i = 0; i < 5; i++) {
-            upgradeLevels[i] = upgradesSet[i];
+            applyUpgrade((UPGRADES) i, upgradesSet[i]);
         }
     }
 
     void update(float deltaMs) override;
 
+    // Upgrade functions
     void applyUpgrade(UPGRADES upgrade, int level);
+    int getUpgradeLevel(UPGRADES upgrade);
+    bool doesPlayerHaveUpgrade(UPGRADES upgrade);
 
+    // Shield functions
     bool doesPlayerHaveShield();
     void removeShield();
     void hitShield();
     float getPlayerSpeed();
 
+    // Oxygen functions
     float getOxygenLevel();
     void updateOxygen(float ms);
     void setOxygenLevel(float newOxygenLevel);
     void addOxygen(float oxygenToAdd);
+    [[nodiscard]] std::string getOxygenString() const;
 
-
-
-    void addATCount();
-
-    int getATCount() const;
-
-    bool isFacingLeft();
-
+    // Invisibility functions
     void setInvisible(bool invisible);
-    bool isInvisible() const;
+    [[nodiscard]] bool isInvisible() const;
     void setInvisibilityTime(float time);
-    float getInvisibilityTime() const;
-
-
+    [[nodiscard]] float getInvisibilityTime() const;
     void updateInvisibility(float ms);
 
-    std::string getOxygenString() const;
+    // AT Cannon functions
+    void setATCannonFire(bool fire);
+    [[nodiscard]] bool isATCannonFire() const;
+    void updateATCannonFire(float ms);
+    [[nodiscard]] float getATCannonFireTime() const;
+    void setProjectileCreated(bool created);
+    [[nodiscard]] bool isProjectileCreated() const;
+    [[nodiscard]] int getATCannonDamage() const;
+
+    // AT functions
+    void addATCount();
+    [[nodiscard]] int getATCount() const;
+    void removeATCount(int count);
+
+    // Misc functions
+    bool isFacingLeft();
 };
 
 

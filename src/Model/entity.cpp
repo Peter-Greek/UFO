@@ -64,6 +64,8 @@ bool entity::isEntityAnEnemy() {return type == ENEMY;};
 bool entity::isEntityAnEnemyBoss() {return type == ENEMY_BOSS;};
 bool entity::isEntityALaser() {return type == LASER;}
 bool entity::isEntityAPickup() {return type == ITEM_PICKUP;};
+bool entity::isEntityAProjectile() {return type == PROJECTILE;};
+
 entity::pType entity::getPickupType() {
     int rel = getMaxHearts() - 1;
     return (pType) rel;
@@ -140,32 +142,32 @@ bool entity::isKnockedBack() const {
     return inKnockback;
 }
 
-int entity::remainingKnockback() const {
+float entity::remainingKnockback() const {
     return knockbackRemaining;
 }
 
-void entity::setKnockedBack(bool knockedBack, int knockbackTime) {
+void entity::setKnockedBack(bool knockedBack, float knockbackTime) {
     inKnockback = knockedBack;
     knockbackRemaining = knockbackTime;
 }
 
-int entity::getLength() {
+int entity::getLength() const {
     return length;
 }
 
-int entity::getWidth() {
+int entity::getWidth() const {
     return width;
 }
 
-vector2 entity::getCenter() {
+vector2 entity::getCenter() const {
     return {coords.x + length / 2, coords.y + width / 2};
 }
 
-vector2 entity::getDimensions() {
+vector2 entity::getDimensions() const {
     return {static_cast<float>(length), static_cast<float>(width)};
 }
 
-bool entity::isEntityInvincible() {
+bool entity::isEntityInvincible() const {
     return isInvincible;
 }
 

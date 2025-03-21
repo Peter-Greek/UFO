@@ -42,6 +42,7 @@
 #include <nlohmann/json.hpp>
 #include "vector2.h"
 #include "heading.h"
+#include "config.h"
 
 using json = nlohmann::json;
 using UUID = std::string;
@@ -59,6 +60,7 @@ void print(Args&&... args)
     std::cout.flush();  // Ensures output is printed immediately
 }
 
+bool isDebug();
 
 template<class... Args>
 void error(Args... args)

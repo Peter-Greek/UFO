@@ -66,7 +66,7 @@ private:
     vector2 vel;
 
     bool inKnockback = false;
-    int knockbackRemaining = 0;
+    float knockbackRemaining = 0;
     bool isInvincible = false; // is the player invincible
     float invincibleTime = 0; // time left of invincibility
 
@@ -109,29 +109,30 @@ public:
     void postAbort() override {};
 
     // get length and width
-    int getLength();
-    int getWidth();
-    vector2 getCenter();
-    vector2 getDimensions();
+    [[nodiscard]] int getLength() const;
+    [[nodiscard]] int getWidth() const;
+    [[nodiscard]] vector2 getCenter() const;
+    [[nodiscard]] vector2 getDimensions() const;
 
     bool isEntityAPlayer();
     bool isEntityAnEnemy();
     bool isEntityAnEnemyBoss();
     bool isEntityALaser();
     bool isEntityAPickup();
+    bool isEntityAProjectile();
 
     pType getPickupType();
 
-    bool isKnockedBack() const;
-    int remainingKnockback() const;
-    void setKnockedBack(bool knockedBack, int knockbackTime);
+    [[nodiscard]] bool isKnockedBack() const;
+    [[nodiscard]] float remainingKnockback() const;
+    void setKnockedBack(bool knockedBack, float knockbackTime);
 
 
-    int getHearts() const;
+    [[nodiscard]] int getHearts() const;
     void setHearts(int newHearts);
     void addHearts(int heartsToAdd);
     void removeHearts(int heartsToRemove);
-    int getMaxHearts() const;
+    [[nodiscard]] int getMaxHearts() const;
     void setMaxHearts(int newMaxHearts);
 
     void setPosition(vector2 newPosition);
@@ -143,16 +144,14 @@ public:
     vector2 getVelocity();
 
     void spawn();
-    bool inWorld() const;
+    [[nodiscard]] bool inWorld() const;
     vector2 getSpawnCoords();
 
     void updateInvincibility(float deltaMs);
-    bool isEntityInvincible();
+    [[nodiscard]] bool isEntityInvincible() const;
     void setEntityInvincible(bool invincible);
     void setEntityInvincible(bool invincible, float time);
     void setEntityInvincibleTime(float time);
-
-
 };
 
 
