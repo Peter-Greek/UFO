@@ -41,7 +41,7 @@ public:
     explicit AT(
             passFunc_t& func,
             vector2 position
-    ) : entity(func, entity::ITEM_PICKUP, 1, position) {}
+    ) : entity(func, entity::ITEM_PICKUP, entity::AT, position) {}
 };
 
 

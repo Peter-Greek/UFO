@@ -69,6 +69,9 @@ int view::initialize() {
     // Make the surface blue
     SDL_FillRect( screenSurface, nullptr, SDL_MapRGB( screenSurface->format, 0, 0, 255 ) );
 
+    // Set the blend mode
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
     // Update the surface
     SDL_UpdateWindowSurface( window );
 

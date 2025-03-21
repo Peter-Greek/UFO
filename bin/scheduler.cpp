@@ -216,7 +216,7 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     processManager.attachProcess(atScore);
     gM->attachText("ATScore", atScore);
 
-    std::string heartsText = "Hearts: 5";
+    std::string heartsText = "Hearts: " + std::to_string(ppl->getHearts());
     auto* pHearts = new text(passFunc, heartsText, 35);
     pHearts->setTextRelativePosition(-1.0f, -0.8f);
     processManager.attachProcess(pHearts);
@@ -267,13 +267,13 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     npc->spawn();
 
     // Create Heart Pickup
-    auto* heart = new entity(passFunc, entity::ITEM_PICKUP, 2, {-50.0f, 0.0f});
+    auto* heart = new entity(passFunc, entity::ITEM_PICKUP, entity::HEART, {-50.0f, 0.0f});
     processManager.attachProcess(heart);
     gM->attachEntity(heart);
     heart->spawn();
 
     // Create Oxy Pickup
-    auto* oxy = new entity(passFunc, entity::ITEM_PICKUP, 3, {0.0f, 50.0f});
+    auto* oxy = new entity(passFunc, entity::ITEM_PICKUP, entity::OXY_TANK, {0.0f, 50.0f});
     processManager.attachProcess(oxy);
     gM->attachEntity(oxy);
     oxy->spawn();

@@ -67,7 +67,7 @@ bool entity::isEntityAPickup() {return type == ITEM_PICKUP;};
 bool entity::isEntityAProjectile() {return type == PROJECTILE;};
 
 entity::pType entity::getPickupType() {
-    int rel = getMaxHearts() - 1;
+    int rel = getMaxHearts();
     return (pType) rel;
 }
 
@@ -192,4 +192,13 @@ void entity::updateInvincibility(float deltaMs) {
             isInvincible = false;
         }
     }
+}
+
+bool entity::isPointInEntity(vector2 point) const {
+    float minX = std::min(coords.x, coords.x + length);
+    float maxX = std::max(coords.x, coords.x + length);
+    float minY = std::min(coords.y, coords.y + width);
+    float maxY = std::max(coords.y, coords.y + width);
+
+    return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
 }

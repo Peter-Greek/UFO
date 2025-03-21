@@ -48,10 +48,10 @@ public:
     };
 
     enum pType {
-        AT,
-        HEART,
-        OXY_TANK,
-        KEY_CARD,
+        AT = 1,
+        HEART = 2,
+        OXY_TANK = 3,
+        KEY_CARD = 4,
     };
 
 private:
@@ -74,9 +74,17 @@ private:
     int width = 10;
 
     void setDefaultLengthWidth() {
-        if (type == PLAYER) {
-            length = 32;
-            width = 32;
+        switch (type) {
+            case PLAYER:
+                length = 64;
+                width = 48;
+                break;
+            case ENEMY:
+                length = 32;
+                width = 32;
+                break;
+            default:
+                break;
         }
     }
 public:
@@ -113,6 +121,8 @@ public:
     [[nodiscard]] int getWidth() const;
     [[nodiscard]] vector2 getCenter() const;
     [[nodiscard]] vector2 getDimensions() const;
+
+    [[nodiscard]] bool isPointInEntity(vector2 point) const;
 
     bool isEntityAPlayer();
     bool isEntityAnEnemy();

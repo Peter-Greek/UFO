@@ -79,10 +79,10 @@ public:
     };
     explicit Player(
             passFunc_t& func
-    ) : entity(func, entity::PLAYER, 5, {0.0f, 0.0f}) {}
+    ) : entity(func, entity::PLAYER, 500, {0.0f, 0.0f}) {}
     explicit Player(
             passFunc_t& func, upgradeList_t upgradesSet
-    ) : entity(func, entity::PLAYER, 5, {0.0f, 0.0f}) {
+    ) : entity(func, entity::PLAYER, 500, {0.0f, 0.0f}) {
         // for each enum upgrade, set the upgrade level to the level passed in
         for (int i = 0; i < 5; i++) {
             applyUpgrade((UPGRADES) i, upgradesSet[i]);

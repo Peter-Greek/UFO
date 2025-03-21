@@ -119,6 +119,7 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     auto* p = dynamic_cast<Player*>(e);
     vector2 currentCoords = e->getPosition();
     vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
+    vector2 playerDim = e->getDimensions();
 
     if (isDebug()) {
 
@@ -180,12 +181,33 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
         currentFrame = animList["FSS_IDLE"]->getCurrentFrame(deltaMs);
     }
 
-    SDL_Rect destRect = { static_cast<int>(screenCoords.x) - currentFrame.w, static_cast<int>(screenCoords.y) - currentFrame.h, currentFrame.w * 2, currentFrame.h * 2 };
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x - (32)) ,
+            static_cast<int>(screenCoords.y - (48)) ,
+            64, // 64 px
+            64, // 64 px
+    };
     if (p->isInvisible()) {
         asepriteMap["FSS"]->setTextureAlpha(80);
     }
     asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
     asepriteMap["FSS"]->resetTextureAlpha();
+
+    if (isDebug()) {
+        // draw the hit box of the player
+        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 50);
+        TriggerEvent("SDL::Render::DrawRect",
+                     screenCoords.x - playerDim.x/2,
+                     screenCoords.y - playerDim.y/2,
+                     playerDim.x,
+                     playerDim.y
+        );
+        TriggerEvent("SDL::Render::ResetDrawColor");
+
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+        TriggerEvent("SDL::Render::DrawPoint", screenCoords.x, screenCoords.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+    }
 }
 
 void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
@@ -193,19 +215,31 @@ void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
     if (it == txdMap.end() || !it->second) {
         return;
     }
-    int textureSize = 160;
-    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+    SDL_Rect srcRect = {0, 0, 160, 160}; // load the entire texture
 
     SDL_Rect destRect = {
-            static_cast<int>(screenCoords.x),
-            static_cast<int>(screenCoords.y),
-            32, 32 // down scale the texture
+            static_cast<int>(screenCoords.x) - 16,
+            static_cast<int>(screenCoords.y) - 16,
+            32,
+            32 // down scale the texture
     };
     txdMap["ALIEN::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 
-    TriggerEvent("SDL::Render::SetDrawColor", 0, 0, 255, 255);
-    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-    TriggerEvent("SDL::Render::ResetDrawColor");
+    if (isDebug()) {
+        // draw the hit box of the player
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 255, 50);
+        TriggerEvent("SDL::Render::DrawRect",
+                     screenCoords.x - dim.x/2,
+                     screenCoords.y - dim.y/2,
+                     dim.x,
+                     dim.y
+        );
+        TriggerEvent("SDL::Render::ResetDrawColor");
+
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+        TriggerEvent("SDL::Render::DrawPoint", screenCoords.x, screenCoords.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+    }
 }
 
 void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
@@ -673,6 +707,17 @@ void GameManager::handlePlayerUpdate(entity* e) {
                 }
             }
 
+        }else if (e2->isEntityAProjectile()) {
+            vector2 projCoords = e2->getPosition();
+            if (p->isPointInEntity(projCoords)) {
+                if (e2->getHearts() > 0) {
+                    playerTakeHit(p, e2->getHearts());
+                    bounceEntities(e, e2);
+                    e2->removeHearts(e2->getHearts());
+                    if (e2->getHearts() == 0) {e2->succeed();}
+                    textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
+                }
+            }
         }
     }
 
@@ -702,7 +747,10 @@ void GameManager::handlePlayerUpdate(entity* e) {
             vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
             Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
             vector2 newVel = angleToVector2(h) * 0.15f;
-            auto* proj = new entity(passFunc, entity::PROJECTILE, damage, playerCoords);
+
+            vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
+
+            auto* proj = new entity(passFunc, entity::PROJECTILE, damage, spawnCoords);
             PM->attachProcess(proj);
             attachEntity(proj);
             proj->setVelocity(newVel);
@@ -722,23 +770,38 @@ void GameManager::handleEnemyUpdate(entity* e) {
     vector2 newVel = vector2(0.0f, 0.0f);
     bool isClose = false;
     bool inKnockback = e->isKnockedBack();
-    if (!inKnockback) {
-        // get the closest player if < 60 units away start to move towards player
-        for (auto& e2 : entityList) {
-            if (e2->isEntityAPlayer()) {
-                auto* p = dynamic_cast<Player*>(e2);
-                if (p->isInvisible()) { // cant see invisible players so no follow
-                    break;
+
+    for (auto& e2 : entityList) {
+        if (e2->isEntityAPlayer()) {
+            auto* p = dynamic_cast<Player*>(e2);
+            if (p->isInvisible()) { // cant see invisible players so no follow
+                continue;
+            }
+            vector2 playerCoords = e2->getPosition();
+            if ((currentCoords - playerCoords).length() < (SCREEN_WIDTH / 4)) {
+                newVel = (playerCoords - currentCoords).normalize() * 0.05f;
+                isClose = true;
+            }
+            continue;
+        }else if (e2->isEntityAProjectile()) {
+            vector2 projCoords = e2->getPosition();
+            if (e->isPointInEntity(projCoords)) {
+                if (e2->getHearts() > 0) {
+                    e->removeHearts(e2->getHearts());
+                    if (e->getHearts() == 0) {
+                        e->succeed();
+                    }
+                    bounceEntities(e, e2);
+                    e2->removeHearts(e2->getHearts());
+                    e2->succeed();
                 }
-                vector2 playerCoords = e2->getPosition();
-                if ((currentCoords - playerCoords).length() < (SCREEN_WIDTH / 4)) {
-                    newVel = (playerCoords - currentCoords).normalize() * 0.05f;
-                    isClose = true;
-                }
-                break;
             }
         }
+    }
 
+
+    if (!inKnockback) {
+        // get the closest player if < 60 units away start to move towards player
         if (!isClose) {
             // if not close to spawn point move back to spawn point
             vector2 spawnCoords = e->getSpawnCoords();
