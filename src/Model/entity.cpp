@@ -195,12 +195,11 @@ void entity::updateInvincibility(float deltaMs) {
 }
 
 bool entity::isPointInEntity(vector2 point) const {
-    float minX = std::min(coords.x, coords.x + length);
-    float maxX = std::max(coords.x, coords.x + length);
-    float minY = std::min(coords.y, coords.y + width);
-    float maxY = std::max(coords.y, coords.y + width);
-
-    return point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
+    vector2 p1 = coords + vector2(-length/2, width/2); // Top-left
+    vector2 p2 = coords + vector2(length/2, width/2); // Top-right
+    vector2 p3 = coords + vector2(length/2, -width/2); // Bottom-right
+    vector2 p4 = coords + vector2(-length/2, -width/2); // Bottom-left
+    return isPointInBounds(point, {p1, p2, p3, p4});
 }
 
 void entity::setLength(int newLength) {
