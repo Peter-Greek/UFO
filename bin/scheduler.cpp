@@ -61,6 +61,8 @@
 
 #include "world.h"
 
+#include "ChatBox.h"
+
 // Scheduler Variables
 jLoader gameStorage("../resource/storage.json");
 bool threadDone = false;
@@ -277,6 +279,8 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     processManager.attachProcess(oxy);
     gM->attachEntity(oxy);
     oxy->spawn();
+
+    print("Game Environment Created");
 }
 
 int applySettings() {
@@ -318,6 +322,29 @@ int main(int argc, char* argv[])
     // Create a view process; this will have to come first as it will be the main window and renderer
     view* viewProcess = new view(passFunc);
     processManager.attachProcess(viewProcess);
+
+    auto* chatBox = new ChatBox(passFunc);
+    processManager.attachProcess(chatBox);
+    chatBox->addMessage("Hello World");
+    chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
+    chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
+    chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
+    chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
+    chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
+    chatBox->addMessage("Hello World");
+    chatBox->AddEventHandler("SDL::OnPollEvent", [chatBox](int eventType, int key) {
+        if (eventType == SDL_KEYDOWN) {
+            if (chatBox->isHiddenChatBox()) {
+                if (key == SDLK_t) {
+                    chatBox->toggleChatBox();
+                }
+            }else {
+                if (key == SDLK_ESCAPE) {
+                    chatBox->toggleChatBox();
+                }
+            }
+        }
+    });
 
     // Load JSON storage file
     loadGameStorage();

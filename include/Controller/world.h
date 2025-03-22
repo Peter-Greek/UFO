@@ -19,7 +19,7 @@ class world : public xProcess {
 private:
     bool gameRunning = false;
 
-    jsonLoader worldData;
+    jLoader worldData;
 
     // Debug world maker function
     int curRoom = 0;
@@ -43,7 +43,7 @@ public:
     void loadWorld();
     void saveWorld();
 
-    jsonLoader& getWorldData();
+    jLoader& getWorldData();
 
     wallList_t getWallList();
 

@@ -38,7 +38,7 @@ void world::saveWorld() {
     worldData.save();
 }
 
-jsonLoader& world::getWorldData() {
+jLoader& world::getWorldData() {
     return worldData;
 }
 

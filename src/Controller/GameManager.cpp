@@ -181,6 +181,7 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
         currentFrame = animList["FSS_IDLE"]->getCurrentFrame(deltaMs);
     }
 
+    // Need to change the position based on the direction the player is moving so the sprite stays within the hit box
     SDL_Rect destRect = {
             static_cast<int>(screenCoords.x - (angle == 90 ? 16.0f : (angle == -90 ? 48.0f : 32.0f))) ,
             static_cast<int>(screenCoords.y - (std::abs(angle) == 90 ? 32.0f : 48.0f)) ,
@@ -220,8 +221,8 @@ void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
     SDL_Rect destRect = {
             static_cast<int>(screenCoords.x) - 16,
             static_cast<int>(screenCoords.y) - 16,
-            32,
-            32 // down scale the texture
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
     };
     txdMap["ALIEN::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 

@@ -144,6 +144,7 @@ void view::update(float deltaMs) {
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White color
     TriggerEvent("SDL::OnUpdate", deltaMs);
+    TriggerEvent("SDL::OnUpdate::Layer2", deltaMs); // second layer
     SDL_RenderPresent(renderer);
 }
 
