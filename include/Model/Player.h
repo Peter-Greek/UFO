@@ -60,6 +60,7 @@ private:
     bool projectileCreated = false; // has the projectile been created for this fire
     const float atCannonFireInterval = 1000; // time the player has to wait between AT cannon shots
 
+    bool chatState = false; // is the chat box open
 public:
     enum UPGRADE_KEYS {
         INVISIBILITY_KEY = SDL_SCANCODE_1,
@@ -79,7 +80,9 @@ public:
     };
     explicit Player(
             passFunc_t& func
-    ) : entity(func, entity::PLAYER, 500, {0.0f, 0.0f}) {}
+    ) : entity(func, entity::PLAYER, 500, {0.0f, 0.0f}) {
+        localInit();
+    }
     explicit Player(
             passFunc_t& func, upgradeList_t upgradesSet
     ) : entity(func, entity::PLAYER, 500, {0.0f, 0.0f}) {
@@ -87,8 +90,10 @@ public:
         for (int i = 0; i < 5; i++) {
             applyUpgrade((UPGRADES) i, upgradesSet[i]);
         }
+        localInit();
     }
 
+    int localInit();
     void update(float deltaMs) override;
 
     // Upgrade functions

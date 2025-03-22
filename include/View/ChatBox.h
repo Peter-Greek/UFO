@@ -65,14 +65,21 @@ private:
         std::string text;
         bool isCut = false;
     };
-// list of messages
+    // list of messages
     std::vector<ChatMessage> messages;
     static const int MAX_VISIBLE_MESSAGES = 8;
     static const int MESSAGE_PADDING = 5;
 
+
+
     int fontSize = 50;
     int textWidth;
     int textHeight;
+
+    int CHAT_INPUT_HEIGHT = fontSize * 2 + MESSAGE_PADDING;
+    SDL_Rect inputBox = {cbox.x + 10, cbox.y + cbox.h - CHAT_INPUT_HEIGHT, cbox.w - 20, CHAT_INPUT_HEIGHT - 20};
+    SDL_Rect inputBoxText = {inputBox.x + inputBox.w - 50, inputBox.y + 15, 0, 0};
+    ChatMessage inputMessage = {nullptr, inputBoxText, "> "};
 public:
     explicit ChatBox(passFunc_t& func) : xProcess(true, func) {
         setFontColor(255, 255, 255, 255);
@@ -106,6 +113,10 @@ public:
 
 
     std::vector<std::string> wrapText(const std::string &text, int maxWidth);
+
+    void createInputMessage();
+
+    void hideInputMessage();
 };
 
 

@@ -332,19 +332,6 @@ int main(int argc, char* argv[])
     chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
     chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
     chatBox->addMessage("Hello World");
-    chatBox->AddEventHandler("SDL::OnPollEvent", [chatBox](int eventType, int key) {
-        if (eventType == SDL_KEYDOWN) {
-            if (chatBox->isHiddenChatBox()) {
-                if (key == SDLK_t) {
-                    chatBox->toggleChatBox();
-                }
-            }else {
-                if (key == SDLK_ESCAPE) {
-                    chatBox->toggleChatBox();
-                }
-            }
-        }
-    });
 
     // Load JSON storage file
     loadGameStorage();

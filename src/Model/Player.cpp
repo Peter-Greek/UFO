@@ -33,6 +33,14 @@
 
 #include "Player.h"
 
+int Player::localInit() {
+    // Chat State To prevent key presses from doing anything when the chat box is open
+    AddEventHandler("UFO::Chat::State", [this](bool state) {
+        chatState = state;
+    });
+    return 1;
+}
+
 void Player::update(float deltaMs) {
     updateInvincibility(deltaMs);
     updateInvisibility(deltaMs);
@@ -50,6 +58,24 @@ void Player::update(float deltaMs) {
     bool shieldPressed = keyboard_state_array[UPGRADE_KEYS::SHIELD_KEY];
     bool speedPressed = keyboard_state_array[UPGRADE_KEYS::SPEED_KEY];
     bool oxygenPressed = keyboard_state_array[UPGRADE_KEYS::OXYGEN_KEY];
+
+    bool upPressed = keyboard_state_array[SDL_SCANCODE_W] || keyboard_state_array[SDL_SCANCODE_UP];
+    bool downPressed = keyboard_state_array[SDL_SCANCODE_S] || keyboard_state_array[SDL_SCANCODE_DOWN];
+    bool leftPressed = keyboard_state_array[SDL_SCANCODE_A] || keyboard_state_array[SDL_SCANCODE_LEFT];
+    bool rightPressed = keyboard_state_array[SDL_SCANCODE_D] || keyboard_state_array[SDL_SCANCODE_RIGHT];
+
+
+    if (chatState) {
+        upPressed = false;
+        downPressed = false;
+        leftPressed = false;
+        rightPressed = false;
+        invisibilityPressed = false;
+        atCannonPressed = false;
+        shieldPressed = false;
+        speedPressed = false;
+        oxygenPressed = false;
+    }
 
 
     //TODO: eventually make it so each key is changeable
@@ -70,14 +96,6 @@ void Player::update(float deltaMs) {
             }
         }
     }
-
-
-
-
-    bool upPressed = keyboard_state_array[SDL_SCANCODE_W] || keyboard_state_array[SDL_SCANCODE_UP];
-    bool downPressed = keyboard_state_array[SDL_SCANCODE_S] || keyboard_state_array[SDL_SCANCODE_DOWN];
-    bool leftPressed = keyboard_state_array[SDL_SCANCODE_A] || keyboard_state_array[SDL_SCANCODE_LEFT];
-    bool rightPressed = keyboard_state_array[SDL_SCANCODE_D] || keyboard_state_array[SDL_SCANCODE_RIGHT];
 
     if (isKnockedBack()) {
         upPressed = false;

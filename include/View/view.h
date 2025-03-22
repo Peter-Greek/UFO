@@ -20,6 +20,7 @@ public:
     void postFail() override;
     void postAbort() override;
 private:
+    bool chatState = false;
     bool running = false;
     SDL_Event e;
     SDL_Window* window;

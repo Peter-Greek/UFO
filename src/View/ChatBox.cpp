@@ -75,7 +75,6 @@ int ChatBox::initialize_SDL_process(SDL_Window* passed_window) {
     running = true;
     // Using Layer 2 for rendering so it is on top of everything else
     AddEventHandler("SDL::OnUpdate::Layer2", [this](float deltaMs) {
-        print("ChatBox Update");
         // While application is running
         if (!running) return;
         if (isHidden) {return;}
@@ -84,6 +83,13 @@ int ChatBox::initialize_SDL_process(SDL_Window* passed_window) {
 
         SDL_SetRenderDrawColor(renderer, 96, 96, 96, 200);
         SDL_RenderFillRect(renderer, &cbox);
+
+        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
+        SDL_RenderDrawRect(renderer, &inputBox);
+        if (inputMessage.texture) {
+            SDL_SetTextureColorMod(inputMessage.texture, 255, 255, 255);
+            SDL_RenderCopy(renderer, inputMessage.texture, nullptr, &inputMessage.dst);
+        }
 
         if (messages.empty()) {return;}
 
@@ -104,17 +110,55 @@ int ChatBox::initialize_SDL_process(SDL_Window* passed_window) {
         }
     });
 
+    AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
+        if (isHiddenChatBox()) {
+            if (eventType == SDL_KEYUP) {
+                if (key == SDLK_t) {
+                    toggleChatBox();
+                }
+            }
+        }else {
+            if (eventType == SDL_KEYDOWN) {
+                if (key == SDLK_ESCAPE) {
+                    toggleChatBox();
+                }
+            }
+        }
+    });
+
+    AddEventHandler("SDL::OnTextInput", [this](std::string text) {
+        if (isHiddenChatBox()) return;
+        inputMessage.text += text;
+        createInputMessage();
+    });
+
     return 1;
 }
 
 void ChatBox::update(float deltaMs) {
     // While application is running
     if (!running) return;
-    if (messages.empty()) {return;}
-    if (renderer == nullptr) {return;}
-    if (isHidden) {return;}
-}
+    if (messages.empty()) { return; }
+    if (renderer == nullptr) { return; }
+    if (isHidden) { return; }
+    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
 
+    if (keyboard_state_array[SDL_SCANCODE_RETURN]) {
+        // Send message
+        if (inputMessage.text.size() > 2) {
+            std::string message = inputMessage.text.substr(2);
+            addMessage(message);
+            inputMessage.text = "> ";
+            createInputMessage();
+        }
+    } else if (keyboard_state_array[SDL_SCANCODE_BACKSPACE]) {
+        // Backspace
+        if (inputMessage.text.size() > 2) {
+            inputMessage.text.pop_back();
+            createInputMessage();
+        }
+    }
+}
 
 void ChatBox::addMessage(const std::string& message) {
     // Create new message texture
@@ -132,7 +176,7 @@ void ChatBox::addMessage(const std::string& message) {
 }
 
 void ChatBox::updateMessagesPositioning() {
-    int y = cbox.y + cbox.h;
+    int y = cbox.y + cbox.h - CHAT_INPUT_HEIGHT - MESSAGE_PADDING;
     std::vector<ChatMessage> newMessages;
 
     for (int i = 0; i < MAX_VISIBLE_MESSAGES; i++) {
@@ -202,45 +246,50 @@ void ChatBox::updateMessagesPositioning() {
     messages = std::vector<ChatMessage>(newMessages.rbegin(), newMessages.rend());
 }
 
-
-std::vector<std::string> ChatBox::wrapText(const std::string& text, int maxWidth) {
-    std::vector<std::string> lines;
-    std::string currentLine;
-    std::istringstream words(text);
-    std::string word;
-
-    while (words >> word) {
-        std::string testLine = currentLine + (currentLine.empty() ? "" : " ") + word;
-        int w, h;
-        TTF_SizeText(font, testLine.c_str(), &w, &h);
-        if (w > maxWidth) {
-            if (!currentLine.empty()) {
-                lines.push_back(currentLine);
-                currentLine.clear();
-            }
-            currentLine = word;
-        } else {
-            currentLine = testLine;
-        }
+void ChatBox::createInputMessage() {
+    if (inputMessage.texture) {
+        SDL_DestroyTexture(inputMessage.texture);
     }
-    if (!currentLine.empty()) {
-        lines.push_back(currentLine);
-    }
-    return lines;
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, inputMessage.text.c_str(), color);
+    inputMessage.texture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    SDL_FreeSurface(textSurface);
+
+
+    int w, h;
+    SDL_QueryTexture(inputMessage.texture, nullptr, nullptr, &w, &h);
+    inputMessage.dst = {
+            inputBox.x + inputBox.w - 50 -  w,
+            inputMessage.dst.y,
+            w,
+            h
+    };
 }
+
+void ChatBox::hideInputMessage() {
+    if (inputMessage.texture) {
+        SDL_DestroyTexture(inputMessage.texture);
+        inputMessage.texture = nullptr;
+    }
+}
+
 
 void ChatBox::hideChatBox() {
     isHidden = true;
     if (!running) return;
+    TriggerEvent("UFO::Chat::State", false);
 
     for (auto& message : messages) {
         SDL_DestroyTexture(message.texture);
     }
+    SDL_StopTextInput();
+    hideInputMessage();
 }
 
 void ChatBox::showChatBox() {
     isHidden = false;
     if (!running) return;
+    TriggerEvent("UFO::Chat::State", true);
 
     for (auto& message : messages) {
         SDL_Surface* textSurface = TTF_RenderText_Solid(font, message.text.c_str(), color);
@@ -249,6 +298,8 @@ void ChatBox::showChatBox() {
     }
 
     updateMessagesPositioning();
+    SDL_StartTextInput();
+    createInputMessage();
 }
 
 void ChatBox::toggleChatBox() {
@@ -319,3 +370,28 @@ void ChatBox::setFontColor(int r, int g, int b, int a) {
 }
 
 
+std::vector<std::string> ChatBox::wrapText(const std::string& text, int maxWidth) {
+    std::vector<std::string> lines;
+    std::string currentLine;
+    std::istringstream words(text);
+    std::string word;
+
+    while (words >> word) {
+        std::string testLine = currentLine + (currentLine.empty() ? "" : " ") + word;
+        int w, h;
+        TTF_SizeText(font, testLine.c_str(), &w, &h);
+        if (w > maxWidth) {
+            if (!currentLine.empty()) {
+                lines.push_back(currentLine);
+                currentLine.clear();
+            }
+            currentLine = word;
+        } else {
+            currentLine = testLine;
+        }
+    }
+    if (!currentLine.empty()) {
+        lines.push_back(currentLine);
+    }
+    return lines;
+}

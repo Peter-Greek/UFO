@@ -111,9 +111,12 @@ int view::initialize() {
     });
 
 
+    // Chat State To prevent key presses from doing anything when the chat box is open
+    AddEventHandler("UFO::Chat::State", [this](bool state) {
+        chatState = state;
+    });
+
     running = true;
-
-
     return 1;
 }
 
@@ -134,12 +137,23 @@ void view::update(float deltaMs) {
         // User presses a key
         if( e.type == SDL_KEYDOWN )
         {
-            if( e.key.keysym.sym == SDLK_q ) running = false;
-            if ( e.key.keysym.sym == SDLK_b ) {
-                TriggerEvent("UFO::ChangeConfigValue", "debugMode");
+            if (!chatState) {
+                if( e.key.keysym.sym == SDLK_q ) running = false;
+                if ( e.key.keysym.sym == SDLK_b ) {
+                    TriggerEvent("UFO::ChangeConfigValue", "debugMode");
+                }
+            }else {
+                const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
+                // if control q is pressed then quit
+                if (keyboard_state_array[SDL_SCANCODE_LCTRL] && e.key.keysym.sym == SDLK_q) {
+                    running = false;
+                }
             }
         }
         TriggerEvent("SDL::OnPollEvent", e.type, e.key.keysym.sym);
+        if (e.type == SDL_TEXTINPUT) {
+            TriggerEvent("SDL::OnTextInput", e.text.text);
+        }
     }
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White color
