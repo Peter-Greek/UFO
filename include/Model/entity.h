@@ -108,9 +108,9 @@ public:
     int initialize() override;
     void update(float deltaMs) override;
     bool isDone() override;
-    void postSuccess() override {};
-    void postFail() override {};
-    void postAbort() override {};
+    void postSuccess() override { onTriggerEvent("ENTITY::SUCCEED", json {}); };
+    void postFail() override { onTriggerEvent("ENTITY::FAILED", json {}); };
+    void postAbort() override {onTriggerEvent("ENTITY::ABORTED", json {}); };
 
     // get length and width
     [[nodiscard]] int getLength() const;

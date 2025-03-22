@@ -603,9 +603,9 @@ void GameManager::update(float deltaMs) {
 
         // Handle Collisions
         if (e->isEntityAnEnemy()) {
-            handleEnemyUpdate(e);
+            handleEnemyUpdate(e, deltaMs);
         }else if (e->isEntityAPlayer()) {
-            handlePlayerUpdate(e);
+            handlePlayerUpdate(e, deltaMs);
         }
 
         // Handle Update of Coords
@@ -613,6 +613,12 @@ void GameManager::update(float deltaMs) {
         // Check if the new coords are out of bounds or hitting a wall
         if (worldMap->isPointInWall(e->getPosition())) {
             e->setPosition(e->getLastCoords());
+            if (e->isEntityAProjectile()) {
+                e->removeHearts(e->getHearts());
+                if (e->getHearts() == 0) {
+                    e->fail();
+                }
+            }
         }
     }
 
@@ -623,7 +629,7 @@ void GameManager::update(float deltaMs) {
     removalList.clear();
 }
 
-void GameManager::handlePlayerUpdate(entity* e) {
+void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
     auto* p = dynamic_cast<Player*>(e);
     vector2 currentCoords = e->getPosition();
     for (auto& e2 : entityList) {
@@ -758,6 +764,10 @@ void GameManager::handlePlayerUpdate(entity* e) {
             p->setProjectileCreated(true);
             proj->spawn();
 
+            proj->AddEventHandler("ENTITY::SUCCEED", [p, this]() {
+                audioMap["hitmarker"]->play(0.1f);
+            });
+
             if (p->isInvisible()) {
                 p->setInvisible(false); // leave invisibility when you shoot
             }
@@ -765,7 +775,7 @@ void GameManager::handlePlayerUpdate(entity* e) {
     }
 }
 
-void GameManager::handleEnemyUpdate(entity* e) {
+void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
     vector2 currentCoords = e->getPosition();
     vector2 curVel = e->getVelocity();
     vector2 newVel = vector2(0.0f, 0.0f);
@@ -792,7 +802,8 @@ void GameManager::handleEnemyUpdate(entity* e) {
                     if (e->getHearts() == 0) {
                         e->succeed();
                     }
-                    bounceEntities(e, e2);
+//                    bounceEntities(e, e2);
+//                    inKnockback = true;
                     e2->removeHearts(e2->getHearts());
                     e2->succeed();
                 }
@@ -810,9 +821,11 @@ void GameManager::handleEnemyUpdate(entity* e) {
                 newVel = (spawnCoords - currentCoords).normalize() * 0.05f;
             }
         }
-
     }else {
-        if (curVel.length() == 0.0f) {
+        if (e->remainingKnockback() - deltaMs > 0 && e->isKnockedBack()) {
+            e->setKnockedBack(true, e->remainingKnockback() - deltaMs);
+            newVel = curVel;
+        } else {
             e->setKnockedBack(false, 0.0f);
         }
     }
@@ -891,6 +904,10 @@ void GameManager::bounceEntities(entity *e1, entity *e2) {
     e2->setVelocity(newVel);
     e1->setKnockedBack(true, 250.0f);
     e2->setKnockedBack(true, 250.0f);
+}
+
+void GameManager::attachAudio(const std::string& name, AudioLoader* audio) {
+    audioMap[name] = audio;
 }
 
 

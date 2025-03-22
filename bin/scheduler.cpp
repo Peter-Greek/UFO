@@ -50,7 +50,7 @@
 #include "ProcessManager.h"
 #include "view.h"
 #include "text.h"
-
+#include "ChatBox.h"
 #include "GameManager.h"
 #include "entity.h"
 #include "Player.h"
@@ -58,10 +58,10 @@
 #include "Laser.h"
 #include "AT.h"
 #include "AsepriteLoader.h"
-
+#include "AudioLoader.h"
 #include "world.h"
 
-#include "ChatBox.h"
+
 
 // Scheduler Variables
 jLoader gameStorage("../resource/storage.json");
@@ -230,8 +230,12 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     processManager.attachProcess(oxyTime);
     gM->attachText("OxyTimer", oxyTime);
 
+    //Create Audio
+    auto* audioHitmarker = new AudioLoader(passFunc, "../resource/sfx/hitmarker.wav");
+    processManager.attachProcess(audioHitmarker);
+    gM->attachAudio("hitmarker", audioHitmarker);
 
-
+    // Create AT
     //TODO: anything above 700 starts to lag only when rendered on screen so view needs optimizations
     for (int i = 0; i < 200; i++) {
         // random location for the AT

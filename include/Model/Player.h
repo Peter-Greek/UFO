@@ -38,6 +38,8 @@
 using upgradeList_t = std::array<int, 5>;
 class Player : public entity {
 private:
+    bool initalized = false;
+
     upgradeList_t upgradeLevels = {0, 0, 0, 0, 0}; // upgrade levels for each upgrade
 
     float BASE_OXYGEN_TIME = 3 * 60 * 1000 + 0.0f; // base time for the player without any upgrades
@@ -80,9 +82,7 @@ public:
     };
     explicit Player(
             passFunc_t& func
-    ) : entity(func, entity::PLAYER, 500, {0.0f, 0.0f}) {
-        localInit();
-    }
+    ) : entity(func, entity::PLAYER, 500, {0.0f, 0.0f}) {}
     explicit Player(
             passFunc_t& func, upgradeList_t upgradesSet
     ) : entity(func, entity::PLAYER, 500, {0.0f, 0.0f}) {
@@ -90,7 +90,6 @@ public:
         for (int i = 0; i < 5; i++) {
             applyUpgrade((UPGRADES) i, upgradesSet[i]);
         }
-        localInit();
     }
 
     int localInit();

@@ -1,7 +1,7 @@
 {
-    "loads": 1015,
+    "loads": 1030,
     "settings": {
-        "debugMode": 0,
+        "debugMode": 1,
         "unlimitedFrames": false
     }
 }

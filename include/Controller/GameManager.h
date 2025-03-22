@@ -46,6 +46,10 @@
 #include "TxdLoader.h"
 #include "vector2.h"
 #include "ProcessManager.h"
+#include "entity.h"
+#include "wall.h"
+#include "AudioLoader.h"
+
 
 class GameManager : public xProcess {
 public:
@@ -58,7 +62,7 @@ private:
     std::map<std::string, AsepriteLoader*> asepriteMap;
     std::map<std::string, Animation*> animList;
     std::map<std::string, TxdLoader*> txdMap;
-    std::ostringstream oss;
+    std::map<std::string, AudioLoader*> audioMap;
     camera* cam;
     world* worldMap;
 
@@ -91,11 +95,12 @@ public:
     void attachText(std::string name, text* t);
     void attachAseprite(std::string name, AsepriteLoader *a);
     void attachTxd(std::string name, TxdLoader *txd);
+    void attachAudio(const std::string& name, AudioLoader *audio);
 
     static void bounceEntities(entity* e1, entity* e2);
 
-    void handleEnemyUpdate(entity *e);
-    void handlePlayerUpdate(entity *e);
+    void handleEnemyUpdate(entity *e, float deltaMs);
+    void handlePlayerUpdate(entity *e, float deltaMs);
 
     void updatePlayerView(bool isVisible, entity *e, float deltaMs);
 

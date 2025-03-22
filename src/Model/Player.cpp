@@ -38,10 +38,22 @@ int Player::localInit() {
     AddEventHandler("UFO::Chat::State", [this](bool state) {
         chatState = state;
     });
+
+    RegisterCommand("setHearts", [this](std::string command, sList_t args, std::string message) {
+        if (args.empty()) {
+            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: setHearts <int>");
+            return;
+        }
+        int hearts = std::stoi(args[0]);
+        setHearts(hearts);
+    });
+
+    initalized = true;
     return 1;
 }
 
 void Player::update(float deltaMs) {
+    if (!initalized) {localInit();}
     updateInvincibility(deltaMs);
     updateInvisibility(deltaMs);
     updateOxygen(deltaMs);
@@ -176,8 +188,7 @@ void Player::update(float deltaMs) {
     if (remainingKnockback() - deltaMs > 0 && isKnockedBack()) {
         setKnockedBack(true, remainingKnockback() - deltaMs);
         newVel = curVel;
-    } 
-    else {
+    } else {
         setKnockedBack(false, 0.0f);
     }
 
