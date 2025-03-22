@@ -191,3 +191,17 @@ vector2 random(const vector2& vec1, const vector2& vec2) {
     float t = random(0.0f, 1.0f);
     return vec1 + (vec2 - vec1) * t;
 }
+
+sList_t split(const std::string& str, const std::string& delimiter) {
+    sList_t result;
+    size_t start = 0;
+    size_t end;
+
+    while ((end = str.find(delimiter, start)) != std::string::npos) {
+        result.push_back(str.substr(start, end - start));
+        start = end + delimiter.length();
+    }
+
+    result.push_back(str.substr(start)); // Add the last piece
+    return result;
+}

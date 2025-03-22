@@ -132,6 +132,15 @@ int ChatBox::initialize_SDL_process(SDL_Window* passed_window) {
         createInputMessage();
     });
 
+    AddEventHandler("__internal_chat_register_command", [this](std::string command) {
+        print("Registering command: ", command);
+        commands.push_back(command);
+    });
+
+    AddEventHandler("UFO::Chat::AddMessage", [this](std::string message) {
+        addMessage(message);
+    });
+
     return 1;
 }
 
@@ -148,6 +157,16 @@ void ChatBox::update(float deltaMs) {
         if (inputMessage.text.size() > 2) {
             std::string message = inputMessage.text.substr(2);
             addMessage(message);
+            sList_t args = split(message, " ");
+            std::string command = args[0];
+            if (std::find(commands.begin(), commands.end(), command) == commands.end()) {
+                addMessage("Unknown/Unregistered command: " + command);
+                inputMessage.text = "> ";
+                createInputMessage();
+                return;
+            }
+            args.erase(args.begin());
+            TriggerEvent("__internal_command_" + command, "chat", args, message);
             inputMessage.text = "> ";
             createInputMessage();
         }
@@ -173,6 +192,7 @@ void ChatBox::addMessage(const std::string& message) {
     ChatMessage newMessage = {txt, pst, c_message};
     messages.push_back(newMessage);
     updateMessagesPositioning();
+    TriggerEvent("UFO::Chat::MessageAdded", message);
 }
 
 void ChatBox::updateMessagesPositioning() {
@@ -273,7 +293,6 @@ void ChatBox::hideInputMessage() {
     }
 }
 
-
 void ChatBox::hideChatBox() {
     isHidden = true;
     if (!running) return;
@@ -310,8 +329,6 @@ void ChatBox::toggleChatBox() {
     }
 }
 
-
-
 void ChatBox::clearMessages() {
     for (auto& message : messages) {
         SDL_DestroyTexture(message.texture);
@@ -334,7 +351,6 @@ void ChatBox::setFontSize(int toFontSize) {
     }
     updateMessagesPositioning();
 }
-
 
 void ChatBox::updateChatBoxPositioning() {
     cbox = {

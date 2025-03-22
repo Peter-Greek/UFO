@@ -75,6 +75,18 @@ public:
         }
     }
 
+    template <typename Func>
+    void RegisterCommand(const std::string& eventName, Func&& func) {
+        print("Registering command: ", eventName);
+        using FunctionType = std::decay_t<Func>;
+        using ArgsTuple = typename function_traits<FunctionType>::args_tuple;
+
+        eventHandlers["__internal_command_" + eventName].push_back([func = std::forward<Func>(func)](const json& eventData) {
+            callWithJson(func, eventData, ArgsTuple{});
+        });
+        TriggerEvent("__internal_chat_register_command", eventName);
+    }
+
 private:
     std::map<std::string, std::list<std::function<void(json)>> > eventHandlers;
     std::function<void(const std::string&, const json&)> pgx_onTriggerEvent;

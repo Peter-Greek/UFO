@@ -70,6 +70,7 @@ private:
     static const int MAX_VISIBLE_MESSAGES = 8;
     static const int MESSAGE_PADDING = 5;
 
+    sList_t commands;
 
 
     int fontSize = 50;

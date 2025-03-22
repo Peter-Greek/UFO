@@ -38,6 +38,7 @@
 #include <iostream>
 #include <random>
 #include <cmath>
+#include <string>
 
 #include <nlohmann/json.hpp>
 #include "vector2.h"
@@ -48,6 +49,7 @@ using json = nlohmann::json;
 using UUID = std::string;
 using passFunc_t = std::function<void(const std::string& eventName, const json& eventData)>;
 using vectorList_t = std::vector<vector2>;
+using sList_t = std::vector<std::string>;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -105,5 +107,7 @@ vectorList_t getMinMaxFromVectors(vector2 v, vector2 v2);
 float random(float min, float max);
 int random(int min, int max);
 vector2 random(vector2 minVec, vector2 maxVec);
+
+sList_t split(const std::string& str, const std::string& delimiter);
 
 #endif //CSCI437_UTIL_H
