@@ -391,39 +391,32 @@ int main(int argc, char* argv[])
         threadDone = true;
     });
 
-    std::thread schedulerThread([&processManager, &viewProcess]()
-    {
 
-        if (!viewProcess->initialize()) {
-            error("View Process failed to initialize");
-            delete viewProcess;
-            return 0;
-        }
-        viewProcess->initialize_manual(); // Initialize the view process and set it to manual update mode
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1 ms to allow the view process to initialize fully
-        SDL_Window* window = viewProcess->getWindow();
-        float deltaMs = 0;
-        viewProcess->TriggerEvent("UFO::StartGame"); // debug start game (later on we will have a main menu)
-        while (!threadDone) {
-            deltaMs = getTimeElapsed();
-            deltaMs *= gameTimeFactor;
-            deltaMs = deltaMs <= 0 ? 1 : deltaMs;
-            if (! (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) { // dont update any of the logic or view when the window is minimized
-                processManager.updateProcessList(deltaMs, window);
-            }
-            viewProcess->update(deltaMs); // Update the view process last as all the logic gets updated before this
-            if (!unlimitedFrames) std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-            if (viewProcess->isDone()) {
-                threadDone = true;
-            }
-        }
+    if (!viewProcess->initialize()) {
+        error("View Process failed to initialize");
+        delete viewProcess;
         return 0;
-    });
+    }
+    viewProcess->initialize_manual(); // Initialize the view process and set it to manual update mode
 
-    // Wait for the thread to finish
-    schedulerThread.join();
+    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1 ms to allow the view process to initialize fully
+    SDL_Window* window = viewProcess->getWindow();
+    float deltaMs = 0;
+    viewProcess->TriggerEvent("UFO::StartGame"); // debug start game (later on we will have a main menu)
+    while (!threadDone) {
+        deltaMs = getTimeElapsed();
+        deltaMs *= gameTimeFactor;
+        deltaMs = deltaMs <= 0 ? 1 : deltaMs;
+        if (! (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) { // dont update any of the logic or view when the window is minimized
+            processManager.updateProcessList(deltaMs, window);
+        }
+        viewProcess->update(deltaMs); // Update the view process last as all the logic gets updated before this
+        if (!unlimitedFrames) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+        if (viewProcess->isDone()) {
+            threadDone = true;
+        }
+    }
 
     return 0;
 }
