@@ -802,8 +802,9 @@ void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
                     if (e->getHearts() == 0) {
                         e->succeed();
                     }
-//                    bounceEntities(e, e2);
-//                    inKnockback = true;
+                    bounceEntities(e2, e);
+                    curVel = e->getVelocity();
+                    inKnockback = true;
                     e2->removeHearts(e2->getHearts());
                     e2->succeed();
                 }
@@ -830,7 +831,7 @@ void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
         }
     }
 
-    if (!isClose || inKnockback) {
+    if (!isClose && !inKnockback) {
         if (curVel.y != 0.0f) {
             newVel.y = curVel.y * 0.25f; // reduce velocity
             if (newVel.y < 0.1f && newVel.y > -0.1f) {
@@ -884,10 +885,12 @@ void GameManager::playerTakeHit(Player* p, int damage) {
     if (p->doesPlayerHaveShield()) {
         //TODO: Add shield hit sound and animation
         p->hitShield();
+        print("Shield Hit");
     }else {
         //TODO: Add player hit sound and animation
         p->removeHearts(damage);
         textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
+        print("Player Hit");
     }
 }
 

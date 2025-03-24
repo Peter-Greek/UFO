@@ -201,9 +201,9 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     gM->attachAseprite("FSS", fAnim);
 
     upgradeList_t upgrades = {0, 0, 0, 0, 0}; // for debug purposes eventually will be loaded from json storage
-    upgrades[Player::UPGRADES::OXYGEN]       = 0;
-    upgrades[Player::UPGRADES::SHIELD]       = 0;
-    upgrades[Player::UPGRADES::SPEED]        = 0;
+    upgrades[Player::UPGRADES::OXYGEN]       = 2;
+    upgrades[Player::UPGRADES::SHIELD]       = 2;
+    upgrades[Player::UPGRADES::SPEED]        = 5;
     upgrades[Player::UPGRADES::INVISIBILITY] = 1;
     upgrades[Player::UPGRADES::AT_CANNON]    = 1;
 
