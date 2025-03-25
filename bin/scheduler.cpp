@@ -109,7 +109,7 @@ void CreateDebugText(passFunc_t passFunc, ProcessManager& processManager)
     text* fpsText = new text(passFunc, fpsTextContent);
     fpsText->setTextRelativePosition(0.0f, -0.8f);
     fpsText->AddEventHandler("SDL::OnUpdate", [fpsText](float deltaMs) {
-        std::string fpsTextContent = "FPS: " + std::to_string(1000/deltaMs);
+        std::string fpsTextContent = "FPS: " + std::to_string(1000.0f/deltaMs);
         fpsText->setText(fpsTextContent);
     });
     processManager.attachProcess(fpsText);
@@ -160,10 +160,11 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
         print(processManager.containsUUID(id));
     });
 
-    // Create World
+    // Create World (HAS TO START BEFORE ANY ENTITY IS ATTACHED!)
     auto* w = new world(passFunc);
     processManager.attachProcess(w);
     gM->setWorld(w);
+
 
     auto* wTxd = new TxdLoader(passFunc, "../resource/wall.png");
     processManager.attachProcess(wTxd);
@@ -203,7 +204,7 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     upgradeList_t upgrades = {0, 0, 0, 0, 0}; // for debug purposes eventually will be loaded from json storage
     upgrades[Player::UPGRADES::OXYGEN]       = 2;
     upgrades[Player::UPGRADES::SHIELD]       = 2;
-    upgrades[Player::UPGRADES::SPEED]        = 5;
+    upgrades[Player::UPGRADES::SPEED]        = 0;
     upgrades[Player::UPGRADES::INVISIBILITY] = 1;
     upgrades[Player::UPGRADES::AT_CANNON]    = 1;
 
@@ -242,7 +243,7 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
         auto* at = new AT(passFunc, {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))});
         processManager.attachProcess(at);
         gM->attachEntity(at);
-        at->spawn();
+//        at->spawn();
     }
 
     // Create Laser
@@ -254,12 +255,12 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     processManager.attachProcess(laser);
     gM->attachEntity(laser);
     laser->setSpin(true);
-    laser->spawn();
+//    laser->spawn();
 
     auto* laser2 = new Laser(passFunc, {50.0f, 0.0f}, Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
     processManager.attachProcess(laser2);
     gM->attachEntity(laser2);
-    laser2->spawn();
+//    laser2->spawn();
 
 
     // Create NPC
@@ -270,19 +271,19 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     auto* npc = new entity(passFunc, entity::ENEMY, 3, {350.0f, 0.0f});
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
-    npc->spawn();
+//    npc->spawn();
 
     // Create Heart Pickup
     auto* heart = new entity(passFunc, entity::ITEM_PICKUP, entity::HEART, {-50.0f, 0.0f});
     processManager.attachProcess(heart);
     gM->attachEntity(heart);
-    heart->spawn();
+//    heart->spawn();
 
     // Create Oxy Pickup
     auto* oxy = new entity(passFunc, entity::ITEM_PICKUP, entity::OXY_TANK, {0.0f, 50.0f});
     processManager.attachProcess(oxy);
     gM->attachEntity(oxy);
-    oxy->spawn();
+//    oxy->spawn();
 
     print("Game Environment Created");
 }
@@ -295,6 +296,10 @@ int applySettings() {
 
     if (gameStorage["settings"]["debugMode"] != nullptr) {
         debugMode = gameStorage["settings"]["debugMode"].get<int>();
+    }
+
+    if (gameStorage["settings"]["curRoomIndex"] != nullptr) {
+        curRoomIndex = gameStorage["settings"]["curRoomIndex"].get<int>();
     }
 
     updateSettings(); // Update non stored settings based on the new changes
@@ -357,6 +362,9 @@ int main(int argc, char* argv[])
             gameStorage.save();
         } else if (configName == "debugMode") {
             gameStorage["settings"]["debugMode"] = debugMode;
+            gameStorage.save();
+        }else if (configName == "curRoomIndex") {
+            gameStorage["settings"]["curRoomIndex"] = curRoomIndex;
             gameStorage.save();
         }
     });

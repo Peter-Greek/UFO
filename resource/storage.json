@@ -1,6 +1,7 @@
 {
-    "loads": 1046,
+    "loads": 1082,
     "settings": {
+        "curRoomIndex": 1,
         "debugMode": 1,
         "unlimitedFrames": false
     }

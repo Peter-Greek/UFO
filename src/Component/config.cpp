@@ -36,10 +36,7 @@
 // Define global variables
 bool unlimitedFrames = false;
 int debugMode = 0;
-
-bool centerStraightened = true; // if the ball hits dead in the center then it straightens out kinda like a put in baseball
-bool interestingBounces = true; // if the ball hits the paddle at an angle then it will bounce off at an angle
-bool rampUpPaddleSpeed = true; // paddle speeds up if held down
+int curRoomIndex = -1;
 
 int SCREEN_WIDTH = 1024;
 int SCREEN_HEIGHT = 768;

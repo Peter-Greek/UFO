@@ -34,8 +34,7 @@
 #include "Laser.h"
 
 void Laser::update(float deltaMs) {
-    if (!inWorld()) {print("laser not in world"); return;}
-//    print("Laser Update: ", inFire, lastFired);
+    if (!inWorld()) {return;}
     if (inFire == 0) {
         if (lastFired > interval) {
             lastFired = 0;

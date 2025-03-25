@@ -98,3 +98,190 @@ bool world::isPointInWall(vector2 vec) {
     }
     return false;
 }
+
+vector2 world::getSpawnPoint() {
+    return worldData["spawnPoint"].get<vector2>();
+}
+
+// Returns a random available door from the placed rooms
+json* pickAvailableDoor(std::vector<json>& doors) {
+    std::vector<json*> available;
+    for (auto& door : doors) {
+        if (!door["isTaken"].get<bool>()) {
+            available.push_back(&door);
+        }
+    }
+
+    if (available.empty()) return nullptr;
+
+    return available[random(0, (int)available.size() - 1)];
+}
+
+// Returns a room template that has at least one unused door
+json pickRoomWithUnusedDoor(const json& roomTemplates) {
+    std::vector<json> validRooms;
+    for (auto& room : roomTemplates["rooms"]) {
+        if (!room.contains("doors")) continue;
+        for (auto& door : room["doors"]) {
+            if (!door.contains("isTaken") || door["isTaken"] == false) {
+                validRooms.push_back(room);
+                break;
+            }
+        }
+    }
+
+    if (validRooms.empty()) {
+        error("No valid room with unused doors available.");
+    }
+
+    return validRooms[random(0, (int)validRooms.size() - 1)];
+}
+
+// Returns a pointer to the first unused door in the room
+json* findUnusedDoor(json& room) {
+    for (auto& door : room["doors"]) {
+        if (!door.contains("isTaken") || door["isTaken"] == false) {
+            return &door;
+        }
+    }
+    return nullptr;
+}
+
+vector2 rotatePoint(vector2 point, vector2 center, float angleDegrees) {
+    float angleRad = angleDegrees * (M_PI / 180.0f);
+    float s = sin(angleRad);
+    float c = cos(angleRad);
+    point -= center;
+    float newX = point.x * c - point.y * s;
+    float newY = point.x * s + point.y * c;
+    return {newX + center.x, newY + center.y};
+}
+
+vector2 getDoorCenter(const json& door) {
+    vector2 base = door["coords"].get<vector2>();
+    float heading = door["h"].get<float>();
+    float length = door["l"].get<float>();
+    vector2 dir = angleToVector2(Heading(heading)).normalize();
+    return base + dir * (length / 2.0f);
+}
+
+
+void world::generateLayout(int count) {
+    json roomTemplates;
+    std::ifstream file("../resource/world.json");
+    if (!file.is_open()) {
+        error("Failed to open world template file.");
+        return;
+    }
+    file >> roomTemplates;
+
+    wallList.clear();
+    roomList.clear();
+    worldData["rooms"].clear();
+
+    std::vector<json> placedDoors;
+    std::vector<json> placedRooms;
+
+    for (int i = 0; i < count; ++i) {
+        json room;
+
+        if (i == 0) {
+            // First room — place center at spawn point
+            room = roomTemplates["rooms"][0];
+            vector2 spawnPoint = worldData["spawnPoint"].get<vector2>();
+            vector2 roomCenter = room["center"].get<vector2>();
+            vector2 offset = spawnPoint - roomCenter;
+
+            for (auto& w : room["walls"]) {
+                w["coords"] = w["coords"].get<vector2>() + offset;
+            }
+            for (auto& d : room["doors"]) {
+                d["coords"] = d["coords"].get<vector2>() + offset;
+                d["isTaken"] = false;
+                placedDoors.push_back(d);
+            }
+            room["center"] = spawnPoint;
+            placedRooms.push_back(room);
+        } else {
+            json* openDoor = pickAvailableDoor(placedDoors);
+            if (!openDoor) break;
+
+            json templateRoom = pickRoomWithUnusedDoor(roomTemplates);
+            json newRoom = templateRoom;
+            json* newDoor = findUnusedDoor(newRoom);
+            if (!newDoor) continue;
+
+            for (auto& d : newRoom["doors"]) {
+                d["isTaken"] = false;
+            }
+
+            // Step 1: Get door headings
+            int openHeading = openDoor->at("h").get<int>();
+            int newHeading = newDoor->at("h").get<int>();
+
+            float desiredHeading = fmod((openHeading + 180), 360);
+            float rotationAmount = fmod((desiredHeading - newHeading + 360), 360);
+
+            // Step 2: Rotate new room
+            vector2 newRoomCenter = newRoom["center"].get<vector2>();
+            for (auto& w : newRoom["walls"]) {
+                vector2 coord = w["coords"].get<vector2>();
+                w["coords"] = rotatePoint(coord, newRoomCenter, rotationAmount);
+                w["h"] = static_cast<int>(fmod(w["h"].get<int>() + rotationAmount, 360));
+            }
+
+            for (auto& d : newRoom["doors"]) {
+                vector2 coord = d["coords"].get<vector2>();
+                d["coords"] = rotatePoint(coord, newRoomCenter, rotationAmount);
+                d["h"] = static_cast<int>(fmod(d["h"].get<int>() + rotationAmount, 360));
+            }
+
+            newRoom["center"] = rotatePoint(newRoomCenter, newRoomCenter, rotationAmount);
+
+            // Step 3: Align door centers
+            vector2 openDoorCenter = getDoorCenter(*openDoor);
+            vector2 newDoorCenter = getDoorCenter(*newDoor); // After rotation
+            vector2 moveOffset = openDoorCenter - newDoorCenter;
+
+            for (auto& w : newRoom["walls"]) {
+                w["coords"] = w["coords"].get<vector2>() + moveOffset;
+            }
+            for (auto& d : newRoom["doors"]) {
+                d["coords"] = d["coords"].get<vector2>() + moveOffset;
+            }
+            newRoom["center"] = newRoom["center"].get<vector2>() + moveOffset;
+
+            openDoor->at("isTaken") = true;
+            newDoor->at("isTaken") = true;
+
+            for (auto& d : newRoom["doors"]) {
+                if (!d["isTaken"].get<bool>()) {
+                    placedDoors.push_back(d);
+                }
+            }
+
+            placedRooms.push_back(newRoom);
+            room = newRoom;
+        }
+
+        wallList_t newWallList;
+        for (auto& wallJson : room["walls"]) {
+            auto* wallPtr = new wall(
+                    wallJson["coords"].get<vector2>(),
+                    wallJson["l"].get<int>(),
+                    wallJson["w"].get<int>(),
+                    wallJson["h"].get<int>()
+            );
+            wallList.push_back(wallPtr);
+            newWallList.push_back(wallPtr);
+        }
+
+        roomList.push_back(newWallList);
+        worldData["rooms"].push_back(room);
+    }
+}
+
+
+
+
+

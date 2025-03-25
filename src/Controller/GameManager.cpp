@@ -105,6 +105,29 @@ int GameManager::initialize() {
         }
     });
 
+    RegisterCommand("setRoomIndex", [this](std::string command, sList_t args, std::string message) {
+        if (args.empty()) {
+            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: setRoomIndex <index>");
+            return;
+        }
+
+        int index = std::stoi(args[0]);
+        curRoomIndex = index;
+        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
+        TriggerEvent("UFO::Chat::AddMessage", "Room Index Set to: " + std::to_string(index));
+    });
+
+    RegisterCommand("createNewRoom", [this](std::string command, sList_t args, std::string message) {
+        if (!args.empty()) {
+            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: createNewRoom");
+            return;
+        }
+        int roomIndex = worldMap->addRoom();
+        curRoomIndex = roomIndex;
+        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
+        TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
+    });
+
     gameRunning = true;
     return 1;
 }
@@ -362,13 +385,18 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
                 json worldData = worldMap->getWorldData().get();
                 if (worldData["rooms"].empty() == 0) {
                     if (db_room_index == -1 || db_wall_index == -1) {
-                        int roomIndex = worldMap->addRoom();
+                        int roomIndex = curRoomIndex;
+                        if (roomIndex == -1) {roomIndex = worldMap->addRoom();}
+                        curRoomIndex = roomIndex;
+                        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
                         worldMap->addWall(roomIndex, debugWall);
                     } else {
                         worldMap->updateWall(db_room_index, db_wall_index, debugWall);
                     }
                 } else {
                     int roomIndex = worldMap->addRoom();
+                    curRoomIndex = roomIndex;
+                    TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
                     worldMap->addWall(roomIndex, debugWall);
                 }
                 worldMap->saveWorld();
@@ -397,8 +425,6 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
             inShiftFind = true;
             shiftFindStart = cam->screenToWorldCoords(vector2(x, y));
         }else {
-
-
             if (inShiftFind) {
                 bool foundWall = false;
                 roomList_t roomList = worldMap->getRoomList();
@@ -857,6 +883,12 @@ void GameManager::attachProcessManager(ProcessManager *pm) {
 
 void GameManager::attachEntity(entity* e) {
     entityList.push_back(e);
+    if (e->isEntityAPlayer()) {
+        if (worldMap != nullptr) {
+            vector2 spawnPoint = worldMap->getSpawnPoint();
+            e->setPosition(spawnPoint);
+        }
+    }
 }
 
 void GameManager::attachAseprite(std::string name, AsepriteLoader* a) {
