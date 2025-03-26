@@ -638,10 +638,10 @@ void GameManager::update(float deltaMs) {
         e->updateCoordsFromVelocity(deltaMs);
         // Check if the new coords are out of bounds or hitting a wall
         vectorList_t entityCorners;
-        entityCorners.push_back(e->getPosition() + (-32, -32));
-        entityCorners.push_back(e->getPosition() + (-32, 32));
-        entityCorners.push_back(e->getPosition() + (32, 32));
-        entityCorners.push_back(e->getPosition() + (32, -32));
+        entityCorners.push_back(e->getPosition() + (-e->getLength()/2, -e->getWidth()/2));
+        entityCorners.push_back(e->getPosition() + (-e->getLength()/2, e->getWidth()/2));
+        entityCorners.push_back(e->getPosition() + (e->getLength()/2, e->getWidth()/2));
+        entityCorners.push_back(e->getPosition() + (e->getLength()/2, -e->getWidth()/2));
         if (worldMap->isRectInWall(entityCorners)) {
             e->setPosition(e->getLastCoords());
             if (e->isEntityAProjectile()) {
