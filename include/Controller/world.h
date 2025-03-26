@@ -30,7 +30,7 @@ private:
 public:
     explicit world(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {
         worldData = jsonLoader("../resource/world.json");
-        loadWorld();
+//        loadWorld();
 //        generateLayout(5);
     }
 
@@ -67,6 +67,8 @@ public:
     vector2 getSpawnPoint();
 
     void generateLayout(int count);
+
+    json getAllEntities();
 };
 
 

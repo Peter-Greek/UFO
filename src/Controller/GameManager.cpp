@@ -128,6 +128,73 @@ int GameManager::initialize() {
         TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
     });
 
+
+    // if world is attached
+    if (worldMap) {
+        worldMap->loadWorld(); // loads the world
+        //worldMap->generateLayout(5); // generates the layout of the world random rooms
+        json worldEntityList = worldMap->getAllEntities();
+        for (auto& worldE : worldEntityList) {
+            int hearts = 0;
+            if (worldE["hearts"] == nullptr) {
+                hearts = worldE["pType"].get<int>();
+            }else {
+                hearts = worldE["hearts"].get<int>();
+            }
+
+            if (worldE["eType"] == nullptr) { continue;}
+
+            auto eType = (entity::eType) worldE["eType"].get<int>();
+
+            switch (eType) {
+                case entity::eType::PLAYER:
+                    continue;
+                case entity::eType::ENEMY:
+                case entity::eType::PROJECTILE:{
+                    entity* e = new entity(passFunc, entity::ENEMY, hearts, worldE["coords"].get<vector2>());
+                    PM->attachProcess(e);
+                    attachEntity(e);
+                    e->spawn();
+                    break;
+                }
+                case entity::eType::ITEM_PICKUP: {
+                    if (entity::pType::AT == hearts) {
+                        entity* e = new AT(passFunc, worldE["coords"].get<vector2>());
+                        PM->attachProcess(e);
+                        attachEntity(e);
+                        e->spawn();
+                        break;
+                    }else {
+                        entity* e = new entity(passFunc, entity::ITEM_PICKUP, hearts, worldE["coords"].get<vector2>());
+                        PM->attachProcess(e);
+                        attachEntity(e);
+                        e->spawn();
+                        break;
+                    }
+                }
+                case entity::eType::LASER: {
+                    Heading h = Heading(worldE["heading"].get<float>());
+                    int l = worldE["length"].get<int>();
+                    int w = worldE["width"].get<int>();
+                    int interval = worldE["interval"].get<int>();
+                    int dur = worldE["duration"].get<int>();
+                    int damage = worldE["damage"].get<int>();
+                    int speed = worldE["speed"].get<int>();
+                    Laser* e = new Laser(passFunc, worldE["coords"].get<vector2>(), h, l, w, interval, dur, damage, speed);
+                    PM->attachProcess(e);
+                    attachEntity(e);
+                    if (worldE["spin"] != nullptr) {
+                        e->setSpin(worldE["spin"].get<bool>());
+                    }
+                    e->spawn();
+                    break;
+                }
+                case entity::eType::ENEMY_BOSS:
+                    break;
+            }
+        }
+    }
+
     gameRunning = true;
     return 1;
 }

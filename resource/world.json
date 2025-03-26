@@ -4,6 +4,16 @@
             "id": "hw1",
             "name": "Straight Hallway 1",
             "type": "hallway",
+            "entities": [
+                {
+                    "coords": {
+                        "X": 303.146,
+                        "Y": -271.895
+                    },
+                    "eType": 1,
+                    "hearts": 3
+                }
+            ],
             "walls": [
                 {
                     "coords": {
@@ -147,6 +157,16 @@
                     "h": 269,
                     "l": 125,
                     "w": 3
+                }
+            ],
+            "entities": [
+                {
+                    "coords": {
+                        "X": 150.049,
+                        "Y": -368.461
+                    },
+                    "eType": 4,
+                    "pType": 2
                 }
             ],
             "center": {

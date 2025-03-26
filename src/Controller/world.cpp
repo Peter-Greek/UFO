@@ -290,6 +290,18 @@ void world::generateLayout(int count) {
     }
 }
 
+json world::getAllEntities() {
+    json entities = json::array();
+    if (worldData["rooms"].empty() == 0) {
+        for (auto &room: worldData["rooms"]) {
+            for (auto &rEntity: room["entities"]) {
+                entities.push_back(rEntity);
+            }
+        }
+    }
+    return entities;
+}
+
 
 
 
