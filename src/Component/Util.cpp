@@ -123,11 +123,38 @@ bool isPointInBounds(const vector2& point, const vectorList_t& polygon) {
     return oddNodes;
 }
 
-bool isRectangleInRectangle(const vectorList_t& rect, const vectorList_t& polygon) {
-    if(rect[2].x < polygon[0].x || polygon[2].x < rect[0].x)
-        return false;
-    if(rect[2].y < polygon[0].y || polygon[2].y < rect[0].y)
-        return false;
+vector2 projectRectangle(const vectorList_t& rect, const vector2& axis) {
+    float minProj = rect[0].dot(axis);
+    float maxProj = rect[0].dot(axis);
+    
+    for (const auto& point : rect) {
+        float projection = point.dot(axis);
+        if (projection < minProj) 
+            minProj = projection;
+        if (projection > maxProj) 
+            maxProj = projection;
+    }
+
+    return vector2(minProj, maxProj);
+}
+
+bool isRectangleInRectangle(const vectorList_t& rect1, const vectorList_t& rect2) {
+    vectorList_t edges;
+
+    for (int i = 0; i < 4; i++) {
+        edges.push_back((rect1[(i + 1) % 4] - rect1[i]).perpendicular().normalize());
+        edges.push_back((rect2[(i + 1) % 4] - rect2[i]).perpendicular().normalize());
+    }
+
+    for (const auto& axis : edges) {
+        vector2 proj1 = projectRectangle(rect1, axis);
+        vector2 proj2 = projectRectangle(rect2, axis);
+
+        if (proj1.getY() < proj2.getX() || proj2.getY() < proj1.getX()) {
+            return false;
+        }
+    }
+
     return true;
 }
 
