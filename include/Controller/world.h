@@ -31,7 +31,7 @@ public:
     explicit world(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {
         worldData = jsonLoader("../resource/world.json");
         loadWorld();
-        generateLayout(5);
+//        generateLayout(5);
     }
 
     int initialize() override;

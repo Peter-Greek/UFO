@@ -243,7 +243,7 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
         auto* at = new AT(passFunc, {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))});
         processManager.attachProcess(at);
         gM->attachEntity(at);
-//        at->spawn();
+        at->spawn();
     }
 
     // Create Laser
@@ -255,12 +255,12 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     processManager.attachProcess(laser);
     gM->attachEntity(laser);
     laser->setSpin(true);
-//    laser->spawn();
+    laser->spawn();
 
     auto* laser2 = new Laser(passFunc, {50.0f, 0.0f}, Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
     processManager.attachProcess(laser2);
     gM->attachEntity(laser2);
-//    laser2->spawn();
+    laser2->spawn();
 
 
     // Create NPC
@@ -271,19 +271,19 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     auto* npc = new entity(passFunc, entity::ENEMY, 3, {350.0f, 0.0f});
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
-//    npc->spawn();
+    npc->spawn();
 
     // Create Heart Pickup
     auto* heart = new entity(passFunc, entity::ITEM_PICKUP, entity::HEART, {-50.0f, 0.0f});
     processManager.attachProcess(heart);
     gM->attachEntity(heart);
-//    heart->spawn();
+    heart->spawn();
 
     // Create Oxy Pickup
     auto* oxy = new entity(passFunc, entity::ITEM_PICKUP, entity::OXY_TANK, {0.0f, 50.0f});
     processManager.attachProcess(oxy);
     gM->attachEntity(oxy);
-//    oxy->spawn();
+    oxy->spawn();
 
     print("Game Environment Created");
 }
