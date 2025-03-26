@@ -54,20 +54,28 @@ int view::initialize() {
     SDL_Delay(100);
 
     // Create renderer
-    renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED );
-    if (renderer == nullptr) error("Unable to create renderer: ", SDL_GetError());
-    print("View Renderer: ", renderer);
+    #ifdef __APPLE__
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+    #else
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    #endif
 
-
-    // Get window surface
-    screenSurface = SDL_GetWindowSurface( window );
-    if(screenSurface == nullptr) {
-        error("Unable to get window surface!", SDL_GetError());
+    if (renderer == nullptr) {
+        error("Unable to create renderer: ", SDL_GetError());
         return 0;
     }
 
-    // Make the surface blue
-    SDL_FillRect( screenSurface, nullptr, SDL_MapRGB( screenSurface->format, 0, 0, 255 ) );
+    #ifndef __APPLE__
+        // Get window surface
+        screenSurface = SDL_GetWindowSurface( window );
+        if(screenSurface == nullptr) {
+            error("Unable to get window surface!", SDL_GetError());
+            return 0;
+        }
+
+        // Make the surface blue
+        SDL_FillRect( screenSurface, nullptr, SDL_MapRGB( screenSurface->format, 0, 0, 255 ) );
+    #endif
 
     // Set the blend mode
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);

@@ -44,6 +44,16 @@ public:
 
     vector2(float x, float y): x(x), y(y){}
 
+    float getX() const
+    {
+        return x;
+    }
+
+    float getY() const
+    {
+        return y;
+    }
+
     vector2 operator+(float f) const
     {
         return {x + f, y + f};
@@ -155,6 +165,11 @@ public:
     {
         float l = length();
         return {x / l, y / l};
+    }
+
+    [[nodiscard]] vector2 perpendicular() const
+    {
+        return {-y, x};
     }
 
     // tostring

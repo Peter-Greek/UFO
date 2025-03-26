@@ -230,7 +230,7 @@ void Player::applyUpgrade(Player::UPGRADES upgrade, int level) {
         PLAYER_SPEED += (level * 0.05f);
     } else if (upgrade == Player::UPGRADES::INVISIBILITY) {
         // increase invisibility duration
-        INVISIBILITY_DURATION += INVISIBILITY_DURATION + level;
+        INVISIBILITY_DURATION += level;
     } else if (upgrade == Player::UPGRADES::AT_CANNON) {
         // increase attack cannon damage
         if (level > 1) {

@@ -123,6 +123,41 @@ bool isPointInBounds(const vector2& point, const vectorList_t& polygon) {
     return oddNodes;
 }
 
+vector2 projectRectangle(const vectorList_t& rect, const vector2& axis) {
+    float minProj = rect[0].dot(axis);
+    float maxProj = rect[0].dot(axis);
+    
+    for (const auto& point : rect) {
+        float projection = point.dot(axis);
+        if (projection < minProj) 
+            minProj = projection;
+        if (projection > maxProj) 
+            maxProj = projection;
+    }
+
+    return vector2(minProj, maxProj);
+}
+
+bool isRectangleInRectangle(const vectorList_t& rect1, const vectorList_t& rect2) {
+    vectorList_t edges;
+
+    for (int i = 0; i < 4; i++) {
+        edges.push_back((rect1[(i + 1) % 4] - rect1[i]).perpendicular().normalize());
+        edges.push_back((rect2[(i + 1) % 4] - rect2[i]).perpendicular().normalize());
+    }
+
+    for (const auto& axis : edges) {
+        vector2 proj1 = projectRectangle(rect1, axis);
+        vector2 proj2 = projectRectangle(rect2, axis);
+
+        if (proj1.getY() < proj2.getX() || proj2.getY() < proj1.getX()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool doLinesIntercept(vector2 v1, vector2 v2, vector2 v3, vector2 v4) {
     float d = (v4.y - v3.y) * (v2.x - v1.x) - (v4.x - v3.x) * (v2.y - v1.y);
     float n_a = (v4.x - v3.x) * (v1.y - v3.y) - (v4.y - v3.y) * (v1.x - v3.x);

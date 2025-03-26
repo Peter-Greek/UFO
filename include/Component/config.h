@@ -37,6 +37,7 @@
 // Declare global variables with extern
 extern bool unlimitedFrames;
 extern int debugMode;
+extern int curRoomIndex;
 
 extern int SCREEN_WIDTH;
 extern int SCREEN_HEIGHT;

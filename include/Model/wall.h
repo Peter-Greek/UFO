@@ -66,6 +66,10 @@ public:
     [[nodiscard]] bool isPointInWall(vector2 vec) const {
         return isPointInBounds(vec, corners);
     }
+
+    [[nodiscard]] bool isRectangleInWall(const vectorList_t& rect) const {
+        return isRectangleInRectangle(rect, corners);
+    }
 };
 
 inline void to_json(json& j, wall &s) {

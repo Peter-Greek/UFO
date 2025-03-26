@@ -32,6 +32,7 @@
 //
 
 #include "ChatBox.h"
+#include <sstream>
 
 int ChatBox::initialize_SDL_process(SDL_Window* passed_window) {
     window = passed_window;

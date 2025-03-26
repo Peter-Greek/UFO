@@ -31,6 +31,7 @@ public:
     explicit world(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {
         worldData = jsonLoader("../resource/world.json");
         loadWorld();
+//        generateLayout(5);
     }
 
     int initialize() override;
@@ -51,6 +52,7 @@ public:
 
     bool isPointInWall(vector2 vector21);
 
+    bool isRectInWall(vectorList_t& rect);
 
     int addRoom();
 
@@ -61,6 +63,10 @@ public:
     void deleteWall(int roomId, int wallId);
 
     void deleteRoom(int roomId);
+
+    vector2 getSpawnPoint();
+
+    void generateLayout(int count);
 };
 
 
