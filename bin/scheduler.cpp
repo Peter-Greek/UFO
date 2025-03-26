@@ -51,6 +51,7 @@
 #include "view.h"
 #include "text.h"
 #include "ChatBox.h"
+#include "UpgradeMenu.h"
 #include "GameManager.h"
 #include "entity.h"
 #include "Player.h"
@@ -341,6 +342,9 @@ int main(int argc, char* argv[])
     chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
     chatBox->addMessage("Hello World! This is a longer text with a lot of words and characters and I want to see it on the screen!");
     chatBox->addMessage("Hello World");
+
+    auto* upgradeMenu = new UpgradeMenu(passFunc);
+    processManager.attachProcess(upgradeMenu);
 
     // Load JSON storage file
     loadGameStorage();
