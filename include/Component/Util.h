@@ -98,6 +98,7 @@ vector2 angleToVector2(Heading angle);
 vectorList_t calculateBoundingBox(const vector2& min, const vector2& max);
 std::pair<float, float> calculateDimensions(const std::vector<vector2>& points);
 bool isPointInBounds(const vector2& point, const vectorList_t& polygon);
+bool isRectangleInRectangle(const vectorList_t& rect, const vectorList_t& polygon);
 bool doLinesIntercept(vector2 v1, vector2 v2, vector2 v3, vector2 v4);
 int getInterceptDist(vector2 v1, vector2 v2, vector2 v3, vector2 v4);
 float getPerpendicularDistance(vector2 point, vector2 lineStart, vector2 lineEnd);

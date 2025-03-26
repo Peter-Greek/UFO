@@ -123,6 +123,14 @@ bool isPointInBounds(const vector2& point, const vectorList_t& polygon) {
     return oddNodes;
 }
 
+bool isRectangleInRectangle(const vectorList_t& rect, const vectorList_t& polygon) {
+    if(rect[2].x < polygon[0].x || polygon[2].x < rect[0].x)
+        return false;
+    if(rect[2].y < polygon[0].y || polygon[2].y < rect[0].y)
+        return false;
+    return true;
+}
+
 bool doLinesIntercept(vector2 v1, vector2 v2, vector2 v3, vector2 v4) {
     float d = (v4.y - v3.y) * (v2.x - v1.x) - (v4.x - v3.x) * (v2.y - v1.y);
     float n_a = (v4.x - v3.x) * (v1.y - v3.y) - (v4.y - v3.y) * (v1.x - v3.x);

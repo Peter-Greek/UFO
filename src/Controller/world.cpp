@@ -99,6 +99,15 @@ bool world::isPointInWall(vector2 vec) {
     return false;
 }
 
+bool world::isRectInWall(vectorList_t& rect) {
+    for (auto& w : wallList) {
+        if (w->isRectangleInWall(rect)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 vector2 world::getSpawnPoint() {
     return worldData["spawnPoint"].get<vector2>();
 }

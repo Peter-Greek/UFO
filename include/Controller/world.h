@@ -52,6 +52,7 @@ public:
 
     bool isPointInWall(vector2 vector21);
 
+    bool isRectInWall(vectorList_t& rect);
 
     int addRoom();
 
