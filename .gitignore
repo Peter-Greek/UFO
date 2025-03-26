@@ -2,8 +2,8 @@
 **/[Rr]elease
 
 *.exe
-/resource/world.json
-/resource/storage.json
+resource/world.json
+resource/storage.json
 
 /.idea/
 /cmake-build-debug-mingw/
