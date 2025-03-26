@@ -203,11 +203,13 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     gM->attachAseprite("FSS", fAnim);
 
     upgradeList_t upgrades = {0, 0, 0, 0, 0}; // for debug purposes eventually will be loaded from json storage
-    upgrades[Player::UPGRADES::OXYGEN]       = 2;
-    upgrades[Player::UPGRADES::SHIELD]       = 2;
-    upgrades[Player::UPGRADES::SPEED]        = 0;
-    upgrades[Player::UPGRADES::INVISIBILITY] = 1;
-    upgrades[Player::UPGRADES::AT_CANNON]    = 1;
+    upgrades[Player::UPGRADES::OXYGEN]       = gameStorage["player"]["upgrades"]["oxygen"].get<int>();
+    upgrades[Player::UPGRADES::SHIELD]       = gameStorage["player"]["upgrades"]["shield"].get<int>();
+    upgrades[Player::UPGRADES::SPEED]        = gameStorage["player"]["upgrades"]["speed"].get<int>();
+    upgrades[Player::UPGRADES::INVISIBILITY] = gameStorage["player"]["upgrades"]["invisibility"].get<int>();
+    upgrades[Player::UPGRADES::AT_CANNON]    = gameStorage["player"]["upgrades"]["at_cannon"].get<int>();
+
+
 
     auto* ppl = new Player(passFunc, upgrades);
     processManager.attachProcess(ppl);
@@ -309,6 +311,33 @@ int applySettings() {
 
 int loadGameStorage() {
     gameStorage.update();
+
+    if (gameStorage["player"] == nullptr) {
+        gameStorage["player"] = json::object();
+        gameStorage["player"]["ATCount"] = 0;
+        gameStorage["player"]["TotalAT"] = 0;
+    }
+
+    if (gameStorage["player"]["ATCount"] == nullptr) {
+        gameStorage["player"]["ATCount"] = 0;
+        gameStorage.save();
+    }
+
+    if (gameStorage["player"]["TotalAT"] == nullptr) {
+        gameStorage["player"]["TotalAT"] = 0;
+        gameStorage.save();
+    }
+
+    if (gameStorage["player"]["upgrades"] == nullptr) {
+        gameStorage["player"]["upgrades"] = json::object();
+        gameStorage["player"]["upgrades"]["oxygen"] = 0;
+        gameStorage["player"]["upgrades"]["shield"] = 0;
+        gameStorage["player"]["upgrades"]["speed"] = 0;
+        gameStorage["player"]["upgrades"]["invisibility"] = 0;
+        gameStorage["player"]["upgrades"]["at_cannon"] = 0;
+        gameStorage.save();
+    }
+
     applySettings(); // Apply the settings from the storage file
     gameStorage["loads"] = gameStorage["loads"] != nullptr ? gameStorage["loads"].get<int>() + 1 : 1; // Increment the loads counter
     gameStorage.save();
@@ -392,9 +421,11 @@ int main(int argc, char* argv[])
         CreateDebugText(passFunc, processManager);
     });
 
-    viewProcess->AddEventHandler("UFO::EndGame", [&viewProcess, passFunc, &processManager](int winner) {
-        print("Ending Game Loop: ", winner);
+    viewProcess->AddEventHandler("UFO::EndGame", [&viewProcess, passFunc, &processManager](int hearts, int atcount) {
+        print("Ending Game Loop, AT Count: ", atcount);
         viewProcess->TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
+        gameStorage["player"]["ATCount"] = gameStorage["player"]["ATCount"].get<int>() + atcount;
+        gameStorage["player"]["TotalAT"] = gameStorage["player"]["TotalAT"].get<int>() + atcount;
         // Create a new main menu with the winner
     });
 
