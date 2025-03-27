@@ -327,11 +327,28 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
 }
 
 void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
-    auto it = txdMap.find("ALIEN::TEXTURE");
+    // yes I know I could have just randomized the textures on load of the class but that would have required
+    // making a new class for enemies or add more bloat to the entity class so ya no this round about way is OK
+    int ran = mapHashToRange(jenkinsOneAtATimeHash(e->getId()), 1, 3) + 0;
+    std::string textureName = "ALIEN" + std::to_string(ran) + "::TEXTURE";
+
+    auto it = txdMap.find(textureName);
     if (it == txdMap.end() || !it->second) {
         return;
     }
-    SDL_Rect srcRect = {0, 0, 160, 160}; // load the entire texture
+    SDL_Rect srcRect;
+
+    switch (ran) {
+        case 1:
+            srcRect = {0, 0, 160, 160};
+            break;
+        case 2:
+            srcRect = {0, 0, 160, 200};
+            break;
+        case 3:
+            srcRect = {0, 0, 200, 160};
+            break;
+    }
 
     SDL_Rect destRect = {
             static_cast<int>(screenCoords.x) - 16,
@@ -339,7 +356,7 @@ void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
             static_cast<int>(dim.x),
             static_cast<int>(dim.y) // down scale the texture
     };
-    txdMap["ALIEN::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+    txdMap[textureName]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 
     if (isDebug()) {
         // draw the hit box of the player

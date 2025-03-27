@@ -1,5 +1,5 @@
 {
-    "loads": 1114,
+    "loads": 1119,
     "player": {
         "ATCount": 0,
         "TotalAT": 0,
@@ -13,7 +13,7 @@
     },
     "settings": {
         "curRoomIndex": 1,
-        "debugMode": 1,
+        "debugMode": 0,
         "unlimitedFrames": false
     }
 }

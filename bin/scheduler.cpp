@@ -272,7 +272,15 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     // Create NPC
     auto* aTxd = new TxdLoader(passFunc, "../resource/Alien1.png");
     processManager.attachProcess(aTxd);
-    gM->attachTxd("ALIEN::TEXTURE", aTxd);
+    gM->attachTxd("ALIEN1::TEXTURE", aTxd);
+
+    auto* a2Txd = new TxdLoader(passFunc, "../resource/Alien2.png");
+    processManager.attachProcess(a2Txd);
+    gM->attachTxd("ALIEN2::TEXTURE", a2Txd);
+
+    auto* a3Txd = new TxdLoader(passFunc, "../resource/Alien3.png");
+    processManager.attachProcess(a3Txd);
+    gM->attachTxd("ALIEN3::TEXTURE", a3Txd);
 
     auto* npc = new entity(passFunc, entity::ENEMY, 3, {350.0f, 0.0f});
     processManager.attachProcess(npc);

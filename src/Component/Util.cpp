@@ -240,3 +240,23 @@ sList_t split(const std::string& str, const std::string& delimiter) {
     result.push_back(str.substr(start)); // Add the last piece
     return result;
 }
+
+uint32_t jenkinsOneAtATimeHash(const std::string& key) {
+    uint32_t hash = 0;
+
+    for (char c : key) {
+        hash += static_cast<uint8_t>(c);
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash;
+}
+
+int mapHashToRange(uint32_t hash, int min, int max) {
+    return (hash % (max - min + 1)) + min;
+}
