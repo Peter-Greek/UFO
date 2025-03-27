@@ -244,7 +244,22 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
         textMap["RelHeading"]->hideText();
     }
 
+    // Update Oxygen Text
     textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
+
+    // Update Hearts
+    if (p->getMaxHearts() < 10) {
+        int currentHearts = p->getHearts();
+        int x = 0;
+        int y = 0;
+        for (int i = 0; i < currentHearts; i++) {
+            if (i != 0) {
+                x += 32;
+            }
+            renderHeart(vector2(x, y), vector2(32, 32));
+        }
+    }
+
 
     cam->updateCamera(currentCoords - vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
 
