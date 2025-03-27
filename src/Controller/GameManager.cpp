@@ -68,18 +68,23 @@ int GameManager::initialize() {
                 renderEnemy(screenCoords, dim, e);
             }else if (e->isEntityAPickup()) {
                 if (e->getPickupType() == entity::AT) {
-//                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-//                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-//                    TriggerEvent("SDL::Render::ResetDrawColor");
+                    if (isDebug()) {
+                        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                        TriggerEvent("SDL::Render::ResetDrawColor");
+                    }
                     auto* at = dynamic_cast<AT*>(e);
                     if (at) {
                         renderAT(screenCoords, dim, at);
                     }
 
                 }else if (e->getPickupType() == entity::HEART) {
-                    TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                    TriggerEvent("SDL::Render::ResetDrawColor");
+                    if (isDebug()) {
+                        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                        TriggerEvent("SDL::Render::ResetDrawColor");
+                    }
+                    renderHeart(screenCoords, dim, e);
                 }else if (e->getPickupType() == entity::OXY_TANK) {
                     TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
@@ -396,12 +401,50 @@ void GameManager::renderAT(vector2 screenCoords, vector2 dim, AT* at) {
     // Render the texture
     SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
     SDL_Rect destRect = {
-            static_cast<int>(screenCoords.x) - 16,
-            static_cast<int>(screenCoords.y) - 16,
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
             static_cast<int>(dim.x),
             static_cast<int>(dim.y) // down scale the texture
     };
     txdMap["AT::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+}
+
+void GameManager::renderHeart(vector2 screenCoords, vector2 dim, entity* e) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("HEART::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+    int textureSize = 32;
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+    txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+}
+
+void GameManager::renderHeart(vector2 screenCoords, vector2 dim) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("HEART::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+    int textureSize = 32;
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+    txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 }
 
 void GameManager::handleDebugWorldCreator(float deltaMs) {

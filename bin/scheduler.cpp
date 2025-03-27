@@ -280,6 +280,10 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     npc->spawn();
 
     // Create Heart Pickup
+    auto* HeartTxd = new TxdLoader(passFunc, "../resource/HeartSS.png");
+    processManager.attachProcess(HeartTxd);
+    gM->attachTxd("HEART::TEXTURE", HeartTxd);
+
     auto* heart = new entity(passFunc, entity::ITEM_PICKUP, entity::HEART, {-50.0f, 0.0f});
     processManager.attachProcess(heart);
     gM->attachEntity(heart);
