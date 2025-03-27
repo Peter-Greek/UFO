@@ -195,20 +195,30 @@ void world::generateLayout(int count) {
         json room;
 
         if (i == 0) {
-            // First room — place center at spawn point
             room = roomTemplates["rooms"][0];
             vector2 spawnPoint = worldData["spawnPoint"].get<vector2>();
             vector2 roomCenter = room["center"].get<vector2>();
             vector2 offset = spawnPoint - roomCenter;
 
+            // shift walls
             for (auto& w : room["walls"]) {
                 w["coords"] = w["coords"].get<vector2>() + offset;
             }
+
+            // shift doors
             for (auto& d : room["doors"]) {
                 d["coords"] = d["coords"].get<vector2>() + offset;
                 d["isTaken"] = false;
                 placedDoors.push_back(d);
             }
+
+            // shift entities
+            if (room.contains("entities")) {
+                for (auto& e : room["entities"]) {
+                    e["coords"] = e["coords"].get<vector2>() + offset;
+                }
+            }
+
             room["center"] = spawnPoint;
             placedRooms.push_back(room);
         } else {
@@ -224,41 +234,54 @@ void world::generateLayout(int count) {
                 d["isTaken"] = false;
             }
 
-            // Step 1: Get door headings
             int openHeading = openDoor->at("h").get<int>();
-            int newHeading = newDoor->at("h").get<int>();
-
+            int newHeading  = newDoor->at("h").get<int>();
             float desiredHeading = fmod((openHeading + 180), 360);
             float rotationAmount = fmod((desiredHeading - newHeading + 360), 360);
 
-            // Step 2: Rotate new room
             vector2 newRoomCenter = newRoom["center"].get<vector2>();
+
+            // rotate walls
             for (auto& w : newRoom["walls"]) {
                 vector2 coord = w["coords"].get<vector2>();
                 w["coords"] = rotatePoint(coord, newRoomCenter, rotationAmount);
                 w["h"] = static_cast<int>(fmod(w["h"].get<int>() + rotationAmount, 360));
             }
 
+            // rotate doors
             for (auto& d : newRoom["doors"]) {
                 vector2 coord = d["coords"].get<vector2>();
                 d["coords"] = rotatePoint(coord, newRoomCenter, rotationAmount);
                 d["h"] = static_cast<int>(fmod(d["h"].get<int>() + rotationAmount, 360));
             }
 
+            // rotate entities
+            if (newRoom.contains("entities")) {
+                for (auto& e : newRoom["entities"]) {
+                    vector2 coord = e["coords"].get<vector2>();
+                    e["coords"] = rotatePoint(coord, newRoomCenter, rotationAmount);
+                }
+            }
+
             newRoom["center"] = rotatePoint(newRoomCenter, newRoomCenter, rotationAmount);
 
-            // Step 3: Align door centers
+            // door alignment
             vector2 openDoorCenter = getDoorCenter(*openDoor);
-            vector2 newDoorCenter = getDoorCenter(*newDoor); // After rotation
-            vector2 moveOffset = openDoorCenter - newDoorCenter;
+            vector2 newDoorCenter  = getDoorCenter(*newDoor);
+            vector2 offset = openDoorCenter - newDoorCenter;
 
             for (auto& w : newRoom["walls"]) {
-                w["coords"] = w["coords"].get<vector2>() + moveOffset;
+                w["coords"] = w["coords"].get<vector2>() + offset;
             }
             for (auto& d : newRoom["doors"]) {
-                d["coords"] = d["coords"].get<vector2>() + moveOffset;
+                d["coords"] = d["coords"].get<vector2>() + offset;
             }
-            newRoom["center"] = newRoom["center"].get<vector2>() + moveOffset;
+            if (newRoom.contains("entities")) {
+                for (auto& e : newRoom["entities"]) {
+                    e["coords"] = e["coords"].get<vector2>() + offset;
+                }
+            }
+            newRoom["center"] = newRoom["center"].get<vector2>() + offset;
 
             openDoor->at("isTaken") = true;
             newDoor->at("isTaken") = true;
@@ -289,6 +312,7 @@ void world::generateLayout(int count) {
         worldData["rooms"].push_back(room);
     }
 }
+
 
 json world::getAllEntities() {
     json entities = json::array();
