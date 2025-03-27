@@ -116,6 +116,8 @@ public:
     void handleDebugWorldCreator(float deltaMs);
 
     void drawWall(wall *cur_wall);
+
+    void renderAT(vector2 screenCoords, vector2 dim, AT *at);
 };
 
 

@@ -241,6 +241,9 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
 
     // Create AT
     //TODO: anything above 700 starts to lag only when rendered on screen so view needs optimizations
+    auto* ATTxd = new TxdLoader(passFunc, "../resource/ATLoot1.png");
+    processManager.attachProcess(ATTxd);
+    gM->attachTxd("AT::TEXTURE", ATTxd);
     for (int i = 0; i < 200; i++) {
         // random location for the AT
         auto* at = new AT(passFunc, {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))});
