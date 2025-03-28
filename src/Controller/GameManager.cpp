@@ -68,16 +68,10 @@ int GameManager::initialize() {
                 renderEnemy(screenCoords, dim, e);
             }else if (e->isEntityAPickup()) {
                 if (e->getPickupType() == entity::AT) {
-                    if (isDebug()) {
-                        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                        TriggerEvent("SDL::Render::ResetDrawColor");
-                    }
                     auto* at = dynamic_cast<AT*>(e);
                     if (at) {
                         renderAT(screenCoords, dim, at);
                     }
-
                 }else if (e->getPickupType() == entity::HEART) {
                     if (isDebug()) {
                         TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
@@ -140,72 +134,77 @@ int GameManager::initialize() {
 
 
     // if world is attached
-    if (worldMap) {
-        worldMap->loadWorld(); // loads the world
-//        worldMap->generateLayout(8); // generates the layout of the world random rooms
-        json worldEntityList = worldMap->getAllEntities();
-        for (auto& worldE : worldEntityList) {
-            int hearts = 0;
-            if (worldE["hearts"] == nullptr) {
-                hearts = worldE["pType"].get<int>();
-            }else {
-                hearts = worldE["hearts"].get<int>();
-            }
+    if (false) {
+        if (worldMap) {
 
-            if (worldE["eType"] == nullptr) { continue;}
-
-            auto eType = (entity::eType) worldE["eType"].get<int>();
-
-            switch (eType) {
-                case entity::eType::PLAYER:
-                    continue;
-                case entity::eType::ENEMY:
-                case entity::eType::PROJECTILE:{
-                    entity* e = new entity(passFunc, entity::ENEMY, hearts, worldE["coords"].get<vector2>());
-                    PM->attachProcess(e);
-                    attachEntity(e);
-                    e->spawn();
-                    break;
+            worldMap->loadWorld(); // loads the world
+            //worldMap->generateLayout(8); // generates the layout of the world random rooms
+            json worldEntityList = worldMap->getAllEntities();
+            for (auto &worldE: worldEntityList) {
+                int hearts = 0;
+                if (worldE["hearts"] == nullptr) {
+                    hearts = worldE["pType"].get<int>();
+                } else {
+                    hearts = worldE["hearts"].get<int>();
                 }
-                case entity::eType::ITEM_PICKUP: {
-                    if (entity::pType::AT == hearts) {
-                        entity* e = new AT(passFunc, worldE["coords"].get<vector2>());
-                        PM->attachProcess(e);
-                        attachEntity(e);
-                        e->spawn();
-                        break;
-                    }else {
-                        entity* e = new entity(passFunc, entity::ITEM_PICKUP, hearts, worldE["coords"].get<vector2>());
+
+                if (worldE["eType"] == nullptr) { continue; }
+
+                auto eType = (entity::eType) worldE["eType"].get<int>();
+
+                switch (eType) {
+                    case entity::eType::PLAYER:
+                        continue;
+                    case entity::eType::ENEMY:
+                    case entity::eType::PROJECTILE: {
+                        entity *e = new entity(passFunc, entity::ENEMY, hearts, worldE["coords"].get<vector2>());
                         PM->attachProcess(e);
                         attachEntity(e);
                         e->spawn();
                         break;
                     }
-                }
-                case entity::eType::LASER: {
-                    Heading h = Heading(worldE["heading"].get<float>());
-                    int l = worldE["length"].get<int>();
-                    int w = worldE["width"].get<int>();
-                    int interval = worldE["interval"].get<int>();
-                    int dur = worldE["duration"].get<int>();
-                    int damage = worldE["damage"].get<int>();
-                    int speed = worldE["speed"].get<int>();
-                    Laser* e = new Laser(passFunc, worldE["coords"].get<vector2>(), h, l, w, interval, dur, damage, speed);
-                    PM->attachProcess(e);
-                    attachEntity(e);
-                    if (worldE["spin"] != nullptr) {
-                        e->setSpin(worldE["spin"].get<bool>());
+                    case entity::eType::ITEM_PICKUP: {
+                        if (entity::pType::AT == hearts) {
+                            entity *e = new AT(passFunc, worldE["coords"].get<vector2>());
+                            PM->attachProcess(e);
+                            attachEntity(e);
+                            e->spawn();
+                            break;
+                        } else {
+                            entity *e = new entity(passFunc, entity::ITEM_PICKUP, hearts,
+                                                   worldE["coords"].get<vector2>());
+                            PM->attachProcess(e);
+                            attachEntity(e);
+                            e->spawn();
+                            break;
+                        }
                     }
-                    e->spawn();
-                    break;
+                    case entity::eType::LASER: {
+                        Heading h = Heading(worldE["heading"].get<float>());
+                        int l = worldE["length"].get<int>();
+                        int w = worldE["width"].get<int>();
+                        int interval = worldE["interval"].get<int>();
+                        int dur = worldE["duration"].get<int>();
+                        int damage = worldE["damage"].get<int>();
+                        int speed = worldE["speed"].get<int>();
+                        Laser *e = new Laser(passFunc, worldE["coords"].get<vector2>(), h, l, w, interval, dur, damage,
+                                             speed);
+                        PM->attachProcess(e);
+                        attachEntity(e);
+                        if (worldE["spin"] != nullptr) {
+                            e->setSpin(worldE["spin"].get<bool>());
+                        }
+                        e->spawn();
+                        break;
+                    }
+                    case entity::eType::ENEMY_BOSS:
+                        break;
                 }
-                case entity::eType::ENEMY_BOSS:
-                    break;
             }
+        } else {
+            error("World Map not set in Game Manager");
+            return 0;
         }
-    }else {
-        error("World Map not set in Game Manager");
-        return 0;
     }
 
     gameRunning = true;
@@ -422,17 +421,31 @@ void GameManager::renderAT(vector2 screenCoords, vector2 dim, AT* at) {
     if (it == txdMap.end() || !it->second) {
         return;
     }
+
     int textureSize = 125;
 
     // Render the texture
     SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
     SDL_Rect destRect = {
-            static_cast<int>(screenCoords.x),
-            static_cast<int>(screenCoords.y),
+            static_cast<int>(screenCoords.x - (dim.x / 2)),
+            static_cast<int>(screenCoords.y - (dim.y / 2)),
             static_cast<int>(dim.x),
             static_cast<int>(dim.y) // down scale the texture
     };
+
+    if (isDebug()) { // draw a rec around the texture (background)
+        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x - (dim.x / 2), screenCoords.y - (dim.y / 2), dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+
+    }
     txdMap["AT::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+    if (isDebug()) { // draw a center point of the AT
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+        TriggerEvent("SDL::Render::DrawPoint", screenCoords.x, screenCoords.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+
+    }
 }
 
 void GameManager::renderHeart(vector2 screenCoords, vector2 dim, entity* e) {
@@ -825,7 +838,7 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
     for (auto& e2 : entityList) {
         if (e2->isEntityAPickup()) {
             vector2 enemyCoords = e2->getPosition();
-            if ((currentCoords - enemyCoords).length() < 25) {
+            if (p->isPointInEntity(enemyCoords)) {
                 if (e2->getPickupType() == entity::AT) {
                     e2->setHearts(0);
                     e2->succeed();

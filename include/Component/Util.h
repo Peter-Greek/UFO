@@ -70,7 +70,8 @@ void error(Args... args)
     std::cout << "SCRIPT ERROR: ";
     ((std::cout << args << '\t'), ...) << '\n';
     std::cout.flush();  // Ensures output is printed immediately
-    exit(0);
+
+    exit(69420);
 }
 
 float map_range(float s, float a1, float a2, float b1, float b2);
