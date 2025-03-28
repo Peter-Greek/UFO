@@ -73,13 +73,9 @@ int GameManager::initialize() {
                         renderAT(screenCoords, dim, at);
                     }
                 }else if (e->getPickupType() == entity::HEART) {
-                    if (isDebug()) {
-                        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
-                        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                        TriggerEvent("SDL::Render::ResetDrawColor");
-                    }
                     renderHeart(screenCoords, dim, e);
                 }else if (e->getPickupType() == entity::OXY_TANK) {
+                    //TODO: Render Oxy Tank Like Hearts and AT
                     TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                     TriggerEvent("SDL::Render::ResetDrawColor");
@@ -90,6 +86,7 @@ int GameManager::initialize() {
                     renderLaser(screenCoords, dim, l);
                 }
             }else if (e->isEntityAProjectile()) {
+                //TODO: Render Projectile Like Hearts and AT
                 TriggerEvent("SDL::Render::SetDrawColor", 255, 255, 255, 255);
                 TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                 TriggerEvent("SDL::Render::ResetDrawColor");
@@ -459,11 +456,18 @@ void GameManager::renderHeart(vector2 screenCoords, vector2 dim, entity* e) {
     // Render the texture
     SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
     SDL_Rect destRect = {
-            static_cast<int>(screenCoords.x),
-            static_cast<int>(screenCoords.y),
+            static_cast<int>(screenCoords.x - (dim.x/2)),
+            static_cast<int>(screenCoords.y - (dim.y/2)),
             static_cast<int>(dim.x),
             static_cast<int>(dim.y) // down scale the texture
     };
+
+    if (isDebug()) {
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x - (dim.x/2), screenCoords.y - (dim.y/2), dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+    }
+
     txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 }
 
@@ -845,6 +849,9 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
                     p->addATCount(); // adds 1 AT to player current loop total
                     textMap["ATScore"]->setText("AT: " + std::to_string(p->getATCount()));
                 }else if (e2->getPickupType() == entity::HEART) {
+                    if (p->getHearts() == p->getMaxHearts()) {
+                        continue; // This is a design choice to not allow the player to pick up hearts if they are full
+                    }
                     e2->setHearts(0);
                     e2->succeed();
                     p->addHearts(1); // adds 1 heart
