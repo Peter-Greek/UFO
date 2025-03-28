@@ -25,10 +25,23 @@ private:
         static_cast<int>(upgradeMenuSize.x),
         static_cast<int>(upgradeMenuSize.y)
     };
+
+    struct UpgradeText {
+        SDL_Texture* texture;
+        SDL_Rect dst;
+        std::string text;
+        bool isCut = false;
+    };
+
+    SDL_Rect ATBox = {cbox.x + 2*(SCREEN_WIDTH/3), cbox.y+ 10, SCREEN_WIDTH - (10+ATBox.x), SCREEN_HEIGHT/7};
+    SDL_Rect ATBoxText = {ATBox.x+30, ATBox.y+30, ATBox.w-60, ATBox.h-60};
+    UpgradeText ATText = {nullptr, ATBoxText, "AT Count: 0"};
     int fontSize = 50;
 
 public:
-    explicit UpgradeMenu(passFunc_t& func) : xProcess(true, func){}
+    explicit UpgradeMenu(passFunc_t& func) : xProcess(true, func){
+        setFontColor(255, 255, 255, 255);
+    }
     ~UpgradeMenu() override = default;
 
     int initialize_SDL_process(SDL_Window* window) override;
@@ -41,6 +54,8 @@ public:
     void setUpgradeMenuSize(vector2 size);
     void setUpgradeMenuSize(float x, float y);
     void updateUpgradeMenuPositioning();
+    void displayATCount();
+    void setFontColor(int r, int g, int b, int a);
 
 };
 #endif //CSCI437_UPGRADEMENU_H

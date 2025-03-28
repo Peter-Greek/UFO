@@ -48,8 +48,18 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
 
         if (renderer == nullptr) {return;}
 
+        //Drawing menu background
         SDL_SetRenderDrawColor(renderer, 0, 0, 75, 255);
         SDL_RenderFillRect(renderer, &cbox);
+        
+        //Drawing box to show AT count
+        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
+        SDL_RenderDrawRect(renderer, &ATBox);
+
+        if (ATText.texture) {
+            SDL_SetTextureColorMod(ATText.texture, 255, 255, 255);
+            SDL_RenderCopy(renderer, ATText.texture, nullptr, &ATText.dst);
+        }
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
@@ -82,8 +92,17 @@ void UpgradeMenu::showUpgradeMenu() {
     isHidden = false;
     if (!running) return;
     TriggerEvent("UFO::UpgradeMenu::State", true);
-
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, "upgrade menu", color);
+    displayATCount();
+}
+
+void UpgradeMenu::displayATCount(){
+    if (ATText.texture) {
+        SDL_DestroyTexture(ATText.texture);
+    }
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, ATText.text.c_str(), color);
+    ATText.texture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    SDL_FreeSurface(textSurface);
 }
 
 void UpgradeMenu::closeUpgradeMenu() {
@@ -91,6 +110,7 @@ void UpgradeMenu::closeUpgradeMenu() {
     if (!running) return;
     TriggerEvent("UFO::UpgradeMenu::State", false);
 }
+
 
 void UpgradeMenu::updateUpgradeMenuPositioning() {
     cbox = {
@@ -119,4 +139,8 @@ void UpgradeMenu::setUpgradeMenuSize(vector2 size) {
 void UpgradeMenu::setUpgradeMenuSize(float x, float y) {
     upgradeMenuSize = {x, y};
     updateUpgradeMenuPositioning();
+}
+
+void UpgradeMenu::setFontColor(int r, int g, int b, int a) {
+    color = {static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b), static_cast<Uint8>(a)};
 }
