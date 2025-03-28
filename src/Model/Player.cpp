@@ -192,17 +192,6 @@ void Player::update(float deltaMs) {
         setKnockedBack(false, 0.0f);
     }
 
-    // set length and width of the player based on the direction they are moving (so the hit box encompasses the sprite)
-    if (newVel.x == 0.0f && std::abs(newVel.y) > 0.0f) {
-        vector2 dims = getDefLengthWidth();
-        setLength(dims.y);
-        setWidth(dims.x);
-    }else {
-        vector2 dims = getDefLengthWidth();
-        setLength(dims.x);
-        setWidth(dims.y);
-    }
-
     setVelocity(newVel);
 }
 

@@ -282,17 +282,8 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
 
     if (playerVel.x != 0 || playerVel.y != 0) {
         currentFrame = animList["FSS_MOVE"]->getCurrentFrame(deltaMs);
-        if (playerVel.x < 0) {
+        if (playerVel.x < 0 || p->isFacingLeft()) {
             flip = true;
-        }
-
-        if (playerVel.y != 0) {
-            angle = playerVel.y > 0 ? 90 : -90;
-            if (playerVel.x < 0) {
-                angle = playerVel.y > 0 ? -45 : 45;
-            }else if (playerVel.x > 0) {
-                angle = playerVel.y > 0 ? 45 : -45;
-            }
         }
     }else {
         flip = p->isFacingLeft();
