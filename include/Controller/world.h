@@ -11,6 +11,7 @@
 #include "TxdLoader.h"
 #include "wall.h"
 #include "vector"
+#include <unordered_set>
 
 using wallList_t = std::list<wall*>;
 using roomList_t = std::list<wallList_t>;
@@ -27,6 +28,27 @@ private:
 
     wallList_t wallList;
     roomList_t roomList;
+
+    std::unordered_set<std::string> usedRoomTypes;
+    std::unordered_map<std::string, int> roomTypeCount;
+    std::vector<std::string> requiredRoomTypes;
+
+    json getRoomById(const json& templates, const std::string& id);
+    void offsetRoom(json& room, const vector2& offset);
+    void rotateRoom(json& room, float angle);
+    void markDoors(json& room, std::vector<json>& doorPool, json* skip = nullptr);
+    float getRequiredRotation(const json& openDoor, const json& newDoor);
+    bool shouldAddHallway(int specialPlaced, int maxCount, int placed, const std::string& lastType);
+    bool shouldAddSpecialRoom(int specialPlaced);
+    json pickHallway(const json& templates);
+    json pickUnusedSpecialRoom(const json& templates);
+    std::string getConnectingRoomType(const json& door);
+    json* pickAvailableDoor(std::vector<json>& doors);
+    json* findUnusedDoor(json& room);
+    json pickUsedSpecialRoom(const json& templates);
+
+
+
 public:
     explicit world(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {
         worldData = jsonLoader("../resource/world.json");

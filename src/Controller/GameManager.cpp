@@ -142,7 +142,7 @@ int GameManager::initialize() {
     // if world is attached
     if (worldMap) {
         worldMap->loadWorld(); // loads the world
-//        worldMap->generateLayout(5); // generates the layout of the world random rooms
+//        worldMap->generateLayout(8); // generates the layout of the world random rooms
         json worldEntityList = worldMap->getAllEntities();
         for (auto& worldE : worldEntityList) {
             int hearts = 0;
