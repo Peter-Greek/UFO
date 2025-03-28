@@ -77,6 +77,9 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             }
         }
 });
+    AddEventHandler("UFO::UpgradeMenu::DisplayATCount", [this](int ATCount) {
+        displayATCount(ATCount);
+    });
     return 1;
 }
 
@@ -93,16 +96,21 @@ void UpgradeMenu::showUpgradeMenu() {
     if (!running) return;
     TriggerEvent("UFO::UpgradeMenu::State", true);
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, "upgrade menu", color);
-    displayATCount();
+    displayATCount(AT);
 }
 
-void UpgradeMenu::displayATCount(){
+void UpgradeMenu::displayATCount(int ATCount){
     if (ATText.texture) {
         SDL_DestroyTexture(ATText.texture);
     }
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, ATText.text.c_str(), color);
+    std::string ATCountText = "AT Count: " + std::to_string(ATCount);
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, ATCountText.c_str(), color);
     ATText.texture = SDL_CreateTextureFromSurface(renderer, textSurface);
     SDL_FreeSurface(textSurface);
+}
+
+void UpgradeMenu::setATCount(int ATCount){
+    AT = ATCount;
 }
 
 void UpgradeMenu::closeUpgradeMenu() {

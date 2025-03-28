@@ -389,7 +389,7 @@ int main(int argc, char* argv[])
 
     auto* upgradeMenu = new UpgradeMenu(passFunc);
     processManager.attachProcess(upgradeMenu);
-
+    upgradeMenu->setATCount(gameStorage["player"]["ATCount"].get<int>());
     // Load JSON storage file
     loadGameStorage();
 

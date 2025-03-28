@@ -15,6 +15,7 @@ private:
     SDL_Point rot;
     vector2 position = {0, 0};
     vector2 upgradeMenuSize = {static_cast<float>(SCREEN_WIDTH), static_cast<float>(SCREEN_HEIGHT)};
+    int AT;
 
     bool running = false;
     bool isHidden = true;
@@ -54,8 +55,8 @@ public:
     void setUpgradeMenuSize(vector2 size);
     void setUpgradeMenuSize(float x, float y);
     void updateUpgradeMenuPositioning();
-    void displayATCount();
+    void displayATCount(int ATCount);
+    void setATCount(int ATCount);
     void setFontColor(int r, int g, int b, int a);
-
 };
 #endif //CSCI437_UPGRADEMENU_H
