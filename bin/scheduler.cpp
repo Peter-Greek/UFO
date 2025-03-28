@@ -61,7 +61,7 @@
 #include "AsepriteLoader.h"
 #include "AudioLoader.h"
 #include "world.h"
-
+#include "Boss.h"
 
 
 // Scheduler Variables
@@ -286,6 +286,12 @@ void CreateGameEnvironment(passFunc_t passFunc, ProcessManager& processManager){
     processManager.attachProcess(npc);
     gM->attachEntity(npc);
     npc->spawn();
+
+    // Create Boss
+    auto* boss = new Boss(passFunc, {0.0f, 0.0f});
+    processManager.attachProcess(boss);
+    gM->attachEntity(boss);
+    boss->spawn();
 
     // Create Heart Pickup
     auto* HeartTxd = new TxdLoader(passFunc, "../resource/HeartSS.png");

@@ -64,7 +64,7 @@ int GameManager::initialize() {
 
             vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
             vector2 dim = e->getDimensions(); // get the dimensions of the entity (length, width)
-            if (e->isEntityAnEnemy()) {
+            if (e->isEntityAnEnemy() || e->isEntityAnEnemyBoss()) {
                 renderEnemy(screenCoords, dim, e);
             }else if (e->isEntityAPickup()) {
                 if (e->getPickupType() == entity::AT) {
@@ -345,10 +345,10 @@ void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
     }
 
     SDL_Rect destRect = {
-            static_cast<int>(screenCoords.x) - 16,
-            static_cast<int>(screenCoords.y) - 16,
+            static_cast<int>(screenCoords.x - dim.x/2) ,
+            static_cast<int>(screenCoords.y - dim.y/2) ,
             static_cast<int>(dim.x),
-            static_cast<int>(dim.y) // down scale the texture
+            static_cast<int>(dim.y) // down scale or up scale the texture
     };
     txdMap[textureName]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 
