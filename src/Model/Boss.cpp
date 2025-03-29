@@ -62,6 +62,7 @@ bool Boss::canSpawnMinion() {
     if (lastMinionSpawnTime > timeBetweenSpawns && minionCount < maxMinions) {
         return true;
     }
+    return false;
 }
 
 // Gamemanager is going to calculate where the minion should spawn at and then call this function
@@ -71,6 +72,7 @@ entity* Boss::spawnMinion(vector2 coords) {
         attachMinion(e);
         return e;
     }
+    return nullptr;
 }
 
 

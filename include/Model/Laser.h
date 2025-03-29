@@ -42,7 +42,6 @@ private:
     float duration;
     int damage;
     int speed;
-
     bool spinning = false;
     bool clockWise = false;
 
@@ -69,29 +68,19 @@ public:
     {}
 
     void update(float deltaMs) override;
-
     void fire();
-
     void stopFire();
-
     bool isFiring();
-
     Heading getHeading();
     void setHeading(Heading h);
-
     void setSpin(bool s);
     bool isSpinning() const;
-
     int getDamage() const;
     void setDamage(int d);
-
     int getSpeed() const;
     void setSpeed(int s);
-
     float getInterval() const;
     float getDuration() const;
-
-
     float timeLeft();
 };
 

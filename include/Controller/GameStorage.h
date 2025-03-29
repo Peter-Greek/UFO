@@ -45,7 +45,6 @@ public:
     int apply();
     jLoader& getStorage();
     void save();
-
     json& operator[](const std::string& key) {
         return gameStorage[key];
     }

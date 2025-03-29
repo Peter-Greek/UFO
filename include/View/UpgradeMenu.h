@@ -38,7 +38,6 @@ private:
     SDL_Rect ATBoxText = {ATBox.x+30, ATBox.y+30, ATBox.w-60, ATBox.h-60};
     UpgradeText ATText = {nullptr, ATBoxText, "AT Count: 0"};
     int fontSize = 50;
-
 public:
     explicit UpgradeMenu(passFunc_t& func) : xProcess(true, func){
         setFontColor(255, 255, 255, 255);

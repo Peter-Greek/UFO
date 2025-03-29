@@ -66,10 +66,7 @@ private:
     std::map<std::string, AudioLoader*> audioMap;
     camera* cam;
     world* worldMap;
-
     passFunc_t passFunc;
-
-
     wall* debugWall = nullptr;
     // debug wall creation state
     db_WCS debugWallSate = CREATION_NOT_STARTED;
@@ -78,7 +75,6 @@ private:
     int db_wall_index = -1;
     bool inShiftFind = false;
     vector2 shiftFindStart;
-
 public:
     explicit GameManager(passFunc_t& func) : xProcess(false, func), passFunc(func) {}
 
@@ -99,29 +95,19 @@ public:
     void attachAudio(const std::string& name, AudioLoader *audio);
 
     static void bounceEntities(entity* e1, entity* e2);
+    void playerTakeHit(Player *p, int damage);
 
     void handleEnemyUpdate(entity *e, float deltaMs);
     void handlePlayerUpdate(entity *e, float deltaMs);
 
     void updatePlayerView(bool isVisible, entity *e, float deltaMs);
-
-
-    void playerTakeHit(Player *p, int damage);
-
     void renderLaser(vector2 screenCoords, vector2 dim, Laser *l);
-
     void renderEnemy(vector2 screenCoords, vector2 dim, entity *e);
-
     void renderWorld(float deltaMs);
-
     void handleDebugWorldCreator(float deltaMs);
-
     void drawWall(wall *cur_wall);
-
     void renderAT(vector2 screenCoords, vector2 dim, AT *at);
-
     void renderHeart(vector2 screenCoords, vector2 dim, entity *e);
-
     void renderHeart(vector2 screenCoords, vector2 dim);
 };
 

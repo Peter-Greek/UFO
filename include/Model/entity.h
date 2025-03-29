@@ -120,6 +120,7 @@ public:
     [[nodiscard]] vector2 getCenter() const;
     [[nodiscard]] vector2 getDimensions() const;
     vector2 getDefLengthWidth() {
+        // this is staying in h file as its basically a config
         switch (type) {
             case PLAYER:
                 return {64, 48};

@@ -13,28 +13,20 @@
 using json = nlohmann::json;
 
 class ProcessManager {
-
 private:
     std::list<xProcess*> processList;
     std::list<UUID> uuidList;
-
     passFunc_t passFunc;
-
 public:
     ProcessManager() = default;
     ~ProcessManager() = default;
-
-
     int updateProcessList(float deltaMs, SDL_Window* window);
     void attachProcess(xProcess* p);
     void abortAllProcess();
     int removeProcess(xProcess* p);
     void triggerEventInAll(const std::string& eventName, const json& eventData);
-
     UUID generateUUID();
     bool containsUUID(UUID uuid);
-
-
 };
 
 

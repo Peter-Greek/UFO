@@ -90,8 +90,6 @@ private:
 
     int textWidth;
     int textHeight;
-
-
 };
 
 #endif //CSCI437_TEXT_H

@@ -48,7 +48,6 @@ private:
     ProcessManager& processManager;
     GameStorage& gameStorage;
     Scheduler& sch;
-
 public:
     GameInitializer(passFunc_t p1, ProcessManager& pM, GameStorage& loader, Scheduler& sch_p) :
         passFunc(p1),
@@ -57,12 +56,9 @@ public:
         xProcess(false, p1),
         sch(sch_p)
     {};
-
     void update(float deltaMs) override {};
     bool isDone() override {return false;};
-
     void Init();
-
     void Start();
     void End();
     void Debug();

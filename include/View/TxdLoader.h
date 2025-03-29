@@ -51,52 +51,21 @@ public:
             passFunc_t passFunc, std::string txdPath
     ): xProcess(true, passFunc), txdPath(std::move(txdPath)) {}
 
-//    TxdLoader(
-//            passFunc_t passFunc, std::string txdPath,
-//            SDL_Rect srcRect, SDL_Rect destRect, int angle, SDL_Point center, SDL_RendererFlip flip
-//    ): xProcess(true, passFunc), txdPath(std::move(txdPath)), srcRect(srcRect), destRect(destRect),
-//    angle(angle), center(center), flip(flip) {}
-
     int initialize_SDL_process(SDL_Window* passed_window) override;
-
     void update(float deltaMs) override;
-
     bool isDone() override;
-
     void postSuccess() override;
-
     void postFail() override;
-
     void postAbort() override;
 
     void setTxdPath(std::string txdPathStr);
     std::string GetTxdPath();
 
-//    void setSrcRect(SDL_Rect rect);
-//    SDL_Rect GetSrcRect();
-//
-//    void setDestRect(SDL_Rect rect);
-//    SDL_Rect GetDestRect();
-//
-//    void setAngle(int angle);
-//    int GetAngle();
-//
-//    void setCenter(SDL_Point point);
-//    void setCenter(vector2 point);
-//    SDL_Point GetCenter();
-//
-//    void setFlip(SDL_RendererFlip flipDef);
-//    SDL_RendererFlip GetFlip();
     void render(SDL_Rect srcRect, SDL_Rect destRect, int angle, SDL_Point center, SDL_RendererFlip flip);
-
     void render(SDL_Rect srcRect, SDL_Rect destRect, int angle, SDL_RendererFlip flip);
-
     void render(SDL_Rect srcRect, SDL_Rect destRect, Heading angle, SDL_RendererFlip flip);
-
     void render(SDL_Rect srcRect, SDL_Rect destRect, Heading angle);
-
     void render(SDL_Rect srcRect, SDL_Rect destRect, int angle);
-
     void render(SDL_Rect srcRect, SDL_Rect destRect, Heading angle, SDL_Point center, SDL_RendererFlip flip);
 };
 

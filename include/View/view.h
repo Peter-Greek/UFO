@@ -33,7 +33,6 @@ public:
     void postSuccess() override;
     void postFail() override;
     void postAbort() override;
-
 };
 
 

@@ -49,11 +49,9 @@ private:
     bool running = false;
 public:
     explicit AudioLoader(passFunc_t passFunc, std::string  path): xProcess(true, std::move(passFunc)), audioPath(std::move(path)) {}
-
     int initialize_SDL_process(SDL_Window* window) override;
     void update(float deltaMs) override;
     bool isDone() override;
-
     void play(float volume = 1.0f);
 };
 

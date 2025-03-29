@@ -12,16 +12,13 @@ private:
     int lastMinionSpawnTime = 0;
     int inRage = 0;
     int rageTime = 0;
-
     std::vector<entity*> minions;
     std::vector<entity*> projectiles;
     int minionCount = 0;
     int projectileCount = 0;
     int maxMinions = 5;
     int maxProjectiles = 5;
-
     passFunc_t passFunc;
-
 public:
     explicit Boss(
             passFunc_t& func,
@@ -38,9 +35,7 @@ public:
     void removeProjectile(entity* e);
     [[nodiscard]] int getToSpawnMinionCount() const;
     bool canSpawnMinion();
-
     entity* spawnMinion(vector2 coords);
-
 };
 
 

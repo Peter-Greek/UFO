@@ -56,9 +56,11 @@ public:
         gameTime = diff;
         return timeElapsed;
     }
+
     [[nodiscard]] float getGameTime() const {
         return gameTime;
     };
+
     high_res_time_point_t getStartTime() {
         return startTime;
     }
@@ -78,8 +80,6 @@ public:
     [[nodiscard]] float getTimeFactor() const {
         return timeFactor;
     }
-
-
 
     void setTimeout(int delay, std::function<void()> function) {
         std::thread t([delay, function, this]() {
