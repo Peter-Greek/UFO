@@ -17,8 +17,12 @@ class ProcessManager {
 private:
     std::list<xProcess*> processList;
     std::list<UUID> uuidList;
-public:
 
+    passFunc_t passFunc;
+
+public:
+    ProcessManager() = default;
+    ~ProcessManager() = default;
 
 
     int updateProcessList(float deltaMs, SDL_Window* window);
@@ -28,11 +32,9 @@ public:
     void triggerEventInAll(const std::string& eventName, const json& eventData);
 
     UUID generateUUID();
-
-    ProcessManager() = default;
-    ~ProcessManager() = default;
-
     bool containsUUID(UUID uuid);
+
+
 };
 
 

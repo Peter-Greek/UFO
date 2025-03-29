@@ -49,6 +49,7 @@
 #include "entity.h"
 #include "wall.h"
 #include "AudioLoader.h"
+#include "Boss.h"
 
 
 class GameManager : public xProcess {

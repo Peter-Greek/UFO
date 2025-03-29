@@ -125,6 +125,13 @@ int view::initialize() {
     });
 
     running = true;
+
+
+    auto* chatBox = new ChatBox(passFunc);
+    pM.attachProcess(chatBox);
+    chatBox->addMessage("Hello World");
+
+
     return 1;
 }
 
@@ -146,7 +153,10 @@ void view::update(float deltaMs) {
         if( e.type == SDL_KEYDOWN )
         {
             if (!chatState) {
-                if( e.key.keysym.sym == SDLK_q ) running = false;
+                if( e.key.keysym.sym == SDLK_q ) {
+                    TriggerEvent("UFO::Quit");
+                    running = false;
+                }
                 if ( e.key.keysym.sym == SDLK_b ) {
                     TriggerEvent("UFO::ChangeConfigValue", "debugMode");
                 }
