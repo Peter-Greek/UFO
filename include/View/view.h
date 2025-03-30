@@ -19,10 +19,10 @@ private:
     SDL_Surface* screenSurface;
 
     void drawRect(int x, int y, int w, int h);
-    ProcessManager pM;
+    ProcessManager* pM;
     passFunc_t& passFunc;
 public:
-    explicit view(passFunc_t& func, ProcessManager pPm) : xProcess(false, func), pM(pPm), passFunc(func) {};
+    explicit view(passFunc_t& func, ProcessManager& pPm) : xProcess(false, func), pM(&pPm), passFunc(func) {};
     ~view() override = default;
 
     SDL_Window* getWindow() { return window; }

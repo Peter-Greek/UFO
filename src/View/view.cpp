@@ -128,7 +128,7 @@ int view::initialize() {
 
 
     auto* chatBox = new ChatBox(passFunc);
-    pM.attachProcess(chatBox);
+    pM->attachProcess(chatBox);
     chatBox->addMessage("Hello World");
 
 
