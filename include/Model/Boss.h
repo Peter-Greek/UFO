@@ -34,7 +34,7 @@ public:
     void removeMinion(entity* e);
     void removeProjectile(entity* e);
     [[nodiscard]] int getToSpawnMinionCount() const;
-    bool canSpawnMinion();
+    bool canSpawnMinion() const;
     entity* spawnMinion(vector2 coords);
 };
 

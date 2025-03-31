@@ -109,6 +109,8 @@ public:
     void renderAT(vector2 screenCoords, vector2 dim, AT *at);
     void renderHeart(vector2 screenCoords, vector2 dim, entity *e);
     void renderHeart(vector2 screenCoords, vector2 dim);
+
+    void handleBossUpdate(entity *e, float deltaMs);
 };
 
 

@@ -363,6 +363,28 @@ void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
         TriggerEvent("SDL::Render::DrawPoint", screenCoords.x, screenCoords.y);
         TriggerEvent("SDL::Render::ResetDrawColor");
     }
+
+    int hearts = e->getMaxHearts();
+    if (hearts > 0) {
+        int length = e->getLength();
+        int width = e->getWidth();
+
+        float heartWidth = static_cast<float>(length) / hearts;
+        float heartHeight = heartWidth; // Make them square or adjust as needed
+
+        float startX = screenCoords.x - length / 2.0f;
+        float y = screenCoords.y - width / 2.0f - heartHeight - 2; // place above the head with a small gap
+
+        for (int i = 0; i < hearts; i++) {
+            if (i+1 > e->getHearts()) {
+                break;
+            }
+            float x = startX + i * heartWidth;
+            renderHeart(vector2(x, y), vector2(heartWidth, heartHeight));
+        }
+    }
+
+
 }
 
 void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
@@ -806,6 +828,8 @@ void GameManager::update(float deltaMs) {
         // Handle Collisions
         if (e->isEntityAnEnemy()) {
             handleEnemyUpdate(e, deltaMs);
+        }else if (e->isEntityAnEnemyBoss()) {
+            handleBossUpdate(e, deltaMs);
         }else if (e->isEntityAPlayer()) {
             handlePlayerUpdate(e, deltaMs);
         }
@@ -963,7 +987,7 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
             int x, y; SDL_GetMouseState(&x, &y);
             vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
             Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
-            vector2 newVel = angleToVector2(h) * 0.15f;
+            vector2 newVel = angleToVector2(h) * 0.35f;
 
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
 
@@ -1058,6 +1082,53 @@ void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
     }
 
     e->setVelocity(newVel);
+}
+
+void GameManager::handleBossUpdate(entity* e, float deltaMs) {
+    vector2 currentCoords = e->getPosition();
+    vector2 curVel = e->getVelocity();
+    vector2 newVel = vector2(0.0f, 0.0f);
+
+    auto* b = dynamic_cast<Boss*>(e);
+
+    for (auto& e2 : entityList) {
+        if (e2->isEntityAPlayer()) {
+            auto* p = dynamic_cast<Player*>(e2);
+            if (p->isInvisible()) { // cant see invisible players so no follow
+                continue;
+            }
+            vector2 playerCoords = e2->getPosition();
+            if ((currentCoords - playerCoords).length() < ((float) SCREEN_WIDTH)) {
+                int toSpawnMinions = b->getToSpawnMinionCount();
+                if (toSpawnMinions > 0) {
+                    if (b->canSpawnMinion()) {
+
+                        // get the coords from boss to player 2 units along line
+                        vector2 spawnCoords = currentCoords + (playerCoords - currentCoords).normalize() * 2.0f;
+                        auto* minion = b->spawnMinion(spawnCoords);
+                        PM->attachProcess(minion);
+                        attachEntity(minion);
+                        minion->spawn();
+                    }
+                }
+            }
+            continue;
+        }else if (e2->isEntityAProjectile()) {
+            vector2 projCoords = e2->getPosition();
+            if (e->isPointInEntity(projCoords)) {
+                if (e2->getHearts() > 0) {
+                    e->removeHearts(e2->getHearts());
+                    if (e->getHearts() == 0) {
+                        e->succeed();
+                    }
+                    e2->removeHearts(e2->getHearts());
+                    e2->succeed();
+                }
+            }
+        }
+    }
+
+    e->setVelocity({0.0,0.0});
 }
 
 // Attach Functions

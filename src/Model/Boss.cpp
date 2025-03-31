@@ -6,7 +6,10 @@
 
 
 void Boss::update(float deltaMs) {
-
+    lastMinionSpawnTime += deltaMs;
+    if (lastMinionSpawnTime > timeBetweenSpawns) {
+        lastMinionSpawnTime = timeBetweenSpawns;
+    }
 }
 
 bool Boss::inRageMode() const {
@@ -25,6 +28,7 @@ void Boss::attachMinion(entity* e) {
     if (minionCount < maxMinions) {
         minions.push_back(e);
         minionCount++;
+        lastMinionSpawnTime = 0;
     }
 }
 
@@ -56,10 +60,10 @@ int Boss::getToSpawnMinionCount() const {
     return minionToSpawn;
 }
 
-bool Boss::canSpawnMinion() {
+bool Boss::canSpawnMinion() const {
     // if the time is more than the interval and the count is less than
     // the max, then spawn a minion
-    if (lastMinionSpawnTime > timeBetweenSpawns && minionCount < maxMinions) {
+    if (lastMinionSpawnTime >= timeBetweenSpawns && minionCount < maxMinions) {
         return true;
     }
     return false;
