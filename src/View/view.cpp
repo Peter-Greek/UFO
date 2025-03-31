@@ -34,6 +34,7 @@
 
 
 #include "view.h"
+#include "../Controller/WorldCreator.h"
 
 // Process Functions
 int view::initialize() {
@@ -131,6 +132,9 @@ int view::initialize() {
     pM->attachProcess(chatBox);
     chatBox->addMessage("Hello World");
 
+    auto* WC = new WorldCreator(passFunc);
+    pM->attachProcess(WC);
+    chatBox->addMessage("World Creator Attached");
 
     return 1;
 }

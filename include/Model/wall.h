@@ -49,6 +49,11 @@ public:
         corners = getCorners();
     }
 
+    wall(const vector2& pos, int len, int w, Heading h)
+            : position(pos), length(len), width(w), heading(h) {
+        corners = getCorners();
+    }
+
     wall(): heading(0), length(0), width(0) {
         corners = getCorners();
     };

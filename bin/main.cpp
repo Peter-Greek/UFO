@@ -96,6 +96,14 @@ int main(int argc, char* argv[])
         scheduler.shutdown();
     });
 
+    scheduler.setTimeout(2000, [&gameInitializer](){
+        print("Creating Room from PNG");
+        std::string message = "createRoomFromPng testwalls_720.png";
+        sList_t args = split(message, " ");
+        args.erase(args.begin());
+        gameInitializer.TriggerEvent("__internal_command_createRoomFromPng", "chat", args, message);
+    });
+
 
     if (!viewProcess->initialize()) {
         error("View Process failed to initialize");
