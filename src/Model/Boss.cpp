@@ -5,6 +5,7 @@
 #include "Boss.h"
 
 
+
 void Boss::update(float deltaMs) {
     lastMinionSpawnTime += deltaMs;
     if (lastMinionSpawnTime > timeBetweenSpawnsMinion) {
@@ -16,7 +17,7 @@ void Boss::update(float deltaMs) {
         lastProjectileSpawnTime = timeBetweenSpawnsProjectile;
     }
 
-    std::vector<entity*> removalList; // prevent segfaults
+    std::vector<sh_ptr_e> removalList; // prevent segfaults
     for (auto& m : minions) {
         if (m->isDone() || m->state() == xProcess::State::ABORT || m->state() == xProcess::State::FAIL) {
             removalList.push_back(m);
@@ -51,15 +52,15 @@ bool Boss::inRageMode() const {
     return inRage > 0;
 }
 
-bool Boss::isMinion(entity* e) const {
+bool Boss::isMinion(const sh_ptr_e& e) const {
     return std::find(minions.begin(), minions.end(), e) != minions.end();
 }
 
-bool Boss::isBossProjectile(entity* e) const {
+bool Boss::isBossProjectile(const sh_ptr_e& e) const {
     return std::find(projectiles.begin(), projectiles.end(), e) != projectiles.end();
 }
 
-void Boss::attachMinion(entity* e) {
+void Boss::attachMinion(const sh_ptr_e& e) {
     if (minionCount < maxMinions) {
         minions.push_back(e);
         minionCount++;
@@ -67,7 +68,7 @@ void Boss::attachMinion(entity* e) {
     }
 }
 
-void Boss::attachProjectile(entity* e) {
+void Boss::attachProjectile(const sh_ptr_e& e) {
     if (projectileCount < maxProjectiles) {
         projectiles.push_back(e);
         projectileCount++;
@@ -75,7 +76,7 @@ void Boss::attachProjectile(entity* e) {
     }
 }
 
-void Boss::removeMinion(entity* e) {
+void Boss::removeMinion(const sh_ptr_e& e) {
     auto it = std::find(minions.begin(), minions.end(), e);
     if (it != minions.end()) {
         minions.erase(it);
@@ -83,7 +84,7 @@ void Boss::removeMinion(entity* e) {
     }
 }
 
-void Boss::removeProjectile(entity* e) {
+void Boss::removeProjectile(const sh_ptr_e& e) {
     auto it = std::find(projectiles.begin(), projectiles.end(), e);
     if (it != projectiles.end()) {
         projectiles.erase(it);
@@ -106,16 +107,16 @@ bool Boss::canSpawnMinion() const {
 }
 
 // Gamemanager is going to calculate where the minion should spawn at and then call this function
-entity* Boss::spawnMinion(vector2 coords) {
+sh_ptr_e Boss::spawnMinion(vector2 coords) {
     if (minionCount < maxMinions) {
-        auto* e = new entity(passFunc, entity::ENEMY, 3, coords);
+        auto e = std::make_shared<entity>(passFunc, entity::ENEMY, 3, coords);
         attachMinion(e);
         return e;
     }
     return nullptr;
 }
 
-bool Boss::isProjectile(entity* e) const {
+bool Boss::isProjectile(const sh_ptr_e& e) const {
     return std::find(projectiles.begin(), projectiles.end(), e) != projectiles.end();
 }
 
@@ -125,12 +126,14 @@ int Boss::getToSpawnProjectileCount() const {
 }
 
 bool Boss::canSpawnProjectile() const {
-    return lastProjectileSpawnTime >= timeBetweenSpawnsProjectile && projectileCount < maxProjectiles;
+    return lastProjectileSpawnTime >= (inRageMode() ? timeBetweenSpawnsProjectile/3 : timeBetweenSpawnsProjectile) && projectileCount < maxProjectiles;
 }
 
-entity* Boss::spawnProjectile(vector2 coords) {
+sh_ptr_e Boss::spawnProjectile(vector2 coords) {
     if (projectileCount < maxProjectiles) {
-        auto* e = new entity(passFunc, entity::PROJECTILE, 1, coords);
+        // shared pointer to self to pass as the owner of the projectile
+        std::shared_ptr<entity> b = shared_from_this(); // Safe shared_ptr to this
+        auto e = std::make_shared<Projectile>(passFunc, coords, b);
         attachProjectile(e);
         return e;
     }

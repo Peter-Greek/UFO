@@ -50,6 +50,8 @@ public:
         }
     }
 
+
+
     SDL_Rect getFrame(const std::string& frameName) {
         SDL_Rect frame;
         frame.x = jsonData["frames"][frameName]["frame"]["x"].get<int>();

@@ -51,21 +51,25 @@
 #include "AudioLoader.h"
 #include "Boss.h"
 
+using sh_ptr_e = sh_ptr<entity>;
+using sh_ptr_at = sh_ptr<AT>;
+using sh_ptr_laser = sh_ptr<Laser>;
+using sh_ptr_ply =  sh_ptr<Player>;
 
 class GameManager : public xProcess {
 public:
     enum db_WCS {CREATION_NOT_STARTED, COORDS_SET, LENGTH_SET, WIDTH_SET, WALL_CREATED};
 private:
-    ProcessManager* pM;
+    sh_ptr<ProcessManager> pM;
     bool gameRunning = false;
-    std::list<entity*> entityList;
-    std::map<std::string, text*> textMap;
-    std::map<std::string, AsepriteLoader*> asepriteMap;
-    std::map<std::string, Animation*> animList;
-    std::map<std::string, TxdLoader*> txdMap;
-    std::map<std::string, AudioLoader*> audioMap;
-    camera* cam;
-    world* worldMap;
+    std::list<sh_ptr<entity>> entityList;
+    std::map<std::string, sh_ptr<text>> textMap;
+    std::map<std::string, sh_ptr<AsepriteLoader>> asepriteMap;
+    std::map<std::string, sh_ptr<Animation>> animMap;
+    std::map<std::string, sh_ptr<TxdLoader>> txdMap;
+    std::map<std::string, sh_ptr<AudioLoader>> audioMap;
+    sh_ptr<camera> cam;
+    sh_ptr<world> world_ptr;
     passFunc_t passFunc;
     wall* debugWall = nullptr;
     // debug wall creation state
@@ -85,32 +89,36 @@ public:
     void postFail() override {};
     void postAbort() override {};
 
-    void attachProcessManager(ProcessManager* pm);
-    void attachEntity(entity* e);
-    void setCamera(camera* c);
-    void setWorld(world *w);
-    void attachText(std::string name, text* t);
-    void attachAseprite(std::string name, AsepriteLoader *a);
-    void attachTxd(std::string name, TxdLoader *txd);
-    void attachAudio(const std::string& name, AudioLoader *audio);
+    void setProcessManager(sh_ptr<ProcessManager> pm);
+    void setCamera(sh_ptr<camera> c);
+    void setWorld(std::shared_ptr<world> w);
 
-    static void bounceEntities(entity* e1, entity* e2);
-    void playerTakeHit(Player *p, int damage);
+    void attachEntity(sh_ptr<entity> e);
+    void attachText(const std::string& name, sh_ptr<text> t);
+    void attachAseprite(const std::string& name, sh_ptr<AsepriteLoader> a);
+    void attachTxd(const std::string& name, sh_ptr<TxdLoader> txd);
+    void attachAudio(const std::string& name, sh_ptr<AudioLoader> audio);
+    void attachAnim(const std::string& name, sh_ptr<Animation> anim);
 
-    void handleEnemyUpdate(entity *e, float deltaMs);
-    void handlePlayerUpdate(entity *e, float deltaMs);
+    sh_ptr_ply getPlayer();
 
-    void updatePlayerView(bool isVisible, entity *e, float deltaMs);
-    void renderLaser(vector2 screenCoords, vector2 dim, Laser *l);
-    void renderEnemy(vector2 screenCoords, vector2 dim, entity *e);
+    static void bounceEntities(sh_ptr_e e1, sh_ptr_e e2);
+    void playerTakeHit(const sh_ptr_ply& p, int damage);
+
+    void handleEnemyUpdate(const sh_ptr_e& e, float deltaMs);
+    void handlePlayerUpdate(const sh_ptr_e& e, float deltaMs);
+
+    void updatePlayerView(bool isVisible, const sh_ptr_e& e, float deltaMs);
+    void renderLaser(vector2 screenCoords, vector2 dim, const sh_ptr_laser& l);
+    void renderEnemy(vector2 screenCoords, vector2 dim, const sh_ptr_e& e);
     void renderWorld(float deltaMs);
     void handleDebugWorldCreator(float deltaMs);
     void drawWall(wall *cur_wall);
-    void renderAT(vector2 screenCoords, vector2 dim, AT *at);
-    void renderHeart(vector2 screenCoords, vector2 dim, entity *e);
+    void renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& at);
+    void renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e& e);
     void renderHeart(vector2 screenCoords, vector2 dim);
 
-    void handleBossUpdate(entity *e, float deltaMs);
+    void handleBossUpdate(const sh_ptr_e& e, float deltaMs);
 };
 
 

@@ -39,14 +39,14 @@ void GameInitializer::Init() {
         updateSettings(); // Update settings based on global variables
 
         if (configName == "unlimitedFrames") {
-            gameStorage["settings"]["unlimitedFrames"] = unlimitedFrames;
-            gameStorage.save();
+            (*gameStorage)["settings"]["unlimitedFrames"] = unlimitedFrames;
+            gameStorage->save();
         } else if (configName == "debugMode") {
-            gameStorage["settings"]["debugMode"] = debugMode;
-            gameStorage.save();
+            (*gameStorage)["settings"]["debugMode"] = debugMode;
+            gameStorage->save();
         }else if (configName == "curRoomIndex") {
-            gameStorage["settings"]["curRoomIndex"] = curRoomIndex;
-            gameStorage.save();
+            (*gameStorage)["settings"]["curRoomIndex"] = curRoomIndex;
+            gameStorage->save();
         }
     });
 
@@ -64,7 +64,7 @@ void GameInitializer::Init() {
 
     AddEventHandler("UFO::StartGame", [this]() {
         // Create Game Environment
-        print("Starting Game Loop");
+        print("Starting Game...");
         Start();
         Debug();
     });
@@ -72,27 +72,126 @@ void GameInitializer::Init() {
     AddEventHandler("UFO::EndGame", [this](int hearts, int atcount) {
         print("Ending Game Loop, AT Count: ", atcount);
         TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
-        gameStorage["player"]["ATCount"] = gameStorage["player"]["ATCount"].get<int>() + atcount;
-        gameStorage["player"]["TotalAT"] = gameStorage["player"]["TotalAT"].get<int>() + atcount;
+        (*gameStorage)["player"]["ATCount"] = (*gameStorage)["player"]["ATCount"].get<int>() + atcount;
+        (*gameStorage)["player"]["TotalAT"] = (*gameStorage)["player"]["TotalAT"].get<int>() + atcount;
     });
 }
 
-void GameInitializer::Debug()
-{
-    std::string fpsTextContent = "FPS: " + std::to_string(64);
-    text* fpsText = new text(passFunc, fpsTextContent);
-    fpsText->setTextRelativePosition(0.0f, -0.8f);
-    processManager.attachProcess(fpsText);
+void GameInitializer::Start(){
+    print("Game Start Called");
+    auto uMenu = attachProcess<UpgradeMenu>();
+    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
 
-    std::string gameTimeContent = "Time: " + std::to_string(sch.getGameTime());
-    text* gameTimeText = new text(passFunc, gameTimeContent);
+    auto gM = attachProcess<GameManager>();
+    gM->setProcessManager(processManager);
+    gameManager = gM;
+
+    gM->AddEventHandler("UFO::CHECK::UUID", [this](UUID id) {
+        print("Checking UUID: ", id);
+        print(processManager->containsUUID(id));
+    });
+
+    LoadTextures(); // Load all textures
+    LoadAudio();
+
+    // Create World (HAS TO START BEFORE ANY ENTITY IS ATTACHED!)
+    auto w = attachGameProcess<world>();
+    //LoadEntitiesFromWorld(w);
+
+    // Create Camera
+    auto cam = attachGameProcess<camera>();
+
+    // Get Player Upgrades
+    upgradeList_t upgrades = {0, 0, 0, 0, 0}; // for debug purposes eventually will be loaded from json storage
+    upgrades[Player::UPGRADES::OXYGEN]       = (*gameStorage)["player"]["upgrades"]["oxygen"].get<int>();
+    upgrades[Player::UPGRADES::SHIELD]       = (*gameStorage)["player"]["upgrades"]["shield"].get<int>();
+    upgrades[Player::UPGRADES::SPEED]        = (*gameStorage)["player"]["upgrades"]["speed"].get<int>();
+    upgrades[Player::UPGRADES::INVISIBILITY] = (*gameStorage)["player"]["upgrades"]["invisibility"].get<int>();
+    upgrades[Player::UPGRADES::AT_CANNON]    = (*gameStorage)["player"]["upgrades"]["at_cannon"].get<int>();
+
+    // Create Player
+    auto ppl = attachGameProcess<Player>(upgrades);
+
+
+    // Create Random AT (Debug)
+    for (int i = 0; i < 200; i++) {
+        // random location for the AT
+        vector2 coords = {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))};
+        auto at = attachGameProcess<AT>(coords);
+    }
+
+
+    // Create Laser
+    auto laser = attachGameProcess<Laser>(vector2 {-700.0f, 0.0f}, Heading (360 - 45 * 6), 500, 20, 10, 200000, 1, 1);
+    laser->setSpin(true);
+
+    auto laser2 = attachGameProcess<Laser>(vector2 {50.0f, 0.0f}, Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
+
+    // Create NPC
+    auto npc = attachGameProcess<entity>(entity::ENEMY, 3, vector2{350.0f, 0.0f});
+
+    // Create Boss
+    auto boss = attachGameProcess<Boss>(vector2{0.0f, 0.0f});
+
+    // Create Heart Pickup
+
+    auto heart = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::HEART, vector2{-50.0f, 0.0f});
+
+    // Create Oxy Pickup
+    auto oxy = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::OXY_TANK, vector2{0.0f, 50.0f});
+
+    print("Game Environment Created");
+}
+
+void GameInitializer::End() {
+
+}
+
+void GameInitializer::Debug() {
+    print("Debug Mode: ", debugMode);
+    // General Debug Text
+    std::string fpsTextContent = "FPS: " + std::to_string(64);
+    auto fpsText = attachProcess<text>(fpsTextContent);
+    fpsText->setTextRelativePosition(0.0f, -0.8f);
+
+    std::string gameTimeContent = "Time: " + std::to_string(sch->getGameTime());
+    auto gameTimeText = attachProcess<text>(gameTimeContent);
     gameTimeText->setTextRelativePosition(0.0f, 0.8f);
-    processManager.attachProcess(gameTimeText);
+
+    //Debug Text For Wall Creation
+    for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
+        std::string txtName = "DEBUG::WALL::" + std::to_string(i);
+        auto txt = attachGameMappedProcess<text>(txtName, "WALL: " + std::to_string(i), 35);
+        txt->setTextRelativePosition(-1.0f, (-0.1f * (float) (i + 1)));
+        txt->hideText();
+    }
+
+    // Display Current Player Information (Debug)
+    auto atScore = attachGameMappedProcess<text>("ATScore", "AT: 0", 35);
+    atScore->setTextRelativePosition(-1.0f, -0.7f);
+
+    std::string pHeartsContent = "Hearts: 3";
+    if (gameManager->getPlayer() != nullptr) {
+        pHeartsContent = "Hearts: " + std::to_string(gameManager->getPlayer()->getHearts());
+    }
+    auto pHearts = attachGameMappedProcess<text>("PlayerHearts", pHeartsContent, 35);
+    pHearts->setTextRelativePosition(-1.0f, -0.8f);
+
+    auto oxyTime = attachGameMappedProcess<text>("OxyTimer", "Oxygen: 3:00", 35);
+    oxyTime->setTextRelativePosition(-1.0f, -0.9f);
+
+    // Debug Text for Camera
+    auto cText = attachGameMappedProcess<text>("CamCoords", "X: 0.0, Y: 0.0", 35);
+    cText->setTextRelativePosition(0.0f, -0.8f);
+
+    auto rHeading = attachGameMappedProcess<text>("RelHeading", "Heading: 0", 35);
+    rHeading->setTextRelativePosition(0.0f, -0.7f);
+
 
     AddEventHandler("SDL::OnUpdate", [gameTimeText, fpsText, this](float deltaMs) {
         std::string fpsTextContent = "FPS: " + std::to_string(1000.0f/deltaMs);
         fpsText->setText(fpsTextContent);
-        std::string gameTimeContent = "Time: " + std::to_string(sch.getGameTime());
+        std::string gameTimeContent = "Time: " + std::to_string(sch->getGameTime());
         gameTimeText->setText(gameTimeContent);
     });
 
@@ -115,173 +214,100 @@ void GameInitializer::Debug()
     }
 }
 
-void GameInitializer::Start(){
-    auto* upgradeMenu = new UpgradeMenu(passFunc);
-    processManager.attachProcess(upgradeMenu);
-    upgradeMenu->setATCount(gameStorage["player"]["ATCount"].get<int>());
+void GameInitializer::LoadTextures() {
+    print("Loading Textures");
+    // [[Asperite Textures]]
 
 
-    auto* gM = new GameManager(passFunc);
-    processManager.attachProcess(gM);
-    // attach the process manager to the game manager so new entities can be created on the fly
-    gM->attachProcessManager(&processManager);
-
-    gM->AddEventHandler("UFO::CHECK::UUID", [this](UUID id) {
-        print("Checking UUID: ", id);
-        print(processManager.containsUUID(id));
-    });
-
-    // Create World (HAS TO START BEFORE ANY ENTITY IS ATTACHED!)
-    auto* w = new world(passFunc);
-    processManager.attachProcess(w);
-    gM->setWorld(w);
-
-
-    auto* wTxd = new TxdLoader(passFunc, "../resource/wall.png");
-    processManager.attachProcess(wTxd);
-    gM->attachTxd("WALL::TEXTURE", wTxd);
-
-    for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
-        std::string coordsTextContent = "WALL: " + std::to_string(i);
-        auto* cText = new text(passFunc, coordsTextContent, 35);
-        cText->setTextRelativePosition(-1.0f, (-0.1f * (i + 1)));
-        processManager.attachProcess(cText);
-        gM->attachText("DEBUG::WALL::" + std::to_string(i), cText);
-        cText->hideText();
-    }
-
-    // Create Camera
-    auto* cam = new camera(passFunc);
-    processManager.attachProcess(cam);
-    gM->setCamera(cam);
-
-    std::string coordsTextContent = "X: 0.0, Y: 0.0";
-    auto* cText = new text(passFunc, coordsTextContent, 35);
-    cText->setTextRelativePosition(0.0f, -0.8f);
-    processManager.attachProcess(cText);
-    gM->attachText("CamCoords", cText);
-
-    std::string rHeadingC = "Heading: 0";
-    auto* rHeading = new text(passFunc, rHeadingC, 35);
-    rHeading->setTextRelativePosition(0.0f, -0.7f);
-    processManager.attachProcess(rHeading);
-    gM->attachText("RelHeading", rHeading);
-
-    // Create Player
-    auto* fAnim = new AsepriteLoader(passFunc, "../resource/FSS.png", "../resource/FSS.json");
-    processManager.attachProcess(fAnim);
-    gM->attachAseprite("FSS", fAnim);
-
-    upgradeList_t upgrades = {0, 0, 0, 0, 0}; // for debug purposes eventually will be loaded from json storage
-    upgrades[Player::UPGRADES::OXYGEN]       = gameStorage["player"]["upgrades"]["oxygen"].get<int>();
-    upgrades[Player::UPGRADES::SHIELD]       = gameStorage["player"]["upgrades"]["shield"].get<int>();
-    upgrades[Player::UPGRADES::SPEED]        = gameStorage["player"]["upgrades"]["speed"].get<int>();
-    upgrades[Player::UPGRADES::INVISIBILITY] = gameStorage["player"]["upgrades"]["invisibility"].get<int>();
-    upgrades[Player::UPGRADES::AT_CANNON]    = gameStorage["player"]["upgrades"]["at_cannon"].get<int>();
+    // Create Player Anim
+    auto fAnim = attachGameMappedProcess<AsepriteLoader>("FSS", "../resource/FSS.png", "../resource/FSS.json");
+        // [[Animations]]
+        auto fAnimIdle = attachGameMappedNonProcess<Animation>("FSS_IDLE", fAnim->getJSONData(), "Ferret Sprite Sheet (Idle)");
+        auto fAnimMove = attachGameMappedNonProcess<Animation>("FSS_MOVE", fAnim->getJSONData(), "Ferret Sprite Sheet (Movement)");
 
 
 
-    auto* ppl = new Player(passFunc, upgrades);
-    processManager.attachProcess(ppl);
-    gM->attachEntity(ppl);
-    ppl->spawn();
-
-    std::string atScoreText = "AT: 0";
-    auto* atScore = new text(passFunc, atScoreText, 35);
-    atScore->setTextRelativePosition(-1.0f, -0.7f);
-    processManager.attachProcess(atScore);
-    gM->attachText("ATScore", atScore);
-
-    std::string heartsText = "Hearts: " + std::to_string(ppl->getHearts());
-    auto* pHearts = new text(passFunc, heartsText, 35);
-    pHearts->setTextRelativePosition(-1.0f, -0.8f);
-    processManager.attachProcess(pHearts);
-    gM->attachText("PlayerHearts", pHearts);
-
-    std::string oxyTimeC = "Oxygen: 3:00";
-    auto* oxyTime = new text(passFunc, oxyTimeC, 35);
-    oxyTime->setTextRelativePosition(-1.0f, -0.9f);
-    processManager.attachProcess(oxyTime);
-    gM->attachText("OxyTimer", oxyTime);
-
-    //Create Audio
-    auto* audioHitmarker = new AudioLoader(passFunc, "../resource/sfx/hitmarker.wav");
-    processManager.attachProcess(audioHitmarker);
-    gM->attachAudio("hitmarker", audioHitmarker);
-
-    // Create AT
-    //TODO: anything above 700 starts to lag only when rendered on screen so view needs optimizations
-    auto* ATTxd = new TxdLoader(passFunc, "../resource/ATLoot1.png");
-    processManager.attachProcess(ATTxd);
-    gM->attachTxd("AT::TEXTURE", ATTxd);
-    for (int i = 0; i < 200; i++) {
-        // random location for the AT
-        auto* at = new AT(passFunc, {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))});
-        processManager.attachProcess(at);
-        gM->attachEntity(at);
-        at->spawn();
-    }
-
-    // Create Laser
-    auto* lTxd = new TxdLoader(passFunc, "../resource/LaserBeams.png");
-    processManager.attachProcess(lTxd);
-    gM->attachTxd("LASER::TEXTURE", lTxd);
-
-    auto* laser = new Laser(passFunc, {-700.0f, 0.0f}, Heading (360 - 45 * 6), 500, 20, 10, 200000, 1, 1);
-    processManager.attachProcess(laser);
-    gM->attachEntity(laser);
-    laser->setSpin(true);
-    laser->spawn();
-
-    auto* laser2 = new Laser(passFunc, {50.0f, 0.0f}, Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
-    processManager.attachProcess(laser2);
-    gM->attachEntity(laser2);
-    laser2->spawn();
+    // [[Normal Textures]]
 
 
-    // Create NPC
-    auto* aTxd = new TxdLoader(passFunc, "../resource/Alien1.png");
-    processManager.attachProcess(aTxd);
-    gM->attachTxd("ALIEN1::TEXTURE", aTxd);
+    // Create Wall Texture
+    auto wTxd = attachGameMappedProcess<TxdLoader>("WALL::TEXTURE", "../resource/wall.png");
 
-    auto* a2Txd = new TxdLoader(passFunc, "../resource/Alien2.png");
-    processManager.attachProcess(a2Txd);
-    gM->attachTxd("ALIEN2::TEXTURE", a2Txd);
+    // Create AT Texture
+    auto ATTxd = attachGameMappedProcess<TxdLoader>("AT::TEXTURE", "../resource/ATLoot1.png");
 
-    auto* a3Txd = new TxdLoader(passFunc, "../resource/Alien3.png");
-    processManager.attachProcess(a3Txd);
-    gM->attachTxd("ALIEN3::TEXTURE", a3Txd);
+    // Create Laser Texture
+    auto laserTxd = attachGameMappedProcess<TxdLoader>("LASER::TEXTURE", "../resource/LaserBeams.png");
 
-    auto* npc = new entity(passFunc, entity::ENEMY, 3, {350.0f, 0.0f});
-    processManager.attachProcess(npc);
-    gM->attachEntity(npc);
-    npc->spawn();
+    // Create NPC Txds
+    auto a1Txd =  attachGameMappedProcess<TxdLoader>("ALIEN1::TEXTURE", "../resource/Alien1.png");
+    auto a2Txd = attachGameMappedProcess<TxdLoader>("ALIEN2::TEXTURE", "../resource/Alien2.png");
+    auto a3Txd = attachGameMappedProcess<TxdLoader>("ALIEN3::TEXTURE", "../resource/Alien3.png");
 
-    // Create Boss
-    auto* boss = new Boss(passFunc, {0.0f, 0.0f});
-    processManager.attachProcess(boss);
-    gM->attachEntity(boss);
-    boss->spawn();
-
-    // Create Heart Pickup
-    auto* HeartTxd = new TxdLoader(passFunc, "../resource/HeartSS.png");
-    processManager.attachProcess(HeartTxd);
-    gM->attachTxd("HEART::TEXTURE", HeartTxd);
-
-    auto* heart = new entity(passFunc, entity::ITEM_PICKUP, entity::HEART, {-50.0f, 0.0f});
-    processManager.attachProcess(heart);
-    gM->attachEntity(heart);
-    heart->spawn();
-
-    // Create Oxy Pickup
-    auto* oxy = new entity(passFunc, entity::ITEM_PICKUP, entity::OXY_TANK, {0.0f, 50.0f});
-    processManager.attachProcess(oxy);
-    gM->attachEntity(oxy);
-    oxy->spawn();
-
-    print("Game Environment Created");
+    // Create Heart Texture
+    auto HeartTxd = attachGameMappedProcess<TxdLoader>("HEART::TEXTURE", "../resource/HeartSS.png");
 }
 
-void GameInitializer::End() {
+void GameInitializer::LoadAudio() {
+    print("Loading Audio");
+    // [[Audio]]
+    auto aHitMarker = attachGameMappedProcess<AudioLoader>("hitmarker", "../resource/sfx/hitmarker.wav");
+}
 
+void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
+    print("Loading Entities from World");
+    w->loadWorld(); // loads the world
+    json worldEntityList = w->getAllEntities();
+
+    for (auto &worldE : worldEntityList) {
+        int hearts = 0;
+        if (worldE["hearts"] == nullptr) {
+            hearts = worldE["pType"].get<int>();
+        } else {
+            hearts = worldE["hearts"].get<int>();
+        }
+
+        if (worldE["eType"] == nullptr) continue;
+
+        auto eType = static_cast<entity::eType>(worldE["eType"].get<int>());
+        vector2 coords = worldE["coords"].get<vector2>();
+
+        switch (eType) {
+            case entity::PLAYER:
+                break;
+            case entity::ENEMY:
+            case entity::PROJECTILE: {
+                auto e = attachGameProcess<entity>(eType, hearts, coords);
+                break;
+            }
+
+            case entity::ITEM_PICKUP: {
+                if (static_cast<entity::pType>(hearts) == entity::pType::AT) {
+                    auto e = attachGameProcess<AT>(coords);
+                } else {
+                    auto e = attachGameProcess<entity>(entity::ITEM_PICKUP, hearts, coords);
+                }
+                break;
+            }
+
+            case entity::LASER: {
+                auto heading = Heading(worldE["heading"].get<float>());
+                int length = worldE["length"].get<int>();
+                int width = worldE["width"].get<int>();
+                int interval = worldE["interval"].get<int>();
+                int duration = worldE["duration"].get<int>();
+                int damage = worldE["damage"].get<int>();
+                int speed = worldE["speed"].get<int>();
+
+                auto laser = attachGameProcess<Laser>(coords, heading, length, width, interval, duration, damage, speed);
+                if (worldE["spin"] != nullptr) {
+                    laser->setSpin(worldE["spin"].get<bool>());
+                }
+                break;
+            }
+
+            case entity::ENEMY_BOSS:
+                break;
+        }
+    }
 }

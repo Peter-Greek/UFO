@@ -189,15 +189,12 @@ bool view::isDone() {
 }
 
 void view::postSuccess() {
-    print("View Post Success");
 }
 
 void view::postFail() {
-    print("View Post Fail");
 }
 
 void view::postAbort() {
-    print("View Post Abort");
 
     // Destroy renderer
     SDL_DestroyRenderer( renderer );

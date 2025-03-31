@@ -6,14 +6,18 @@
 #define CSCI437_BOSS_H
 
 #include "entity.h"
-class Boss : public entity {
+#include "Projectile.h"
+
+using sh_ptr_e = sh_ptr<entity>;
+
+class Boss : public entity, public std::enable_shared_from_this<Boss> {
 private:
     int timeBetweenSpawnsMinion = 15000;
     int lastMinionSpawnTime = 0;
     int inRage = 0;
     int rageTime = 0;
-    std::vector<entity*> minions;
-    std::vector<entity*> projectiles;
+    std::vector<sh_ptr_e> minions;
+    std::vector<sh_ptr_e> projectiles;
     int minionCount = 0;
     int projectileCount = 0;
     int maxMinions = 5;
@@ -30,23 +34,23 @@ public:
     void update(float deltaMs) override;
 
     [[nodiscard]] bool inRageMode() const;
-    bool isMinion(entity* e) const;
-    bool isBossProjectile(entity* e) const;
-    void attachMinion(entity* e);
-    void attachProjectile(entity* e);
-    void removeMinion(entity* e);
-    void removeProjectile(entity* e);
+    bool isMinion(const sh_ptr_e& e) const;
+    bool isBossProjectile(const sh_ptr_e& e) const;
+    void attachMinion(const sh_ptr_e& e);
+    void attachProjectile(const sh_ptr_e& e);
+    void removeMinion(const sh_ptr_e& e);
+    void removeProjectile(const sh_ptr_e& e);
     [[nodiscard]] int getToSpawnMinionCount() const;
     bool canSpawnMinion() const;
-    entity* spawnMinion(vector2 coords);
+    sh_ptr_e spawnMinion(vector2 coords);
 
-    bool isProjectile(entity *e) const;
+    bool isProjectile(const sh_ptr_e& e) const;
 
     bool canSpawnProjectile() const;
 
     int getToSpawnProjectileCount() const;
 
-    entity *spawnProjectile(vector2 coords);
+    sh_ptr_e spawnProjectile(vector2 coords);
 };
 
 

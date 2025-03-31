@@ -51,6 +51,9 @@ using passFunc_t = std::function<void(const std::string& eventName, const json& 
 using vectorList_t = std::vector<vector2>;
 using sList_t = std::vector<std::string>;
 
+template <typename T>
+using sh_ptr = std::shared_ptr<T>;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif

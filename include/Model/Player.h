@@ -91,6 +91,7 @@ public:
             applyUpgrade((UPGRADES) i, upgradesSet[i]);
         }
     }
+    ~Player() override = default;
 
     int localInit();
     void update(float deltaMs) override;

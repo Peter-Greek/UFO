@@ -51,9 +51,12 @@ private:
     std::string asepritePath;
     std::string asepriteJsonPath;
 public:
-    AsepriteLoader(passFunc_t passFunc, std::string imgPath, std::string jsonPath) : xProcess(true, passFunc) {
-        asepritePath = imgPath;
-        asepriteJsonPath = jsonPath;
+    AsepriteLoader(passFunc_t passFunc, std::string imgPath, std::string jsonPath)
+            : xProcess(true, passFunc),
+              asepritePath(std::move(imgPath)),
+              asepriteJsonPath(std::move(jsonPath))
+    {
+        LoadJSON();
     }
     ~AsepriteLoader() override = default;
 
@@ -68,6 +71,8 @@ public:
     void renderFrame(SDL_Rect srcRect, SDL_Rect destRect, bool flip, int angle);
     void setTextureAlpha(int alpha);
     void resetTextureAlpha();
+
+    int LoadJSON();
 };
 
 

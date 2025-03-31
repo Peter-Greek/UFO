@@ -67,6 +67,15 @@ int AsepriteLoader::initialize_SDL_process(SDL_Window *passed_window) {
     texture = SDL_CreateTextureFromSurface(renderer, tempSurface);
     SDL_FreeSurface(tempSurface);
 
+    gameRunning = true;
+    return 1;
+}
+
+void AsepriteLoader::update(float deltaMs) {
+
+}
+
+int AsepriteLoader::LoadJSON() {
     // Get the JSON data file
     std::ifstream file(asepriteJsonPath);
     if (!file.is_open()) {
@@ -82,12 +91,7 @@ int AsepriteLoader::initialize_SDL_process(SDL_Window *passed_window) {
         return 0;
     }
 
-    gameRunning = true;
     return 1;
-}
-
-void AsepriteLoader::update(float deltaMs) {
-
 }
 
 void AsepriteLoader::setTextureAlpha(int alpha) {

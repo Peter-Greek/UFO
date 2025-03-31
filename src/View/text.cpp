@@ -127,15 +127,12 @@ bool text::isDone() {
 }
 
 void text::postSuccess() {
-    print("Text Post Success");
 }
 
 void text::postFail() {
-    print("Text Post Fail");
 }
 
 void text::postAbort() {
-    print("Text Post Abort");
 
     // Destroy texture
     if (!running) return;

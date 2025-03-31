@@ -33,6 +33,9 @@
 
 #include "GameManager.h"
 
+#include <utility>
+#include "Projectile.h"
+
 int GameManager::initialize() {
     print("Game Manager Initialize");
 
@@ -68,8 +71,7 @@ int GameManager::initialize() {
                 renderEnemy(screenCoords, dim, e);
             }else if (e->isEntityAPickup()) {
                 if (e->getPickupType() == entity::AT) {
-                    auto* at = dynamic_cast<AT*>(e);
-                    if (at) {
+                    if (auto at = std::dynamic_pointer_cast<AT>(e)) {
                         renderAT(screenCoords, dim, at);
                     }
                 }else if (e->getPickupType() == entity::HEART) {
@@ -81,9 +83,10 @@ int GameManager::initialize() {
                     TriggerEvent("SDL::Render::ResetDrawColor");
                 }
             }else if (e->isEntityALaser()) {
-                auto* l = dynamic_cast<Laser*>(e);
-                if (l && l->isFiring()) {
-                    renderLaser(screenCoords, dim, l);
+                if (auto l = std::dynamic_pointer_cast<Laser>(e)) {
+                    if (l->isFiring()) {
+                        renderLaser(screenCoords, dim, l);
+                    }
                 }
             }else if (e->isEntityAProjectile()) {
                 //TODO: Render Projectile Like Hearts and AT
@@ -123,99 +126,26 @@ int GameManager::initialize() {
             TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: createNewRoom");
             return;
         }
-        int roomIndex = worldMap->addRoom();
+        int roomIndex = world_ptr->addRoom();
         curRoomIndex = roomIndex;
         TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
         TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
     });
-
-
-    // if world is attached
-    if (false) {
-        if (worldMap) {
-
-            worldMap->loadWorld(); // loads the world
-            //worldMap->generateLayout(8); // generates the layout of the world random rooms
-            json worldEntityList = worldMap->getAllEntities();
-            for (auto &worldE: worldEntityList) {
-                int hearts = 0;
-                if (worldE["hearts"] == nullptr) {
-                    hearts = worldE["pType"].get<int>();
-                } else {
-                    hearts = worldE["hearts"].get<int>();
-                }
-
-                if (worldE["eType"] == nullptr) { continue; }
-
-                auto eType = (entity::eType) worldE["eType"].get<int>();
-
-                switch (eType) {
-                    case entity::eType::PLAYER:
-                        continue;
-                    case entity::eType::ENEMY:
-                    case entity::eType::PROJECTILE: {
-                        entity *e = new entity(passFunc, entity::ENEMY, hearts, worldE["coords"].get<vector2>());
-                        pM->attachProcess(e);
-                        attachEntity(e);
-                        e->spawn();
-                        break;
-                    }
-                    case entity::eType::ITEM_PICKUP: {
-                        if (entity::pType::AT == hearts) {
-                            entity *e = new AT(passFunc, worldE["coords"].get<vector2>());
-                            pM->attachProcess(e);
-                            attachEntity(e);
-                            e->spawn();
-                            break;
-                        } else {
-                            entity *e = new entity(passFunc, entity::ITEM_PICKUP, hearts,
-                                                   worldE["coords"].get<vector2>());
-                            pM->attachProcess(e);
-                            attachEntity(e);
-                            e->spawn();
-                            break;
-                        }
-                    }
-                    case entity::eType::LASER: {
-                        Heading h = Heading(worldE["heading"].get<float>());
-                        int l = worldE["length"].get<int>();
-                        int w = worldE["width"].get<int>();
-                        int interval = worldE["interval"].get<int>();
-                        int dur = worldE["duration"].get<int>();
-                        int damage = worldE["damage"].get<int>();
-                        int speed = worldE["speed"].get<int>();
-                        Laser *e = new Laser(passFunc, worldE["coords"].get<vector2>(), h, l, w, interval, dur, damage,
-                                             speed);
-                        pM->attachProcess(e);
-                        attachEntity(e);
-                        if (worldE["spin"] != nullptr) {
-                            e->setSpin(worldE["spin"].get<bool>());
-                        }
-                        e->spawn();
-                        break;
-                    }
-                    case entity::eType::ENEMY_BOSS:
-                        break;
-                }
-            }
-        } else {
-            error("World Map not set in Game Manager");
-            return 0;
-        }
-    }
 
     gameRunning = true;
     return 1;
 }
 
 // Update View Functions
-void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
+void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float deltaMs) {
     if (!isVisible) {
         textMap["CamCoords"]->hideText();
         return;
     }
 
-    auto* p = dynamic_cast<Player*>(e);
+    auto p = std::dynamic_pointer_cast<Player>(e);
+    if (!p) return;
+
     vector2 currentCoords = e->getPosition();
     vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
     vector2 playerDim = e->getDimensions();
@@ -265,25 +195,21 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     vector2 playerVel = e->getVelocity();
     SDL_Rect currentFrame;
 
-    if (!animList.count("FSS_IDLE")) {
-        animList["FSS_IDLE"] = new Animation(asepriteMap["FSS"]->getJSONData(), "Ferret Sprite Sheet (Idle)");
-    }
-
-    if (!animList.count("FSS_MOVE")) {
-        animList["FSS_MOVE"] = new Animation(asepriteMap["FSS"]->getJSONData(), "Ferret Sprite Sheet (Movement)");
+    if (!animMap.count("FSS_IDLE") || !animMap.count("FSS_MOVE")) {
+        return;
     }
 
     bool flip = false;
     int angle = 0;
 
     if (playerVel.x != 0 || playerVel.y != 0) {
-        currentFrame = animList["FSS_MOVE"]->getCurrentFrame(deltaMs);
+        currentFrame = animMap["FSS_MOVE"]->getCurrentFrame(deltaMs);
         if (playerVel.x < 0 || p->isFacingLeft()) {
             flip = true;
         }
     }else {
         flip = p->isFacingLeft();
-        currentFrame = animList["FSS_IDLE"]->getCurrentFrame(deltaMs);
+        currentFrame = animMap["FSS_IDLE"]->getCurrentFrame(deltaMs);
     }
 
     // Need to change the position based on the direction the player is moving so the sprite stays within the hit box
@@ -316,7 +242,7 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     }
 }
 
-void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
+void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, const sh_ptr_e& e) {
     // yes I know I could have just randomized the textures on load of the class but that would have required
     // making a new class for enemies or add more bloat to the entity class so ya no this round about way is OK
     int ran = mapHashToRange(jenkinsOneAtATimeHash(e->getId()), 1, 3) + 0;
@@ -387,7 +313,7 @@ void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
 
 }
 
-void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
+void GameManager::renderLaser(vector2 screenCoords, vector2 dim, const sh_ptr_laser& l) {
     Heading h = l->getHeading(); // Number from 0 to 360
     vector2 laserStart = {screenCoords.x, screenCoords.y};
     int length = dim.x;
@@ -434,7 +360,7 @@ void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
     }
 }
 
-void GameManager::renderAT(vector2 screenCoords, vector2 dim, AT* at) {
+void GameManager::renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& at) {
     // Check if the texture exists in txdMap
     auto it = txdMap.find("AT::TEXTURE");
     if (it == txdMap.end() || !it->second) {
@@ -467,7 +393,7 @@ void GameManager::renderAT(vector2 screenCoords, vector2 dim, AT* at) {
     }
 }
 
-void GameManager::renderHeart(vector2 screenCoords, vector2 dim, entity* e) {
+void GameManager::renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e& e) {
     // Check if the texture exists in txdMap
     auto it = txdMap.find("HEART::TEXTURE");
     if (it == txdMap.end() || !it->second) {
@@ -580,24 +506,24 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
                 }
             } else if (debugWallSate == db_WCS::WIDTH_SET) {
                 // add the wall to the room
-                json worldData = worldMap->getWorldData().get();
+                json worldData = world_ptr->getWorldData().get();
                 if (worldData["rooms"].empty() == 0) {
                     if (db_room_index == -1 || db_wall_index == -1) {
                         int roomIndex = curRoomIndex;
-                        if (roomIndex == -1) {roomIndex = worldMap->addRoom();}
+                        if (roomIndex == -1) {roomIndex = world_ptr->addRoom();}
                         curRoomIndex = roomIndex;
                         TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
-                        worldMap->addWall(roomIndex, debugWall);
+                        world_ptr->addWall(roomIndex, debugWall);
                     } else {
-                        worldMap->updateWall(db_room_index, db_wall_index, debugWall);
+                        world_ptr->updateWall(db_room_index, db_wall_index, debugWall);
                     }
                 } else {
-                    int roomIndex = worldMap->addRoom();
+                    int roomIndex = world_ptr->addRoom();
                     curRoomIndex = roomIndex;
                     TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
-                    worldMap->addWall(roomIndex, debugWall);
+                    world_ptr->addWall(roomIndex, debugWall);
                 }
-                worldMap->saveWorld();
+                world_ptr->saveWorld();
                 debugWall = nullptr;
                 debugWallSate = db_WCS::CREATION_NOT_STARTED;
                 for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
@@ -608,7 +534,7 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
             if (debugWallSate != db_WCS::CREATION_NOT_STARTED) {
                 // delete this wall from the shit
                 if (db_room_index != -1 || db_wall_index != -1) {
-                    worldMap->deleteWall(db_room_index, db_wall_index);
+                    world_ptr->deleteWall(db_room_index, db_wall_index);
                 }
 
                 debugWallSate = db_WCS::CREATION_NOT_STARTED;
@@ -625,7 +551,7 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
         }else {
             if (inShiftFind) {
                 bool foundWall = false;
-                roomList_t roomList = worldMap->getRoomList();
+                roomList_t roomList = world_ptr->getRoomList();
                 if (roomList.empty() == 0) {
                     for (auto &wallList: roomList) {
                         for (auto &cur_wall: wallList) {
@@ -783,7 +709,7 @@ void GameManager::drawWall(wall* cur_wall) {
 
 void GameManager::renderWorld(float deltaMs) {
     // loop through worldData.rooms and then draw each wall in it
-    if (worldMap == nullptr) {
+    if (world_ptr == nullptr) {
         error("World Map not set in Game Manager");
         return;
     }
@@ -794,7 +720,7 @@ void GameManager::renderWorld(float deltaMs) {
     }
 
     if (isDebug()) {
-        roomList_t roomList = worldMap->getRoomList();
+        roomList_t roomList = world_ptr->getRoomList();
 
 
         if (roomList.empty() == 0) {
@@ -818,7 +744,7 @@ void GameManager::renderWorld(float deltaMs) {
 
 // Update Controller Functions
 void GameManager::update(float deltaMs) {
-    std::list<entity*> removalList;
+    std::list<sh_ptr_e> removalList;
     for (auto& e : entityList) {
         if (e->isDone() || e->getHearts() <= 0) {
             removalList.push_back(e);
@@ -827,12 +753,13 @@ void GameManager::update(float deltaMs) {
 
         // Remove projectiles that are too far away from the shooting position and not in view
         if (e->isEntityAProjectile() && e->inWorld()) {
-            vector2 spawnCoords = e->getSpawnCoords();
-            vector2 currentCoords = e->getPosition();
-            if ((currentCoords - spawnCoords).length() > 1000) {
-                if (!cam->isPointInView(currentCoords)) {
-                    e->abort();
-                }
+            auto p = std::dynamic_pointer_cast<Projectile>(e);
+            if (!p) continue;
+
+            if (p->isOutOfRange()) {
+                e->abort();
+                removalList.push_back(e);
+                continue;
             }
         }
 
@@ -853,7 +780,7 @@ void GameManager::update(float deltaMs) {
         entityCorners.push_back(e->getPosition() + (-e->getLength()/2, e->getWidth()/2));
         entityCorners.push_back(e->getPosition() + (e->getLength()/2, e->getWidth()/2));
         entityCorners.push_back(e->getPosition() + (e->getLength()/2, -e->getWidth()/2));
-        if (worldMap->isRectInWall(entityCorners)) {
+        if (world_ptr->isRectInWall(entityCorners)) {
             e->setPosition(e->getLastCoords());
             if (e->isEntityAProjectile()) {
                 e->removeHearts(e->getHearts());
@@ -865,14 +792,17 @@ void GameManager::update(float deltaMs) {
     }
 
 
-    for (auto e : removalList) {
+    for (const auto& e : removalList) {
         entityList.remove(e);
     }
     removalList.clear();
 }
 
-void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
-    auto* p = dynamic_cast<Player*>(e);
+void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
+    // Cast to player and if does not work return
+    auto p = std::dynamic_pointer_cast<Player>(e);
+    if (!p) return;
+
     vector2 currentCoords = e->getPosition();
     for (auto& e2 : entityList) {
         if (e2->isEntityAPickup()) {
@@ -932,8 +862,9 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
                 }
             }
         }else if (e2->isEntityALaser()) {
-            auto* l = dynamic_cast<Laser*>(e2);
-            if (l && l->isFiring()) {
+            auto l = std::dynamic_pointer_cast<Laser>(e2);
+            if (!l) return;
+            if (l->isFiring()) {
                 // Get the laser start and end points
                 vector2 p1 = l->getPosition();
                 vector2 direction = angleToVector2(l->getHeading());  // Normalized direction vector
@@ -1001,8 +932,7 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
             vector2 pVel = angleToVector2(h) * 0.35f;
 
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
-
-            auto* proj = new entity(passFunc, entity::PROJECTILE, damage, spawnCoords);
+            auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, std::shared_ptr<Player>(p));
             pM->attachProcess(proj);
             attachEntity(proj);
             proj->setVelocity(pVel);
@@ -1020,7 +950,7 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
     }
 }
 
-void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
+void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
     vector2 currentCoords = e->getPosition();
     vector2 curVel = e->getVelocity();
     vector2 newVel = vector2(0.0f, 0.0f);
@@ -1029,7 +959,8 @@ void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
 
     for (auto& e2 : entityList) {
         if (e2->isEntityAPlayer()) {
-            auto* p = dynamic_cast<Player*>(e2);
+            auto p = std::dynamic_pointer_cast<Player>(e2);
+            if (!p) continue;
             if (p->isInvisible()) { // cant see invisible players so no follow
                 continue;
             }
@@ -1095,28 +1026,30 @@ void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
     e->setVelocity(newVel);
 }
 
-void GameManager::handleBossUpdate(entity* e, float deltaMs) {
+void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
     vector2 currentCoords = e->getPosition();
     vector2 curVel = e->getVelocity();
     vector2 newVel = vector2(0.0f, 0.0f);
 
-    auto* b = dynamic_cast<Boss*>(e);
+    auto b = std::dynamic_pointer_cast<Boss>(e);
+    if (!b) return;
 
     for (auto& e2 : entityList) {
         if (e2->isEntityAPlayer()) {
             // If the player is nearby (later will add check if in boss room)
             // create minions and projectiles
-            auto* p = dynamic_cast<Player*>(e2);
+            auto p = std::dynamic_pointer_cast<Player>(e2);
+            if (!p) return;
             if (p->isInvisible()) { // cant see invisible players so no follow
                 continue;
             }
             vector2 playerCoords = e2->getPosition();
             if ((currentCoords - playerCoords).length() < ((float) SCREEN_WIDTH)) {
                 if (b->canSpawnMinion()) {
-
-                    // get the coords from boss to player 2 units along line
-                    vector2 spawnCoords = currentCoords + (playerCoords - currentCoords).normalize() * 2.0f;
-                    auto* minion = b->spawnMinion(spawnCoords);
+                    Heading h = getHeadingFromVectors(currentCoords, playerCoords);
+                    vector2 pVel = angleToVector2(h) * 0.35f;
+                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + 10.0f));
+                    sh_ptr_e minion = b->spawnMinion(spawnCoords);
                     pM->attachProcess(minion);
                     attachEntity(minion);
                     minion->spawn();
@@ -1133,7 +1066,7 @@ void GameManager::handleBossUpdate(entity* e, float deltaMs) {
                     Heading h = getHeadingFromVectors(currentCoords, playerCoords);
                     vector2 pVel = angleToVector2(h) * 0.35f;
                     vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + 10.0f));
-                    auto* proj = b->spawnProjectile(spawnCoords);
+                    sh_ptr_e proj = b->spawnProjectile(spawnCoords);
                     pM->attachProcess(proj);
                     attachEntity(proj);
                     proj->spawn();
@@ -1167,43 +1100,64 @@ void GameManager::handleBossUpdate(entity* e, float deltaMs) {
     e->setVelocity({0.0,0.0});
 }
 
-// Attach Functions
-void GameManager::attachProcessManager(ProcessManager *pm) {
-    pM = pm;
+
+// Setters
+void GameManager::setProcessManager(sh_ptr<ProcessManager> pm) {
+    pM = std::move(pm);
 }
 
-void GameManager::attachEntity(entity* e) {
+void GameManager::setCamera(sh_ptr<camera> c) {
+    cam = std::move(c);
+}
+
+void GameManager::setWorld(sh_ptr<world> w) {
+    world_ptr = std::move(w);
+}
+
+// Attach Functions
+void GameManager::attachEntity(sh_ptr<entity> e) {
     entityList.push_back(e);
     if (e->isEntityAPlayer()) {
-        if (worldMap != nullptr) {
-            vector2 spawnPoint = worldMap->getSpawnPoint();
+        if (world_ptr != nullptr) {
+            vector2 spawnPoint = world_ptr->getSpawnPoint();
             e->setPosition(spawnPoint);
         }
     }
 }
 
-void GameManager::attachAseprite(std::string name, AsepriteLoader* a) {
-    asepriteMap[name] = a;
+void GameManager::attachAseprite(const std::string& name, sh_ptr<AsepriteLoader> a) {
+    asepriteMap[name] = std::move(a);
 }
 
-void GameManager::attachText(std::string name, text *t) {
-    textMap[name] = t;
+void GameManager::attachText(const std::string& name, sh_ptr<text> t) {
+    textMap[name] = std::move(t);
 }
 
-void GameManager::setCamera(camera* c) {
-    cam = c;
+void GameManager::attachTxd(const std::string& name, sh_ptr<TxdLoader> txd) {
+    txdMap[name] = std::move(txd);
 }
 
-void GameManager::attachTxd(std::string name, TxdLoader* txd) {
-    txdMap[name] = txd;
+void GameManager::attachAudio(const std::string& name, sh_ptr<AudioLoader> audio) {
+    audioMap[name] = std::move(audio);
 }
 
-void GameManager::setWorld(world *w) {
-    worldMap = w;
+void GameManager::attachAnim(const std::string &name, sh_ptr<Animation> anim) {
+    animMap[name] = std::move(anim);
+}
+
+
+// Getters
+sh_ptr<Player> GameManager::getPlayer() {
+    for (auto& e : entityList) {
+        if (e->isEntityAPlayer()) {
+            return std::dynamic_pointer_cast<Player>(e);
+        }
+    }
+    return nullptr;
 }
 
 // Logic Functions
-void GameManager::playerTakeHit(Player* p, int damage) {
+void GameManager::playerTakeHit(const sh_ptr_ply& p, int damage) {
     //TODO: move to player class
     if (p->doesPlayerHaveShield()) {
         //TODO: Add shield hit sound and animation
@@ -1217,7 +1171,7 @@ void GameManager::playerTakeHit(Player* p, int damage) {
     }
 }
 
-void GameManager::bounceEntities(entity *e1, entity *e2) {
+void GameManager::bounceEntities(sh_ptr_e e1, sh_ptr_e e2) {
     vector2 e1Pos = e1->getPosition();
     vector2 e2Pos = e2->getPosition();
     Heading h = getHeadingFromVectors(e1Pos, e2Pos);
@@ -1232,8 +1186,8 @@ void GameManager::bounceEntities(entity *e1, entity *e2) {
     e2->setKnockedBack(true, 250.0f);
 }
 
-void GameManager::attachAudio(const std::string& name, AudioLoader* audio) {
-    audioMap[name] = audio;
-}
+
+
+
 
 
