@@ -7,12 +7,47 @@
 
 void Boss::update(float deltaMs) {
     lastMinionSpawnTime += deltaMs;
-    if (lastMinionSpawnTime > timeBetweenSpawns) {
-        lastMinionSpawnTime = timeBetweenSpawns;
+    if (lastMinionSpawnTime > timeBetweenSpawnsMinion) {
+        lastMinionSpawnTime = timeBetweenSpawnsMinion;
+    }
+
+    lastProjectileSpawnTime += deltaMs;
+    if (lastProjectileSpawnTime > timeBetweenSpawnsProjectile) {
+        lastProjectileSpawnTime = timeBetweenSpawnsProjectile;
+    }
+
+    std::vector<entity*> removalList; // prevent segfaults
+    for (auto& m : minions) {
+        if (m->isDone() || m->state() == xProcess::State::ABORT || m->state() == xProcess::State::FAIL) {
+            removalList.push_back(m);
+        }
+    }
+
+    for (auto& p : projectiles) {
+        if (p->isDone() || p->state() == xProcess::State::ABORT || p->state() == xProcess::State::FAIL) {
+            removalList.push_back(p);
+        }
+    }
+
+    for (auto& e : removalList) {
+        if (e->isEntityAProjectile()) {
+            removeProjectile(e);
+        }else if (e->isEntityAnEnemy()) {
+            removeMinion(e);
+        }
+    }
+
+    if (getHearts() < getMaxHearts() / 2) {
+        inRage += deltaMs;
+    } else {
+        inRage = 0;
     }
 }
 
 bool Boss::inRageMode() const {
+    // I am thinking in rage mode the boss will shoot projectiles faster and spawn minions faster
+    // also have it shoot projectiles in all directions (maybe make the projectiles slower so they stay on the screen longer)
+
     return inRage > 0;
 }
 
@@ -36,6 +71,7 @@ void Boss::attachProjectile(entity* e) {
     if (projectileCount < maxProjectiles) {
         projectiles.push_back(e);
         projectileCount++;
+        lastProjectileSpawnTime = 0;
     }
 }
 
@@ -63,7 +99,7 @@ int Boss::getToSpawnMinionCount() const {
 bool Boss::canSpawnMinion() const {
     // if the time is more than the interval and the count is less than
     // the max, then spawn a minion
-    if (lastMinionSpawnTime >= timeBetweenSpawns && minionCount < maxMinions) {
+    if (lastMinionSpawnTime >= timeBetweenSpawnsMinion && minionCount < maxMinions) {
         return true;
     }
     return false;
@@ -79,8 +115,27 @@ entity* Boss::spawnMinion(vector2 coords) {
     return nullptr;
 }
 
+bool Boss::isProjectile(entity* e) const {
+    return std::find(projectiles.begin(), projectiles.end(), e) != projectiles.end();
+}
 
+int Boss::getToSpawnProjectileCount() const {
+    int projectileToSpawn = maxProjectiles - projectileCount;
+    return projectileToSpawn;
+}
 
+bool Boss::canSpawnProjectile() const {
+    return lastProjectileSpawnTime >= timeBetweenSpawnsProjectile && projectileCount < maxProjectiles;
+}
+
+entity* Boss::spawnProjectile(vector2 coords) {
+    if (projectileCount < maxProjectiles) {
+        auto* e = new entity(passFunc, entity::PROJECTILE, 1, coords);
+        attachProjectile(e);
+        return e;
+    }
+    return nullptr;
+}
 
 
 

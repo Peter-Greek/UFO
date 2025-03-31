@@ -56,7 +56,7 @@ class GameManager : public xProcess {
 public:
     enum db_WCS {CREATION_NOT_STARTED, COORDS_SET, LENGTH_SET, WIDTH_SET, WALL_CREATED};
 private:
-    ProcessManager* PM;
+    ProcessManager* pM;
     bool gameRunning = false;
     std::list<entity*> entityList;
     std::map<std::string, text*> textMap;

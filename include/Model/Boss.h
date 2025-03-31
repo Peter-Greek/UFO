@@ -8,7 +8,7 @@
 #include "entity.h"
 class Boss : public entity {
 private:
-    int timeBetweenSpawns = 15000;
+    int timeBetweenSpawnsMinion = 15000;
     int lastMinionSpawnTime = 0;
     int inRage = 0;
     int rageTime = 0;
@@ -19,6 +19,9 @@ private:
     int maxMinions = 5;
     int maxProjectiles = 5;
     passFunc_t passFunc;
+
+    int timeBetweenSpawnsProjectile = 5000;
+    int lastProjectileSpawnTime = 0;
 public:
     explicit Boss(
             passFunc_t& func,
@@ -36,6 +39,14 @@ public:
     [[nodiscard]] int getToSpawnMinionCount() const;
     bool canSpawnMinion() const;
     entity* spawnMinion(vector2 coords);
+
+    bool isProjectile(entity *e) const;
+
+    bool canSpawnProjectile() const;
+
+    int getToSpawnProjectileCount() const;
+
+    entity *spawnProjectile(vector2 coords);
 };
 
 

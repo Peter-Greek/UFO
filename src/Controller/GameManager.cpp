@@ -155,7 +155,7 @@ int GameManager::initialize() {
                     case entity::eType::ENEMY:
                     case entity::eType::PROJECTILE: {
                         entity *e = new entity(passFunc, entity::ENEMY, hearts, worldE["coords"].get<vector2>());
-                        PM->attachProcess(e);
+                        pM->attachProcess(e);
                         attachEntity(e);
                         e->spawn();
                         break;
@@ -163,14 +163,14 @@ int GameManager::initialize() {
                     case entity::eType::ITEM_PICKUP: {
                         if (entity::pType::AT == hearts) {
                             entity *e = new AT(passFunc, worldE["coords"].get<vector2>());
-                            PM->attachProcess(e);
+                            pM->attachProcess(e);
                             attachEntity(e);
                             e->spawn();
                             break;
                         } else {
                             entity *e = new entity(passFunc, entity::ITEM_PICKUP, hearts,
                                                    worldE["coords"].get<vector2>());
-                            PM->attachProcess(e);
+                            pM->attachProcess(e);
                             attachEntity(e);
                             e->spawn();
                             break;
@@ -186,7 +186,7 @@ int GameManager::initialize() {
                         int speed = worldE["speed"].get<int>();
                         Laser *e = new Laser(passFunc, worldE["coords"].get<vector2>(), h, l, w, interval, dur, damage,
                                              speed);
-                        PM->attachProcess(e);
+                        pM->attachProcess(e);
                         attachEntity(e);
                         if (worldE["spin"] != nullptr) {
                             e->setSpin(worldE["spin"].get<bool>());
@@ -825,6 +825,17 @@ void GameManager::update(float deltaMs) {
             continue;
         }
 
+        // Remove projectiles that are too far away from the shooting position and not in view
+        if (e->isEntityAProjectile() && e->inWorld()) {
+            vector2 spawnCoords = e->getSpawnCoords();
+            vector2 currentCoords = e->getPosition();
+            if ((currentCoords - spawnCoords).length() > 1000) {
+                if (!cam->isPointInView(currentCoords)) {
+                    e->abort();
+                }
+            }
+        }
+
         // Handle Collisions
         if (e->isEntityAnEnemy()) {
             handleEnemyUpdate(e, deltaMs);
@@ -987,14 +998,14 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
             int x, y; SDL_GetMouseState(&x, &y);
             vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
             Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
-            vector2 newVel = angleToVector2(h) * 0.35f;
+            vector2 pVel = angleToVector2(h) * 0.35f;
 
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
 
             auto* proj = new entity(passFunc, entity::PROJECTILE, damage, spawnCoords);
-            PM->attachProcess(proj);
+            pM->attachProcess(proj);
             attachEntity(proj);
-            proj->setVelocity(newVel);
+            proj->setVelocity(pVel);
             p->setProjectileCreated(true);
             proj->spawn();
 
@@ -1093,23 +1104,48 @@ void GameManager::handleBossUpdate(entity* e, float deltaMs) {
 
     for (auto& e2 : entityList) {
         if (e2->isEntityAPlayer()) {
+            // If the player is nearby (later will add check if in boss room)
+            // create minions and projectiles
             auto* p = dynamic_cast<Player*>(e2);
             if (p->isInvisible()) { // cant see invisible players so no follow
                 continue;
             }
             vector2 playerCoords = e2->getPosition();
             if ((currentCoords - playerCoords).length() < ((float) SCREEN_WIDTH)) {
-                int toSpawnMinions = b->getToSpawnMinionCount();
-                if (toSpawnMinions > 0) {
-                    if (b->canSpawnMinion()) {
+                if (b->canSpawnMinion()) {
 
-                        // get the coords from boss to player 2 units along line
-                        vector2 spawnCoords = currentCoords + (playerCoords - currentCoords).normalize() * 2.0f;
-                        auto* minion = b->spawnMinion(spawnCoords);
-                        PM->attachProcess(minion);
-                        attachEntity(minion);
-                        minion->spawn();
-                    }
+                    // get the coords from boss to player 2 units along line
+                    vector2 spawnCoords = currentCoords + (playerCoords - currentCoords).normalize() * 2.0f;
+                    auto* minion = b->spawnMinion(spawnCoords);
+                    pM->attachProcess(minion);
+                    attachEntity(minion);
+                    minion->spawn();
+                    minion->AddEventHandler("ENTITY::SUCCEED", [b, minion, this]() {
+                        b->removeMinion(minion);
+                    });
+
+                    minion->AddEventHandler("ENTITY::ABORT", [b, minion, this]() {
+                        b->removeMinion(minion);
+                    });
+                }
+
+                if (b->canSpawnProjectile()) {
+                    Heading h = getHeadingFromVectors(currentCoords, playerCoords);
+                    vector2 pVel = angleToVector2(h) * 0.35f;
+                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + 10.0f));
+                    auto* proj = b->spawnProjectile(spawnCoords);
+                    pM->attachProcess(proj);
+                    attachEntity(proj);
+                    proj->spawn();
+                    proj->setVelocity(pVel);
+
+                    proj->AddEventHandler("ENTITY::SUCCEED", [b, proj, this]() {
+                        b->removeProjectile(proj);
+                    });
+
+                    proj->AddEventHandler("ENTITY::ABORT", [b, proj, this]() {
+                        b->removeProjectile(proj);
+                    });
                 }
             }
             continue;
@@ -1133,7 +1169,7 @@ void GameManager::handleBossUpdate(entity* e, float deltaMs) {
 
 // Attach Functions
 void GameManager::attachProcessManager(ProcessManager *pm) {
-    PM = pm;
+    pM = pm;
 }
 
 void GameManager::attachEntity(entity* e) {
