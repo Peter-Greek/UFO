@@ -71,9 +71,10 @@ std::vector<wall> WorldCreator::detectWallsFromImage(SDL_Surface* surface) {
     auto isBlack = [&](int x, int y) -> bool {
         Uint32* pixels = (Uint32*)surface->pixels;
         Uint32 pixel = pixels[(y * surface->w) + x];
-        Uint8 r, g, b;
-        SDL_GetRGB(pixel, surface->format, &r, &g, &b);
-        return (r == 0 && g == 0 && b == 0);
+        Uint8 r, g, b, a;
+        SDL_GetRGBA(pixel, surface->format, &r, &g, &b, &a);
+        if (r == a) return false;
+        return (r < 25 && g < 25 && b < 25 && a > 100);
     };
 
     auto floodFill = [&](int sx, int sy) -> std::vector<vector2> {
@@ -102,6 +103,7 @@ std::vector<wall> WorldCreator::detectWallsFromImage(SDL_Surface* surface) {
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             if (!visited[y][x] && isBlack(x, y)) {
+                print("Found black pixel at: ", x, y);
                 auto pixels = floodFill(x, y);
                 if (pixels.empty()) continue;
 
@@ -138,10 +140,10 @@ json WorldCreator::generateRoomJson(const std::string& name, const std::string& 
 
     for (const auto& w : walls) {
         json wall;
-        wall["center"] = w.position;
-        wall["length"] = w.length;
-        wall["width"] = w.width;
-        wall["heading"] = w.heading.get();
+        wall["coords"] = w.position;
+        wall["l"] = w.length;
+        wall["w"] = w.width;
+        wall["h"] = w.heading.get();
         room["walls"].push_back(wall);
     }
 

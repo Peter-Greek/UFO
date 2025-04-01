@@ -41,7 +41,6 @@ class Projectile : public entity {
 private:
     std::weak_ptr<entity> owner;
     float range = 1000;
-
 public:
     explicit Projectile(passFunc_t& func, vector2 position)
             : entity(func, entity::PROJECTILE, 1, position) {}
@@ -56,24 +55,16 @@ public:
             : entity(func, entity::PROJECTILE, damage, position), owner(parent) {}
 
     // Owner Management
-    void setOwner(const std::shared_ptr<entity>& newOwner) {
-        owner = newOwner;
-    }
+    void setOwner(const std::shared_ptr<entity>& newOwner) {owner = newOwner;}
 
-    [[nodiscard]] std::shared_ptr<entity> getOwner() const {
-        return owner.lock();  // returns nullptr if expired
-    }
+    [[nodiscard]] std::shared_ptr<entity> getOwner() const {return owner.lock();}
 
-    [[nodiscard]] bool hasOwner() const {
-        return !owner.expired();
-    }
+    [[nodiscard]] bool hasOwner() const {return !owner.expired();}
 
     // Range Check
     void setRange(float r) { range = r; }
     [[nodiscard]] float getRange() const { return range; }
-    bool isOutOfRange() {
-        return (getPosition() - getSpawnCoords()).length() > range;
-    }
+    bool isOutOfRange() {return (getPosition() - getSpawnCoords()).length() > range;}
 };
 
 #endif // CSCI437_PROJECTILE_H

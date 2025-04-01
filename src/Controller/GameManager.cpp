@@ -894,6 +894,13 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             vector2 projCoords = e2->getPosition();
             if (p->isPointInEntity(projCoords)) {
                 if (e2->getHearts() > 0) {
+                    auto proj = std::dynamic_pointer_cast<Projectile>(e2);
+                    if (!proj) continue;
+                    if (proj->getOwner() == e2) {
+                        // if the projectile is from the player ignore it
+                        continue;
+                    }
+
                     playerTakeHit(p, e2->getHearts());
                     bounceEntities(e, e2);
                     e2->removeHearts(e2->getHearts());
@@ -974,6 +981,15 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
             vector2 projCoords = e2->getPosition();
             if (e->isPointInEntity(projCoords)) {
                 if (e2->getHearts() > 0) {
+                    auto proj = std::dynamic_pointer_cast<Projectile>(e2);
+                    if (!proj) continue;
+                    if (proj->getOwner() != getPlayer()) {
+                        // if the projectile is NOT from the player ignore it
+                        continue;
+                    }
+
+
+
                     e->removeHearts(e2->getHearts());
                     if (e->getHearts() == 0) {
                         e->succeed();
@@ -1086,6 +1102,13 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
             vector2 projCoords = e2->getPosition();
             if (e->isPointInEntity(projCoords)) {
                 if (e2->getHearts() > 0) {
+                    auto proj = std::dynamic_pointer_cast<Projectile>(e2);
+                    if (!proj) continue;
+                    if (proj->getOwner() != getPlayer()) {
+                        // if the projectile is NOT from the player ignore it
+                        continue;
+                    }
+
                     e->removeHearts(e2->getHearts());
                     if (e->getHearts() == 0) {
                         e->succeed();

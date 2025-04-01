@@ -21,6 +21,7 @@ void world::update(float deltaMs) {
 void world::loadWorld() {
     worldData.update();
     wallList.clear();
+    print("Loading World", worldData.get().dump(4));
     if (worldData["rooms"].empty() == 0) {
         for (auto& room : worldData["rooms"]) {
             roomList.push_back(wallList_t());

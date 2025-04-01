@@ -96,7 +96,7 @@ void GameInitializer::Start(){
 
     // Create World (HAS TO START BEFORE ANY ENTITY IS ATTACHED!)
     auto w = attachGameProcess<world>();
-    //LoadEntitiesFromWorld(w);
+//    LoadEntitiesFromWorld(w);
 
     // Create Camera
     auto cam = attachGameProcess<camera>();
