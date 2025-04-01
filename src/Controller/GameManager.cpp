@@ -41,7 +41,7 @@ int GameManager::initialize() {
 
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         if (!gameRunning) {return;}
-        if (cam == nullptr) {error("Camera not set in Game Manager");}
+        if (cam == nullptr) {print("ALERT: Camera not set in Game Manager"); return;}
         // Update Before render
         renderWorld(deltaMs);
         for (auto& e : entityList) {
@@ -189,7 +189,10 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
         SDL_GetMouseState(&x, &y);
         vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
         Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
-        textMap["RelHeading"]->showText("Heading: " + std::to_string(h.get()));
+        if (textMap["RelHeading"] ) {
+            textMap["RelHeading"]->showText("Heading: " + std::to_string(h.get()));
+        }
+
 
 
         // convert screenCoords.x and screenCoords.y to string with only 2 decimal places
@@ -198,15 +201,24 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
         xString = xString.substr(0, xString.find(".") + 3);
         yString = yString.substr(0, yString.find(".") + 3);
         std::string coords = "X: " + xString + " Y: " + yString;
-        textMap["CamCoords"]->showText(coords);
-        textMap["CamCoords"]->setTextPosition(screenCoords.x, screenCoords.y - 40);
+        if (textMap["CamCoords"]) {
+            textMap["CamCoords"]->showText(coords);
+            textMap["CamCoords"]->setTextPosition(screenCoords.x, screenCoords.y - 40);
+        }
     }else {
-        textMap["CamCoords"]->hideText();
-        textMap["RelHeading"]->hideText();
+        if (textMap["CamCoords"]) {
+            textMap["CamCoords"]->hideText();
+        }
+
+        if (textMap["RelHeading"]) {
+            textMap["RelHeading"]->hideText();
+        }
     }
 
     // Update Oxygen Text
-    textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
+    if (textMap["OxyTimer"]) {
+        textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
+    }
 
     // Update Hearts
     if (p->getMaxHearts() < 10) {

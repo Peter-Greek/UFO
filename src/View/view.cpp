@@ -130,6 +130,9 @@ int view::initialize() {
 
     auto* chatBox = new ChatBox(passFunc);
     pM->attachProcess(chatBox);
+    if (chatBox->initialize_SDL_process(window)) {
+        chatBox->initialized();
+    }
     chatBox->addMessage("Hello World");
 
     auto* WC = new WorldCreator(passFunc);

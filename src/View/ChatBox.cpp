@@ -35,6 +35,7 @@
 #include <sstream>
 
 int ChatBox::initialize_SDL_process(SDL_Window* passed_window) {
+    print("Chatbox Initialize");
     window = passed_window;
 
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -181,6 +182,7 @@ void ChatBox::update(float deltaMs) {
 }
 
 void ChatBox::addMessage(const std::string& message) {
+    print("Adding chat message: ", message);
     // Create new message texture
     std::string c_message = "> " + message;
     SDL_Texture* txt;
@@ -192,6 +194,7 @@ void ChatBox::addMessage(const std::string& message) {
     SDL_Rect pst = {0,0,0,0};
     ChatMessage newMessage = {txt, pst, c_message};
     messages.push_back(newMessage);
+    if (renderer == nullptr) { return; }
     updateMessagesPositioning();
     TriggerEvent("UFO::Chat::MessageAdded", message);
 }

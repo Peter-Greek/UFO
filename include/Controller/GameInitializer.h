@@ -50,6 +50,8 @@ private:
     std::shared_ptr<Scheduler> sch;
     std::shared_ptr<GameManager> gameManager;
 
+    std::list<sh_ptr<text>> debugTexts;
+
 public:
     GameInitializer(passFunc_t p1,
         std::shared_ptr<ProcessManager> pM,
@@ -138,6 +140,8 @@ public:
     void LoadAudio();
 
     void LoadEntitiesFromWorld(sh_ptr<world> w);
+
+    void GameDebug();
 };
 
 

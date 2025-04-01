@@ -66,12 +66,13 @@ void GameInitializer::Init() {
         // Create Game Environment
         print("Starting Game...");
         Start();
+        GameDebug();
         Debug();
     });
 
     AddEventHandler("UFO::EndGame", [this]() {
         int atcount = 0;
-        bool isDead = false;
+        bool isDead = true;
         bool beatBoss = false;
 
         auto player = gameManager->getPlayer();
@@ -81,6 +82,8 @@ void GameInitializer::Init() {
             if (player->getHearts() <= 0 || player->isDone()) {
                 atcount = 0;
                 isDead = true;
+            }else {
+                isDead = false;
             }
         }
 
@@ -182,16 +185,48 @@ void GameInitializer::End() {
 }
 
 void GameInitializer::Debug() {
+    if (!debugTexts.empty()) {
+        return;
+    }
     print("Debug Mode: ", debugMode);
     // General Debug Text
     std::string fpsTextContent = "FPS: " + std::to_string(64);
     auto fpsText = attachProcess<text>(fpsTextContent);
     fpsText->setTextRelativePosition(0.0f, -0.8f);
+    debugTexts.push_back(fpsText);
 
     std::string gameTimeContent = "Time: " + std::to_string(sch->getGameTime());
     auto gameTimeText = attachProcess<text>(gameTimeContent);
     gameTimeText->setTextRelativePosition(0.0f, 0.8f);
+    debugTexts.push_back(gameTimeText);
 
+    AddEventHandler("SDL::OnUpdate", [gameTimeText, fpsText, this](float deltaMs) {
+        std::string fpsTextContent = "FPS: " + std::to_string(1000.0f/deltaMs);
+        fpsText->setText(fpsTextContent);
+        std::string gameTimeContent = "Time: " + std::to_string(sch->getGameTime());
+        gameTimeText->setText(gameTimeContent);
+    });
+
+    AddEventHandler("UFO::OnConfigUpdate", [fpsText, gameTimeText](const std::string configName) {
+        if (configName == "debugMode") {
+            if (debugMode == 1) {
+                fpsText->setTextRelativePosition(0.0f, -0.8f);
+                gameTimeText->setTextRelativePosition(0.0f, 0.6f);
+            } else {
+                fpsText->setTextPosition(-100.0f, -100.0f);
+                gameTimeText->setTextPosition(-100.0f, -100.0f);
+            }
+        }
+    });
+
+
+    if (debugMode != 1) {
+        fpsText->setTextPosition(-100.0f, -100.0f);
+        gameTimeText->setTextPosition(-100.0f, -100.0f);
+    }
+}
+
+void GameInitializer::GameDebug() {
     //Debug Text For Wall Creation
     for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
         std::string txtName = "DEBUG::WALL::" + std::to_string(i);
@@ -220,32 +255,6 @@ void GameInitializer::Debug() {
 
     auto rHeading = attachGameMappedProcess<text>("RelHeading", "Heading: 0", 35);
     rHeading->setTextRelativePosition(0.0f, -0.7f);
-
-
-    AddEventHandler("SDL::OnUpdate", [gameTimeText, fpsText, this](float deltaMs) {
-        std::string fpsTextContent = "FPS: " + std::to_string(1000.0f/deltaMs);
-        fpsText->setText(fpsTextContent);
-        std::string gameTimeContent = "Time: " + std::to_string(sch->getGameTime());
-        gameTimeText->setText(gameTimeContent);
-    });
-
-    AddEventHandler("UFO::OnConfigUpdate", [fpsText, gameTimeText](const std::string configName) {
-        if (configName == "debugMode") {
-            if (debugMode == 1) {
-                fpsText->setTextRelativePosition(0.0f, -0.8f);
-                gameTimeText->setTextRelativePosition(0.0f, 0.6f);
-            } else {
-                fpsText->setTextPosition(-100.0f, -100.0f);
-                gameTimeText->setTextPosition(-100.0f, -100.0f);
-            }
-        }
-    });
-
-
-    if (debugMode != 1) {
-        fpsText->setTextPosition(-100.0f, -100.0f);
-        gameTimeText->setTextPosition(-100.0f, -100.0f);
-    }
 }
 
 void GameInitializer::LoadTextures() {
