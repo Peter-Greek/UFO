@@ -781,7 +781,16 @@ void GameManager::update(float deltaMs) {
     std::list<sh_ptr_e> removalList;
     for (auto& e : entityList) {
         if (e->isDone() || e->getHearts() <= 0) {
+            e->fail();
             removalList.push_back(e);
+
+            if (e->isEntityAPlayer()) {
+                if (!gameRunning) {return;}
+                TriggerEvent("UFO::EndGame");
+                TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
+                return;
+            }
+
             continue;
         }
 
@@ -952,8 +961,8 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
     }
 
     if (p->getHearts() <= 0) {
-        gameRunning = false;
-        print("Game Over");
+        TriggerEvent("UFO::EndGame");
+        TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
     }
 
     if (p->isATCannonFire()) {
