@@ -69,11 +69,32 @@ void GameInitializer::Init() {
         Debug();
     });
 
-    AddEventHandler("UFO::EndGame", [this](int hearts, int atcount) {
+    AddEventHandler("UFO::EndGame", [this]() {
+        int atcount = 0;
+        bool isDead = false;
+        bool beatBoss = false;
+
+        auto player = gameManager->getPlayer();
+        if (player != nullptr) {
+            atcount = player->getATCount();
+
+            if (player->getHearts() <= 0 || player->isDone()) {
+                atcount = 0;
+                isDead = true;
+            }
+        }
+
+        auto boss = gameManager->getBoss();
+        if (boss == nullptr || boss->isDone() || boss->getHearts() <= 0) {
+            beatBoss = true;
+        }
+
         print("Ending Game Loop, AT Count: ", atcount);
-        TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
         (*gameStorage)["player"]["ATCount"] = (*gameStorage)["player"]["ATCount"].get<int>() + atcount;
         (*gameStorage)["player"]["TotalAT"] = (*gameStorage)["player"]["TotalAT"].get<int>() + atcount;
+        (*gameStorage).save();
+
+        End();
     });
 }
 
@@ -144,7 +165,20 @@ void GameInitializer::Start(){
 }
 
 void GameInitializer::End() {
+    TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
 
+    gameManager->abort();
+
+    gameManager = nullptr;
+
+    print("Game Ended");
+
+    if (debugMode == 1) {
+        print("Starting new game due to debug mode");
+        sch->setTimeout(1000, [this]() {
+            TriggerEvent("UFO::StartGame");
+        });
+    }
 }
 
 void GameInitializer::Debug() {

@@ -127,9 +127,19 @@ bool text::isDone() {
 }
 
 void text::postSuccess() {
+    // Destroy texture
+    if (!running) return;
+    SDL_FreeSurface( sText );
+    SDL_DestroyTexture( texture );
+    sText = nullptr;
 }
 
 void text::postFail() {
+    // Destroy texture
+    if (!running) return;
+    SDL_FreeSurface( sText );
+    SDL_DestroyTexture( texture );
+    sText = nullptr;
 }
 
 void text::postAbort() {

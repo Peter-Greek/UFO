@@ -85,9 +85,9 @@ public:
     int initialize() override;
     void update(float deltaMs) override;
     bool isDone() override { return !gameRunning; };
-    void postSuccess() override {};
-    void postFail() override {};
-    void postAbort() override {};
+    void postSuccess() override {terminateGame();};
+    void postFail() override {terminateGame();};
+    void postAbort() override {terminateGame();};
 
     void setProcessManager(sh_ptr<ProcessManager> pm);
     void setCamera(sh_ptr<camera> c);
@@ -101,6 +101,7 @@ public:
     void attachAnim(const std::string& name, sh_ptr<Animation> anim);
 
     sh_ptr_ply getPlayer();
+    sh_ptr_e getBoss();
 
     static void bounceEntities(sh_ptr_e e1, sh_ptr_e e2);
     void playerTakeHit(const sh_ptr_ply& p, int damage);
@@ -119,6 +120,8 @@ public:
     void renderHeart(vector2 screenCoords, vector2 dim);
 
     void handleBossUpdate(const sh_ptr_e& e, float deltaMs);
+
+    void terminateGame();
 };
 
 

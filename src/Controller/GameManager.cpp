@@ -99,6 +99,7 @@ int GameManager::initialize() {
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
+        if (!gameRunning) {return;}
         if (isDebug()) {
             if (eventType == SDL_KEYDOWN) {
                 if (key == SDLK_c) {
@@ -132,8 +133,39 @@ int GameManager::initialize() {
         TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
     });
 
+
+    RegisterCommand("escape", [this](std::string command, sList_t args, std::string message) {
+        if (!args.empty()) {
+            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: escape");
+            return;
+        }
+
+        TriggerEvent("UFO::EndGame");
+        TriggerEvent("UFO::Chat::AddMessage", "Game Ended!");
+    });
     gameRunning = true;
     return 1;
+}
+
+void GameManager::terminateGame() {
+    for (auto& e : entityList) {e->abort();}
+    for (auto& t : textMap) {t.second->abort();}
+    for (auto& a : asepriteMap) {a.second->abort();}
+    for (auto& t : txdMap) {t.second->abort();}
+    for (auto& a : audioMap) {a.second->abort();}
+    if (cam) {cam->abort();}
+    if (world_ptr) {world_ptr->abort();}
+    entityList.clear();
+    textMap.clear();
+    asepriteMap.clear();
+    animMap.clear();
+    txdMap.clear();
+    audioMap.clear();
+    cam = nullptr;
+    world_ptr = nullptr;
+    debugWall = nullptr;
+    gameRunning = false;
+    print("Game Manager Terminated!");
 }
 
 // Update View Functions
@@ -744,6 +776,8 @@ void GameManager::renderWorld(float deltaMs) {
 
 // Update Controller Functions
 void GameManager::update(float deltaMs) {
+    if (!gameRunning) {return;}
+
     std::list<sh_ptr_e> removalList;
     for (auto& e : entityList) {
         if (e->isDone() || e->getHearts() <= 0) {
@@ -1170,10 +1204,18 @@ void GameManager::attachAnim(const std::string &name, sh_ptr<Animation> anim) {
 
 
 // Getters
-sh_ptr<Player> GameManager::getPlayer() {
+sh_ptr_ply GameManager::getPlayer() {
     for (auto& e : entityList) {
         if (e->isEntityAPlayer()) {
             return std::dynamic_pointer_cast<Player>(e);
+        }
+    }
+    return nullptr;
+}
+sh_ptr_e GameManager::getBoss() {
+    for (auto& e : entityList) {
+        if (e->isEntityAnEnemyBoss()) {
+            return e;
         }
     }
     return nullptr;
@@ -1208,6 +1250,8 @@ void GameManager::bounceEntities(sh_ptr_e e1, sh_ptr_e e2) {
     e1->setKnockedBack(true, 250.0f);
     e2->setKnockedBack(true, 250.0f);
 }
+
+
 
 
 

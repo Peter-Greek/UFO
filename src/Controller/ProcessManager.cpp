@@ -70,6 +70,7 @@ int ProcessManager::removeProcess(const std::shared_ptr<xProcess>& p) {
 
 void ProcessManager::triggerEventInAll(const std::string &eventName, const json &eventData) {
     for (auto& p : processList) {
+        if (p->dead()) continue;
         p->onTriggerEvent(eventName, eventData);
     }
 }
