@@ -60,9 +60,20 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             SDL_SetTextureColorMod(ATText.texture, 255, 255, 255);
             SDL_RenderCopy(renderer, ATText.texture, nullptr, &ATText.dst);
         }
+
+        //Draw Play Button
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &PlayButton);
+
+        if (PlayText.texture) {
+            SDL_SetTextureColorMod(PlayText.texture, 255, 255, 255);
+            SDL_RenderCopy(renderer, PlayText.texture, nullptr, &PlayText.dst);
+        }
+
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
+        int x, y;
         if (isHidden) {
             if (eventType == SDL_KEYUP) {
                 if (key == SDLK_u) {
@@ -74,6 +85,10 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 if (key == SDLK_ESCAPE) {
                     closeUpgradeMenu();
                 }
+            } else if (eventType == SDL_MOUSEBUTTONDOWN) {
+                SDL_GetMouseState(&x, &y);
+                if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h)
+                    closeUpgradeMenu();
             }
         }
 });
@@ -95,8 +110,9 @@ void UpgradeMenu::showUpgradeMenu() {
     isHidden = false;
     if (!running) return;
     TriggerEvent("UFO::UpgradeMenu::State", true);
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, "upgrade menu", color);
     displayATCount(AT);
+    SDL_Surface* playSurface = TTF_RenderText_Solid(font, "Play", color);
+    PlayText.texture = SDL_CreateTextureFromSurface(renderer, playSurface);
 }
 
 void UpgradeMenu::displayATCount(int ATCount){
