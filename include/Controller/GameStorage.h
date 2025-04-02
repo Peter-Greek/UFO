@@ -28,32 +28,27 @@
  */
 
 //
-// Created by xerxe on 3/22/2025.
+// Created by xerxe on 3/28/2025.
 //
 
-#ifndef CSCI437_AUDIOLOADER_H
-#define CSCI437_AUDIOLOADER_H
+#ifndef CSCI437_GAMESTORAGE_H
+#define CSCI437_GAMESTORAGE_H
 
-
-#include <SDL.h>
-#include <SDL_mixer.h>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include "xProcess.h"
-
-class AudioLoader : public xProcess {
+#include "Util.h"
+#include "jsonLoader.h"
+class GameStorage {
 private:
-    std::string audioPath;
-    Mix_Chunk* chunk = nullptr;
-    bool running = false;
+    jLoader gameStorage;
 public:
-    explicit AudioLoader(passFunc_t passFunc, std::string  path): xProcess(true, std::move(passFunc)), audioPath(std::move(path)) {}
-    int initialize_SDL_process(SDL_Window* window) override;
-    void update(float deltaMs) override;
-    bool isDone() override;
-    void play(float volume = 1.0f);
+    GameStorage() : gameStorage("../resource/storage.json") {};
+    int load();
+    int apply();
+    jLoader& getStorage();
+    void save();
+    json& operator[](const std::string& key) {
+        return gameStorage[key];
+    }
 };
 
 
-#endif //CSCI437_AUDIOLOADER_H
+#endif //CSCI437_GAMESTORAGE_H

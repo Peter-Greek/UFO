@@ -28,32 +28,34 @@
  */
 
 //
-// Created by xerxe on 3/22/2025.
+// Created by xerxe on 3/30/2025.
 //
 
-#ifndef CSCI437_AUDIOLOADER_H
-#define CSCI437_AUDIOLOADER_H
+#ifndef CSCI437_WORLDCREATOR_H
+#define CSCI437_WORLDCREATOR_H
 
-
-#include <SDL.h>
-#include <SDL_mixer.h>
-#include <string>
-#include <unordered_map>
-#include <utility>
 #include "xProcess.h"
+#include "wall.h"
+#include <nlohmann/json.hpp>
+#include <string>
+#include <vector>
 
-class AudioLoader : public xProcess {
-private:
-    std::string audioPath;
-    Mix_Chunk* chunk = nullptr;
-    bool running = false;
+using json = nlohmann::json;
+
+class WorldCreator : public xProcess {
 public:
-    explicit AudioLoader(passFunc_t passFunc, std::string  path): xProcess(true, std::move(passFunc)), audioPath(std::move(path)) {}
+    explicit WorldCreator(passFunc_t func) : xProcess(true, std::move(func)) {}
+
     int initialize_SDL_process(SDL_Window* window) override;
-    void update(float deltaMs) override;
-    bool isDone() override;
-    void play(float volume = 1.0f);
+    void update(float deltaMs) override {}
+    bool isDone() override { return true; }
+
+    void postSuccess() override;
+    void postFail() override;
+
+    static std::vector<wall> detectWallsFromImage(SDL_Surface* surface);
+    static json generateRoomJson(const std::string& name, const std::string& id, const std::vector<wall>& walls);
+    int loadFromPng(std::string fileName);
 };
 
-
-#endif //CSCI437_AUDIOLOADER_H
+#endif //CSCI437_WORLDCREATOR_H

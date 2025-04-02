@@ -41,7 +41,7 @@ public:
     vector2 position;
     int length;
     int width;
-    Heading heading = Heading(0); // Rotation in degrees
+    Heading heading;
     std::vector<vector2> corners;
 
     wall(const vector2& pos, int len, int w, int h)
@@ -49,7 +49,14 @@ public:
         corners = getCorners();
     }
 
-    wall() = default;
+    wall(const vector2& pos, int len, int w, Heading h)
+            : position(pos), length(len), width(w), heading(h) {
+        corners = getCorners();
+    }
+
+    wall(): heading(0), length(0), width(0) {
+        corners = getCorners();
+    };
 
     [[nodiscard]] std::vector<vector2> getCorners() const {
         vector2 dir = angleToVector2(heading); // Convert angle to unit direction

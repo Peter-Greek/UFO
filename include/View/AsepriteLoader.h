@@ -36,61 +36,27 @@
 
 #include "xProcess.h"
 #include <fstream>
-
-
-class Animation {
-public:
-    Animation(nlohmann::json& jsonData, const std::string& animPrefix): currentFrame(0), elapsedTime(0), jsonData(jsonData) {
-        for (int i = 0; i < 8; ++i) { // Assumes 8 frames per animation
-            std::string frameName = animPrefix + " " + std::to_string(i) + ".ase";
-            frames.push_back(getFrame(frameName));
-            durations.push_back(jsonData["frames"][frameName]["duration"].get<int>());
-        }
-    }
-
-    SDL_Rect getFrame(const std::string& frameName) {
-        SDL_Rect frame;
-        frame.x = jsonData["frames"][frameName]["frame"]["x"].get<int>();
-        frame.y = jsonData["frames"][frameName]["frame"]["y"].get<int>();
-        frame.w = jsonData["frames"][frameName]["frame"]["w"].get<int>();
-        frame.h = jsonData["frames"][frameName]["frame"]["h"].get<int>();
-        return frame;
-    }
-
-    SDL_Rect getCurrentFrame(float deltaTime) {
-        elapsedTime += deltaTime;
-        if (elapsedTime > durations[currentFrame]) {
-            elapsedTime = 0;
-            currentFrame = (currentFrame + 1) % frames.size();
-        }
-        return frames[currentFrame];
-    }
-private:
-    std::vector<SDL_Rect> frames;
-    std::vector<int> durations;
-    int currentFrame;
-    float elapsedTime;
-    nlohmann::json& jsonData;
-};
+#include "Animation.h"
 
 class AsepriteLoader : public xProcess {
 private:
+    bool gameRunning = false;
     // SDL Vars
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     SDL_Texture* texture = nullptr;
 
-
     // file path to png and json
     json asepriteData;
     std::string asepritePath;
     std::string asepriteJsonPath;
-
-    bool gameRunning = false;
 public:
-    AsepriteLoader(passFunc_t passFunc, std::string imgPath, std::string jsonPath) : xProcess(true, passFunc) {
-        asepritePath = imgPath;
-        asepriteJsonPath = jsonPath;
+    AsepriteLoader(passFunc_t passFunc, std::string imgPath, std::string jsonPath)
+            : xProcess(true, passFunc),
+              asepritePath(std::move(imgPath)),
+              asepriteJsonPath(std::move(jsonPath))
+    {
+        LoadJSON();
     }
     ~AsepriteLoader() override = default;
 
@@ -100,15 +66,13 @@ public:
     void postSuccess() override {};
     void postFail() override {};
     void postAbort() override {};
-
     SDL_Rect getFrame(const std::string &frameName);
     json& getJSONData() { return asepriteData; }
-
     void renderFrame(SDL_Rect srcRect, SDL_Rect destRect, bool flip, int angle);
-
     void setTextureAlpha(int alpha);
-
     void resetTextureAlpha();
+
+    int LoadJSON();
 };
 
 

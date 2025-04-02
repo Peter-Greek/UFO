@@ -51,6 +51,9 @@ using passFunc_t = std::function<void(const std::string& eventName, const json& 
 using vectorList_t = std::vector<vector2>;
 using sList_t = std::vector<std::string>;
 
+template <typename T>
+using sh_ptr = std::shared_ptr<T>;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -70,7 +73,8 @@ void error(Args... args)
     std::cout << "SCRIPT ERROR: ";
     ((std::cout << args << '\t'), ...) << '\n';
     std::cout.flush();  // Ensures output is printed immediately
-    exit(0);
+
+    exit(69420);
 }
 
 float map_range(float s, float a1, float a2, float b1, float b2);
@@ -110,5 +114,8 @@ int random(int min, int max);
 vector2 random(vector2 minVec, vector2 maxVec);
 
 sList_t split(const std::string& str, const std::string& delimiter);
+
+uint32_t jenkinsOneAtATimeHash(const std::string& key);
+int mapHashToRange(uint32_t hash, int min, int max);
 
 #endif //CSCI437_UTIL_H

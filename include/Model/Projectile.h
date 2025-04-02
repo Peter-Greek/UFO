@@ -28,61 +28,43 @@
  */
 
 //
-// Created by xerxe on 3/4/2025.
+// Created by xerxe on 3/31/2025.
 //
 
-#ifndef CSCI437_LASER_H
-#define CSCI437_LASER_H
+#ifndef CSCI437_PROJECTILE_H
+#define CSCI437_PROJECTILE_H
 
 #include "entity.h"
-class Laser : public entity {
+#include <memory>
+
+class Projectile : public entity {
 private:
-    Heading dir;
-    float interval;
-    float duration;
-    int damage;
-    int speed;
-    bool spinning = false;
-    bool clockWise = false;
-
-    // Time vars
-    float lastFired = 0;
-    float inFire = 0;
+    std::weak_ptr<entity> owner;
+    float range = 1000;
 public:
-    explicit Laser(
-            passFunc_t& func,
-            vector2 position,
-            Heading h,
-            int length,
-            int width,
-            float interval,
-            float duration,
-            int damage,
-            int speed
-    ) : entity(func, entity::LASER, damage, position, length, width),
-        dir(h),
-        interval(interval),
-        duration(duration),
-        damage(damage),
-        speed(speed)
-    {}
+    explicit Projectile(passFunc_t& func, vector2 position)
+            : entity(func, entity::PROJECTILE, 1, position) {}
 
-    void update(float deltaMs) override;
-    void fire();
-    void stopFire();
-    bool isFiring();
-    Heading getHeading();
-    void setHeading(Heading h);
-    void setSpin(bool s);
-    bool isSpinning() const;
-    int getDamage() const;
-    void setDamage(int d);
-    int getSpeed() const;
-    void setSpeed(int s);
-    float getInterval() const;
-    float getDuration() const;
-    float timeLeft();
+    Projectile(passFunc_t& func, vector2 position, const std::shared_ptr<entity>& parent)
+            : entity(func, entity::PROJECTILE, 1, position), owner(parent) {}
+
+    Projectile(passFunc_t& func, vector2 position, int damage)
+            : entity(func, entity::PROJECTILE, damage, position) {}
+
+    Projectile(passFunc_t& func, vector2 position, int damage, const std::shared_ptr<entity>& parent)
+            : entity(func, entity::PROJECTILE, damage, position), owner(parent) {}
+
+    // Owner Management
+    void setOwner(const std::shared_ptr<entity>& newOwner) {owner = newOwner;}
+
+    [[nodiscard]] std::shared_ptr<entity> getOwner() const {return owner.lock();}
+
+    [[nodiscard]] bool hasOwner() const {return !owner.expired();}
+
+    // Range Check
+    void setRange(float r) { range = r; }
+    [[nodiscard]] float getRange() const { return range; }
+    bool isOutOfRange() {return (getPosition() - getSpawnCoords()).length() > range;}
 };
 
-
-#endif //CSCI437_LASER_H
+#endif // CSCI437_PROJECTILE_H

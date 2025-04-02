@@ -34,6 +34,7 @@
 
 
 #include "view.h"
+#include "../Controller/WorldCreator.h"
 
 // Process Functions
 int view::initialize() {
@@ -125,6 +126,19 @@ int view::initialize() {
     });
 
     running = true;
+
+
+    auto* chatBox = new ChatBox(passFunc);
+    pM->attachProcess(chatBox);
+    if (chatBox->initialize_SDL_process(window)) {
+        chatBox->initialized();
+    }
+    chatBox->addMessage("Hello World");
+
+    auto* WC = new WorldCreator(passFunc);
+    pM->attachProcess(WC);
+    chatBox->addMessage("World Creator Attached");
+
     return 1;
 }
 
@@ -146,7 +160,10 @@ void view::update(float deltaMs) {
         if( e.type == SDL_KEYDOWN )
         {
             if (!chatState) {
-                if( e.key.keysym.sym == SDLK_q ) running = false;
+                if( e.key.keysym.sym == SDLK_q ) {
+                    TriggerEvent("UFO::Quit");
+                    running = false;
+                }
                 if ( e.key.keysym.sym == SDLK_b ) {
                     TriggerEvent("UFO::ChangeConfigValue", "debugMode");
                 }
@@ -175,15 +192,12 @@ bool view::isDone() {
 }
 
 void view::postSuccess() {
-    print("View Post Success");
 }
 
 void view::postFail() {
-    print("View Post Fail");
 }
 
 void view::postAbort() {
-    print("View Post Abort");
 
     // Destroy renderer
     SDL_DestroyRenderer( renderer );

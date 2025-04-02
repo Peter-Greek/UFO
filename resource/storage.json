@@ -1,5 +1,16 @@
 {
-    "loads": 1093,
+    "loads": 1266,
+    "player": {
+        "ATCount": 126,
+        "TotalAT": 126,
+        "upgrades": {
+            "at_cannon": 1,
+            "invisibility": 1,
+            "oxygen": 0,
+            "shield": 0,
+            "speed": 0
+        }
+    },
     "settings": {
         "curRoomIndex": 1,
         "debugMode": 1,

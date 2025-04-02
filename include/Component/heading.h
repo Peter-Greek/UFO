@@ -55,7 +55,6 @@ private:
         int range = max - min + 1;
         return ((v - min) % range + range) % range + min;
     }
-
 public:
     BoundedInt(int v, int minVal, int maxVal) : min(minVal), max(maxVal) {
         value = wrap(v);

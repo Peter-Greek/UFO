@@ -127,15 +127,22 @@ bool text::isDone() {
 }
 
 void text::postSuccess() {
-    print("Text Post Success");
+    // Destroy texture
+    if (!running) return;
+    SDL_FreeSurface( sText );
+    SDL_DestroyTexture( texture );
+    sText = nullptr;
 }
 
 void text::postFail() {
-    print("Text Post Fail");
+    // Destroy texture
+    if (!running) return;
+    SDL_FreeSurface( sText );
+    SDL_DestroyTexture( texture );
+    sText = nullptr;
 }
 
 void text::postAbort() {
-    print("Text Post Abort");
 
     // Destroy texture
     if (!running) return;

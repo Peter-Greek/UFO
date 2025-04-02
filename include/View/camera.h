@@ -49,8 +49,6 @@ private:
     float cameraY = 0;
     vector2 CAM_MIN;
     vector2 CAM_MAX;
-
-
 public:
     explicit camera(passFunc_t& func) : xProcess(true, func) {}
     ~camera() override = default;
@@ -63,7 +61,6 @@ public:
     void postAbort() override {};
 
     void updateCamera(float x, float y);
-
     void updateCamera(vector2 pos);
 
     bool isPointInView(vector2 pos) const;
@@ -71,7 +68,6 @@ public:
 
     vector2 worldToScreenCoords(vector2 pos) const;
     vector2 worldToScreenCoords(float x, float y) const;
-
     vector2 screenToWorldCoords(vector2 vector21) const;
 };
 

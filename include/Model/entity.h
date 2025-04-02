@@ -120,11 +120,25 @@ public:
     [[nodiscard]] vector2 getCenter() const;
     [[nodiscard]] vector2 getDimensions() const;
     vector2 getDefLengthWidth() {
+        // this is staying in h file as its basically a config
         switch (type) {
             case PLAYER:
                 return {64, 48};
             case ENEMY:
                 return {32, 32};
+            case ITEM_PICKUP:
+                switch (getPickupType()) {
+                    case HEART:
+                        return {16, 16};
+                    case OXY_TANK:
+                        return {16, 16};
+                    case KEY_CARD:
+                        return {16, 16};
+                    case AT:
+                        return {32, 32};
+                    default:
+                        return {static_cast<float>(appliedLength), static_cast<float>(appliedWidth)};
+                }
             default:
                 return {static_cast<float>(appliedLength), static_cast<float>(appliedWidth)};
         }

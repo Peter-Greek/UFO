@@ -67,7 +67,7 @@ public:
     virtual ~xProcess() = default;
 
     UUID getId() const { return id; }
-    void setId(UUID UID) { id = std::move(UID); }
+    void setId(UUID UID) { id = UID; }
 
     bool isSDLSubProcess() const { return isSDLProcess; }
 

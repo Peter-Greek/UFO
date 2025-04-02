@@ -72,7 +72,6 @@ private:
 
     sList_t commands;
 
-
     int fontSize = 50;
     int textWidth;
     int textHeight;
@@ -111,12 +110,9 @@ public:
 
     void setFontSize(int toFontSize);
     void setFontColor(int r, int g, int b, int a);
-
-
     std::vector<std::string> wrapText(const std::string &text, int maxWidth);
 
     void createInputMessage();
-
     void hideInputMessage();
 };
 

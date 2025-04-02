@@ -33,12 +33,15 @@
 
 #include "GameManager.h"
 
+#include <utility>
+#include "Projectile.h"
+
 int GameManager::initialize() {
     print("Game Manager Initialize");
 
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         if (!gameRunning) {return;}
-        if (cam == nullptr) {error("Camera not set in Game Manager");}
+        if (cam == nullptr) {print("ALERT: Camera not set in Game Manager"); return;}
         // Update Before render
         renderWorld(deltaMs);
         for (auto& e : entityList) {
@@ -64,28 +67,29 @@ int GameManager::initialize() {
 
             vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
             vector2 dim = e->getDimensions(); // get the dimensions of the entity (length, width)
-            if (e->isEntityAnEnemy()) {
+            if (e->isEntityAnEnemy() || e->isEntityAnEnemyBoss()) {
                 renderEnemy(screenCoords, dim, e);
             }else if (e->isEntityAPickup()) {
                 if (e->getPickupType() == entity::AT) {
-                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                    TriggerEvent("SDL::Render::ResetDrawColor");
+                    if (auto at = std::dynamic_pointer_cast<AT>(e)) {
+                        renderAT(screenCoords, dim, at);
+                    }
                 }else if (e->getPickupType() == entity::HEART) {
-                    TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                    TriggerEvent("SDL::Render::ResetDrawColor");
+                    renderHeart(screenCoords, dim, e);
                 }else if (e->getPickupType() == entity::OXY_TANK) {
+                    //TODO: Render Oxy Tank Like Hearts and AT
                     TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                     TriggerEvent("SDL::Render::ResetDrawColor");
                 }
             }else if (e->isEntityALaser()) {
-                auto* l = dynamic_cast<Laser*>(e);
-                if (l && l->isFiring()) {
-                    renderLaser(screenCoords, dim, l);
+                if (auto l = std::dynamic_pointer_cast<Laser>(e)) {
+                    if (l->isFiring()) {
+                        renderLaser(screenCoords, dim, l);
+                    }
                 }
             }else if (e->isEntityAProjectile()) {
+                //TODO: Render Projectile Like Hearts and AT
                 TriggerEvent("SDL::Render::SetDrawColor", 255, 255, 255, 255);
                 TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                 TriggerEvent("SDL::Render::ResetDrawColor");
@@ -95,6 +99,7 @@ int GameManager::initialize() {
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
+        if (!gameRunning) {return;}
         if (isDebug()) {
             if (eventType == SDL_KEYDOWN) {
                 if (key == SDLK_c) {
@@ -122,24 +127,57 @@ int GameManager::initialize() {
             TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: createNewRoom");
             return;
         }
-        int roomIndex = worldMap->addRoom();
+        int roomIndex = world_ptr->addRoom();
         curRoomIndex = roomIndex;
         TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
         TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
     });
 
+
+    RegisterCommand("escape", [this](std::string command, sList_t args, std::string message) {
+        if (!args.empty()) {
+            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: escape");
+            return;
+        }
+
+        TriggerEvent("UFO::EndGame");
+        TriggerEvent("UFO::Chat::AddMessage", "Game Ended!");
+    });
     gameRunning = true;
     return 1;
 }
 
+void GameManager::terminateGame() {
+    for (auto& e : entityList) {e->abort();}
+    for (auto& t : textMap) {t.second->abort();}
+    for (auto& a : asepriteMap) {a.second->abort();}
+    for (auto& t : txdMap) {t.second->abort();}
+    for (auto& a : audioMap) {a.second->abort();}
+    if (cam) {cam->abort();}
+    if (world_ptr) {world_ptr->abort();}
+    entityList.clear();
+    textMap.clear();
+    asepriteMap.clear();
+    animMap.clear();
+    txdMap.clear();
+    audioMap.clear();
+    cam = nullptr;
+    world_ptr = nullptr;
+    debugWall = nullptr;
+    gameRunning = false;
+    print("Game Manager Terminated!");
+}
+
 // Update View Functions
-void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
+void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float deltaMs) {
     if (!isVisible) {
         textMap["CamCoords"]->hideText();
         return;
     }
 
-    auto* p = dynamic_cast<Player*>(e);
+    auto p = std::dynamic_pointer_cast<Player>(e);
+    if (!p) return;
+
     vector2 currentCoords = e->getPosition();
     vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
     vector2 playerDim = e->getDimensions();
@@ -151,7 +189,10 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
         SDL_GetMouseState(&x, &y);
         vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
         Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
-        textMap["RelHeading"]->showText("Heading: " + std::to_string(h.get()));
+        if (textMap["RelHeading"] ) {
+            textMap["RelHeading"]->showText("Heading: " + std::to_string(h.get()));
+        }
+
 
 
         // convert screenCoords.x and screenCoords.y to string with only 2 decimal places
@@ -160,48 +201,59 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
         xString = xString.substr(0, xString.find(".") + 3);
         yString = yString.substr(0, yString.find(".") + 3);
         std::string coords = "X: " + xString + " Y: " + yString;
-        textMap["CamCoords"]->showText(coords);
-        textMap["CamCoords"]->setTextPosition(screenCoords.x, screenCoords.y - 40);
+        if (textMap["CamCoords"]) {
+            textMap["CamCoords"]->showText(coords);
+            textMap["CamCoords"]->setTextPosition(screenCoords.x, screenCoords.y - 40);
+        }
     }else {
-        textMap["CamCoords"]->hideText();
-        textMap["RelHeading"]->hideText();
+        if (textMap["CamCoords"]) {
+            textMap["CamCoords"]->hideText();
+        }
+
+        if (textMap["RelHeading"]) {
+            textMap["RelHeading"]->hideText();
+        }
     }
 
-    textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
+    // Update Oxygen Text
+    if (textMap["OxyTimer"]) {
+        textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
+    }
+
+    // Update Hearts
+    if (p->getMaxHearts() < 10) {
+        int currentHearts = p->getHearts();
+        int x = 0;
+        int y = 0;
+        for (int i = 0; i < currentHearts; i++) {
+            if (i != 0) {
+                x += 32;
+            }
+            renderHeart(vector2(x, y), vector2(32, 32));
+        }
+    }
+
 
     cam->updateCamera(currentCoords - vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
 
     vector2 playerVel = e->getVelocity();
     SDL_Rect currentFrame;
 
-    if (!animList.count("FSS_IDLE")) {
-        animList["FSS_IDLE"] = new Animation(asepriteMap["FSS"]->getJSONData(), "Ferret Sprite Sheet (Idle)");
-    }
-
-    if (!animList.count("FSS_MOVE")) {
-        animList["FSS_MOVE"] = new Animation(asepriteMap["FSS"]->getJSONData(), "Ferret Sprite Sheet (Movement)");
+    if (!animMap.count("FSS_IDLE") || !animMap.count("FSS_MOVE")) {
+        return;
     }
 
     bool flip = false;
     int angle = 0;
 
     if (playerVel.x != 0 || playerVel.y != 0) {
-        currentFrame = animList["FSS_MOVE"]->getCurrentFrame(deltaMs);
-        if (playerVel.x < 0) {
+        currentFrame = animMap["FSS_MOVE"]->getCurrentFrame(deltaMs);
+        if (playerVel.x < 0 || p->isFacingLeft()) {
             flip = true;
-        }
-
-        if (playerVel.y != 0) {
-            angle = playerVel.y > 0 ? 90 : -90;
-            if (playerVel.x < 0) {
-                angle = playerVel.y > 0 ? -45 : 45;
-            }else if (playerVel.x > 0) {
-                angle = playerVel.y > 0 ? 45 : -45;
-            }
         }
     }else {
         flip = p->isFacingLeft();
-        currentFrame = animList["FSS_IDLE"]->getCurrentFrame(deltaMs);
+        currentFrame = animMap["FSS_IDLE"]->getCurrentFrame(deltaMs);
     }
 
     // Need to change the position based on the direction the player is moving so the sprite stays within the hit box
@@ -234,20 +286,37 @@ void GameManager::updatePlayerView(bool isVisible, entity* e, float deltaMs) {
     }
 }
 
-void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
-    auto it = txdMap.find("ALIEN::TEXTURE");
+void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, const sh_ptr_e& e) {
+    // yes I know I could have just randomized the textures on load of the class but that would have required
+    // making a new class for enemies or add more bloat to the entity class so ya no this round about way is OK
+    int ran = mapHashToRange(jenkinsOneAtATimeHash(e->getId()), 1, 3) + 0;
+    std::string textureName = "ALIEN" + std::to_string(ran) + "::TEXTURE";
+
+    auto it = txdMap.find(textureName);
     if (it == txdMap.end() || !it->second) {
         return;
     }
-    SDL_Rect srcRect = {0, 0, 160, 160}; // load the entire texture
+    SDL_Rect srcRect;
+
+    switch (ran) {
+        case 1:
+            srcRect = {0, 0, 160, 160};
+            break;
+        case 2:
+            srcRect = {0, 0, 160, 200};
+            break;
+        case 3:
+            srcRect = {0, 0, 200, 160};
+            break;
+    }
 
     SDL_Rect destRect = {
-            static_cast<int>(screenCoords.x) - 16,
-            static_cast<int>(screenCoords.y) - 16,
+            static_cast<int>(screenCoords.x - dim.x/2) ,
+            static_cast<int>(screenCoords.y - dim.y/2) ,
             static_cast<int>(dim.x),
-            static_cast<int>(dim.y) // down scale the texture
+            static_cast<int>(dim.y) // down scale or up scale the texture
     };
-    txdMap["ALIEN::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+    txdMap[textureName]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 
     if (isDebug()) {
         // draw the hit box of the player
@@ -264,9 +333,31 @@ void GameManager::renderEnemy(vector2 screenCoords, vector2 dim, entity* e) {
         TriggerEvent("SDL::Render::DrawPoint", screenCoords.x, screenCoords.y);
         TriggerEvent("SDL::Render::ResetDrawColor");
     }
+
+    int hearts = e->getMaxHearts();
+    if (hearts > 0) {
+        int length = e->getLength();
+        int width = e->getWidth();
+
+        float heartWidth = static_cast<float>(length) / hearts;
+        float heartHeight = heartWidth; // Make them square or adjust as needed
+
+        float startX = screenCoords.x - length / 2.0f;
+        float y = screenCoords.y - width / 2.0f - heartHeight - 2; // place above the head with a small gap
+
+        for (int i = 0; i < hearts; i++) {
+            if (i+1 > e->getHearts()) {
+                break;
+            }
+            float x = startX + i * heartWidth;
+            renderHeart(vector2(x, y), vector2(heartWidth, heartHeight));
+        }
+    }
+
+
 }
 
-void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
+void GameManager::renderLaser(vector2 screenCoords, vector2 dim, const sh_ptr_laser& l) {
     Heading h = l->getHeading(); // Number from 0 to 360
     vector2 laserStart = {screenCoords.x, screenCoords.y};
     int length = dim.x;
@@ -313,6 +404,83 @@ void GameManager::renderLaser(vector2 screenCoords, vector2 dim, Laser* l) {
     }
 }
 
+void GameManager::renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& at) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("AT::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    int textureSize = 125;
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x - (dim.x / 2)),
+            static_cast<int>(screenCoords.y - (dim.y / 2)),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    if (isDebug()) { // draw a rec around the texture (background)
+        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x - (dim.x / 2), screenCoords.y - (dim.y / 2), dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+
+    }
+    txdMap["AT::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+    if (isDebug()) { // draw a center point of the AT
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+        TriggerEvent("SDL::Render::DrawPoint", screenCoords.x, screenCoords.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+
+    }
+}
+
+void GameManager::renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e& e) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("HEART::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+    int textureSize = 32;
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x - (dim.x/2)),
+            static_cast<int>(screenCoords.y - (dim.y/2)),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    if (isDebug()) {
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x - (dim.x/2), screenCoords.y - (dim.y/2), dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+    }
+
+    txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+}
+
+void GameManager::renderHeart(vector2 screenCoords, vector2 dim) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("HEART::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+    int textureSize = 32;
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+    txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+}
 
 void GameManager::handleDebugWorldCreator(float deltaMs) {
     if (isDebug()) {
@@ -382,24 +550,24 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
                 }
             } else if (debugWallSate == db_WCS::WIDTH_SET) {
                 // add the wall to the room
-                json worldData = worldMap->getWorldData().get();
+                json worldData = world_ptr->getWorldData().get();
                 if (worldData["rooms"].empty() == 0) {
                     if (db_room_index == -1 || db_wall_index == -1) {
                         int roomIndex = curRoomIndex;
-                        if (roomIndex == -1) {roomIndex = worldMap->addRoom();}
+                        if (roomIndex == -1) {roomIndex = world_ptr->addRoom();}
                         curRoomIndex = roomIndex;
                         TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
-                        worldMap->addWall(roomIndex, debugWall);
+                        world_ptr->addWall(roomIndex, debugWall);
                     } else {
-                        worldMap->updateWall(db_room_index, db_wall_index, debugWall);
+                        world_ptr->updateWall(db_room_index, db_wall_index, debugWall);
                     }
                 } else {
-                    int roomIndex = worldMap->addRoom();
+                    int roomIndex = world_ptr->addRoom();
                     curRoomIndex = roomIndex;
                     TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
-                    worldMap->addWall(roomIndex, debugWall);
+                    world_ptr->addWall(roomIndex, debugWall);
                 }
-                worldMap->saveWorld();
+                world_ptr->saveWorld();
                 debugWall = nullptr;
                 debugWallSate = db_WCS::CREATION_NOT_STARTED;
                 for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
@@ -410,7 +578,7 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
             if (debugWallSate != db_WCS::CREATION_NOT_STARTED) {
                 // delete this wall from the shit
                 if (db_room_index != -1 || db_wall_index != -1) {
-                    worldMap->deleteWall(db_room_index, db_wall_index);
+                    world_ptr->deleteWall(db_room_index, db_wall_index);
                 }
 
                 debugWallSate = db_WCS::CREATION_NOT_STARTED;
@@ -427,7 +595,7 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
         }else {
             if (inShiftFind) {
                 bool foundWall = false;
-                roomList_t roomList = worldMap->getRoomList();
+                roomList_t roomList = world_ptr->getRoomList();
                 if (roomList.empty() == 0) {
                     for (auto &wallList: roomList) {
                         for (auto &cur_wall: wallList) {
@@ -585,7 +753,7 @@ void GameManager::drawWall(wall* cur_wall) {
 
 void GameManager::renderWorld(float deltaMs) {
     // loop through worldData.rooms and then draw each wall in it
-    if (worldMap == nullptr) {
+    if (world_ptr == nullptr) {
         error("World Map not set in Game Manager");
         return;
     }
@@ -596,7 +764,7 @@ void GameManager::renderWorld(float deltaMs) {
     }
 
     if (isDebug()) {
-        roomList_t roomList = worldMap->getRoomList();
+        roomList_t roomList = world_ptr->getRoomList();
 
 
         if (roomList.empty() == 0) {
@@ -620,16 +788,41 @@ void GameManager::renderWorld(float deltaMs) {
 
 // Update Controller Functions
 void GameManager::update(float deltaMs) {
-    std::list<entity*> removalList;
+    if (!gameRunning) {return;}
+
+    std::list<sh_ptr_e> removalList;
     for (auto& e : entityList) {
         if (e->isDone() || e->getHearts() <= 0) {
+            e->fail();
             removalList.push_back(e);
+
+            if (e->isEntityAPlayer()) {
+                if (!gameRunning) {return;}
+                TriggerEvent("UFO::EndGame");
+                TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
+                return;
+            }
+
             continue;
+        }
+
+        // Remove projectiles that are too far away from the shooting position and not in view
+        if (e->isEntityAProjectile() && e->inWorld()) {
+            auto p = std::dynamic_pointer_cast<Projectile>(e);
+            if (!p) continue;
+
+            if (p->isOutOfRange()) {
+                e->abort();
+                removalList.push_back(e);
+                continue;
+            }
         }
 
         // Handle Collisions
         if (e->isEntityAnEnemy()) {
             handleEnemyUpdate(e, deltaMs);
+        }else if (e->isEntityAnEnemyBoss()) {
+            handleBossUpdate(e, deltaMs);
         }else if (e->isEntityAPlayer()) {
             handlePlayerUpdate(e, deltaMs);
         }
@@ -638,11 +831,11 @@ void GameManager::update(float deltaMs) {
         e->updateCoordsFromVelocity(deltaMs);
         // Check if the new coords are out of bounds or hitting a wall
         vectorList_t entityCorners;
-        entityCorners.push_back(e->getPosition() + (-32, -32));
-        entityCorners.push_back(e->getPosition() + (-32, 32));
-        entityCorners.push_back(e->getPosition() + (32, 32));
-        entityCorners.push_back(e->getPosition() + (32, -32));
-        if (worldMap->isRectInWall(entityCorners)) {
+        entityCorners.push_back(e->getPosition() + (-e->getLength()/2, -e->getWidth()/2));
+        entityCorners.push_back(e->getPosition() + (-e->getLength()/2, e->getWidth()/2));
+        entityCorners.push_back(e->getPosition() + (e->getLength()/2, e->getWidth()/2));
+        entityCorners.push_back(e->getPosition() + (e->getLength()/2, -e->getWidth()/2));
+        if (world_ptr->isRectInWall(entityCorners)) {
             e->setPosition(e->getLastCoords());
             if (e->isEntityAProjectile()) {
                 e->removeHearts(e->getHearts());
@@ -654,25 +847,31 @@ void GameManager::update(float deltaMs) {
     }
 
 
-    for (auto e : removalList) {
+    for (const auto& e : removalList) {
         entityList.remove(e);
     }
     removalList.clear();
 }
 
-void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
-    auto* p = dynamic_cast<Player*>(e);
+void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
+    // Cast to player and if does not work return
+    auto p = std::dynamic_pointer_cast<Player>(e);
+    if (!p) return;
+
     vector2 currentCoords = e->getPosition();
     for (auto& e2 : entityList) {
         if (e2->isEntityAPickup()) {
             vector2 enemyCoords = e2->getPosition();
-            if ((currentCoords - enemyCoords).length() < 25) {
+            if (p->isPointInEntity(enemyCoords)) {
                 if (e2->getPickupType() == entity::AT) {
                     e2->setHearts(0);
                     e2->succeed();
                     p->addATCount(); // adds 1 AT to player current loop total
                     textMap["ATScore"]->setText("AT: " + std::to_string(p->getATCount()));
                 }else if (e2->getPickupType() == entity::HEART) {
+                    if (p->getHearts() == p->getMaxHearts()) {
+                        continue; // This is a design choice to not allow the player to pick up hearts if they are full
+                    }
                     e2->setHearts(0);
                     e2->succeed();
                     p->addHearts(1); // adds 1 heart
@@ -718,8 +917,9 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
                 }
             }
         }else if (e2->isEntityALaser()) {
-            auto* l = dynamic_cast<Laser*>(e2);
-            if (l && l->isFiring()) {
+            auto l = std::dynamic_pointer_cast<Laser>(e2);
+            if (!l) return;
+            if (l->isFiring()) {
                 // Get the laser start and end points
                 vector2 p1 = l->getPosition();
                 vector2 direction = angleToVector2(l->getHeading());  // Normalized direction vector
@@ -749,6 +949,13 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
             vector2 projCoords = e2->getPosition();
             if (p->isPointInEntity(projCoords)) {
                 if (e2->getHearts() > 0) {
+                    auto proj = std::dynamic_pointer_cast<Projectile>(e2);
+                    if (!proj) continue;
+                    if (proj->getOwner() == e2) {
+                        // if the projectile is from the player ignore it
+                        continue;
+                    }
+
                     playerTakeHit(p, e2->getHearts());
                     bounceEntities(e, e2);
                     e2->removeHearts(e2->getHearts());
@@ -766,8 +973,8 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
     }
 
     if (p->getHearts() <= 0) {
-        gameRunning = false;
-        print("Game Over");
+        TriggerEvent("UFO::EndGame");
+        TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
     }
 
     if (p->isATCannonFire()) {
@@ -784,14 +991,13 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
             int x, y; SDL_GetMouseState(&x, &y);
             vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
             Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
-            vector2 newVel = angleToVector2(h) * 0.15f;
+            vector2 pVel = angleToVector2(h) * 0.35f;
 
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
-
-            auto* proj = new entity(passFunc, entity::PROJECTILE, damage, spawnCoords);
-            PM->attachProcess(proj);
+            auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, std::shared_ptr<Player>(p));
+            pM->attachProcess(proj);
             attachEntity(proj);
-            proj->setVelocity(newVel);
+            proj->setVelocity(pVel);
             p->setProjectileCreated(true);
             proj->spawn();
 
@@ -806,7 +1012,7 @@ void GameManager::handlePlayerUpdate(entity* e, float deltaMs) {
     }
 }
 
-void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
+void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
     vector2 currentCoords = e->getPosition();
     vector2 curVel = e->getVelocity();
     vector2 newVel = vector2(0.0f, 0.0f);
@@ -815,7 +1021,8 @@ void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
 
     for (auto& e2 : entityList) {
         if (e2->isEntityAPlayer()) {
-            auto* p = dynamic_cast<Player*>(e2);
+            auto p = std::dynamic_pointer_cast<Player>(e2);
+            if (!p) continue;
             if (p->isInvisible()) { // cant see invisible players so no follow
                 continue;
             }
@@ -829,6 +1036,15 @@ void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
             vector2 projCoords = e2->getPosition();
             if (e->isPointInEntity(projCoords)) {
                 if (e2->getHearts() > 0) {
+                    auto proj = std::dynamic_pointer_cast<Projectile>(e2);
+                    if (!proj) continue;
+                    if (proj->getOwner() != getPlayer()) {
+                        // if the projectile is NOT from the player ignore it
+                        continue;
+                    }
+
+
+
                     e->removeHearts(e2->getHearts());
                     if (e->getHearts() == 0) {
                         e->succeed();
@@ -881,43 +1097,153 @@ void GameManager::handleEnemyUpdate(entity* e, float deltaMs) {
     e->setVelocity(newVel);
 }
 
-// Attach Functions
-void GameManager::attachProcessManager(ProcessManager *pm) {
-    PM = pm;
+void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
+    vector2 currentCoords = e->getPosition();
+    vector2 curVel = e->getVelocity();
+    vector2 newVel = vector2(0.0f, 0.0f);
+
+    auto b = std::dynamic_pointer_cast<Boss>(e);
+    if (!b) return;
+
+    for (auto& e2 : entityList) {
+        if (e2->isEntityAPlayer()) {
+            // If the player is nearby (later will add check if in boss room)
+            // create minions and projectiles
+            auto p = std::dynamic_pointer_cast<Player>(e2);
+            if (!p) return;
+            if (p->isInvisible()) { // cant see invisible players so no follow
+                continue;
+            }
+            vector2 playerCoords = e2->getPosition();
+            if ((currentCoords - playerCoords).length() < ((float) SCREEN_WIDTH)) {
+                if (b->canSpawnMinion()) {
+                    Heading h = getHeadingFromVectors(currentCoords, playerCoords);
+                    vector2 pVel = angleToVector2(h) * 0.35f;
+                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + 10.0f));
+                    sh_ptr_e minion = b->spawnMinion(spawnCoords);
+                    pM->attachProcess(minion);
+                    attachEntity(minion);
+                    minion->spawn();
+                    minion->AddEventHandler("ENTITY::SUCCEED", [b, minion, this]() {
+                        b->removeMinion(minion);
+                    });
+
+                    minion->AddEventHandler("ENTITY::ABORT", [b, minion, this]() {
+                        b->removeMinion(minion);
+                    });
+                }
+
+                if (b->canSpawnProjectile()) {
+                    Heading h = getHeadingFromVectors(currentCoords, playerCoords);
+                    vector2 pVel = angleToVector2(h) * 0.35f;
+                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + 10.0f));
+                    sh_ptr_e proj = b->spawnProjectile(spawnCoords);
+                    pM->attachProcess(proj);
+                    attachEntity(proj);
+                    proj->spawn();
+                    proj->setVelocity(pVel);
+
+                    proj->AddEventHandler("ENTITY::SUCCEED", [b, proj, this]() {
+                        b->removeProjectile(proj);
+                    });
+
+                    proj->AddEventHandler("ENTITY::ABORT", [b, proj, this]() {
+                        b->removeProjectile(proj);
+                    });
+                }
+            }
+            continue;
+        }else if (e2->isEntityAProjectile()) {
+            vector2 projCoords = e2->getPosition();
+            if (e->isPointInEntity(projCoords)) {
+                if (e2->getHearts() > 0) {
+                    auto proj = std::dynamic_pointer_cast<Projectile>(e2);
+                    if (!proj) continue;
+                    if (proj->getOwner() != getPlayer()) {
+                        // if the projectile is NOT from the player ignore it
+                        continue;
+                    }
+
+                    e->removeHearts(e2->getHearts());
+                    if (e->getHearts() == 0) {
+                        e->succeed();
+                    }
+                    e2->removeHearts(e2->getHearts());
+                    e2->succeed();
+                }
+            }
+        }
+    }
+
+    e->setVelocity({0.0,0.0});
 }
 
-void GameManager::attachEntity(entity* e) {
+
+// Setters
+void GameManager::setProcessManager(sh_ptr<ProcessManager> pm) {
+    pM = std::move(pm);
+}
+
+void GameManager::setCamera(sh_ptr<camera> c) {
+    cam = std::move(c);
+}
+
+void GameManager::setWorld(sh_ptr<world> w) {
+    world_ptr = std::move(w);
+}
+
+// Attach Functions
+void GameManager::attachEntity(sh_ptr<entity> e) {
     entityList.push_back(e);
     if (e->isEntityAPlayer()) {
-        if (worldMap != nullptr) {
-            vector2 spawnPoint = worldMap->getSpawnPoint();
+        if (world_ptr != nullptr) {
+            vector2 spawnPoint = world_ptr->getSpawnPoint();
             e->setPosition(spawnPoint);
         }
     }
 }
 
-void GameManager::attachAseprite(std::string name, AsepriteLoader* a) {
-    asepriteMap[name] = a;
+void GameManager::attachAseprite(const std::string& name, sh_ptr<AsepriteLoader> a) {
+    asepriteMap[name] = std::move(a);
 }
 
-void GameManager::attachText(std::string name, text *t) {
-    textMap[name] = t;
+void GameManager::attachText(const std::string& name, sh_ptr<text> t) {
+    textMap[name] = std::move(t);
 }
 
-void GameManager::setCamera(camera* c) {
-    cam = c;
+void GameManager::attachTxd(const std::string& name, sh_ptr<TxdLoader> txd) {
+    txdMap[name] = std::move(txd);
 }
 
-void GameManager::attachTxd(std::string name, TxdLoader* txd) {
-    txdMap[name] = txd;
+void GameManager::attachAudio(const std::string& name, sh_ptr<AudioLoader> audio) {
+    audioMap[name] = std::move(audio);
 }
 
-void GameManager::setWorld(world *w) {
-    worldMap = w;
+void GameManager::attachAnim(const std::string &name, sh_ptr<Animation> anim) {
+    animMap[name] = std::move(anim);
+}
+
+
+// Getters
+sh_ptr_ply GameManager::getPlayer() {
+    for (auto& e : entityList) {
+        if (e->isEntityAPlayer()) {
+            return std::dynamic_pointer_cast<Player>(e);
+        }
+    }
+    return nullptr;
+}
+sh_ptr_e GameManager::getBoss() {
+    for (auto& e : entityList) {
+        if (e->isEntityAnEnemyBoss()) {
+            return e;
+        }
+    }
+    return nullptr;
 }
 
 // Logic Functions
-void GameManager::playerTakeHit(Player* p, int damage) {
+void GameManager::playerTakeHit(const sh_ptr_ply& p, int damage) {
     //TODO: move to player class
     if (p->doesPlayerHaveShield()) {
         //TODO: Add shield hit sound and animation
@@ -931,7 +1257,7 @@ void GameManager::playerTakeHit(Player* p, int damage) {
     }
 }
 
-void GameManager::bounceEntities(entity *e1, entity *e2) {
+void GameManager::bounceEntities(sh_ptr_e e1, sh_ptr_e e2) {
     vector2 e1Pos = e1->getPosition();
     vector2 e2Pos = e2->getPosition();
     Heading h = getHeadingFromVectors(e1Pos, e2Pos);
@@ -946,8 +1272,10 @@ void GameManager::bounceEntities(entity *e1, entity *e2) {
     e2->setKnockedBack(true, 250.0f);
 }
 
-void GameManager::attachAudio(const std::string& name, AudioLoader* audio) {
-    audioMap[name] = audio;
-}
+
+
+
+
+
 
 
