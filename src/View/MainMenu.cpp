@@ -52,17 +52,18 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
         SDL_SetRenderDrawColor(renderer, 0, 75, 0, 255);
         SDL_RenderFillRect(renderer, &cbox);
         
-        //Drawing box to show AT count
+        //Drawing start button
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
         SDL_RenderDrawRect(renderer, &ATBox);
 
-        if (ATText.texture) {
+        /*if (ATText.texture) {
             SDL_SetTextureColorMod(ATText.texture, 255, 255, 255);
             SDL_RenderCopy(renderer, ATText.texture, nullptr, &ATText.dst);
-        }
+        }*/
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
+        int x, y;
         if (isHidden) {
             if (eventType == SDL_KEYUP) {
                 if (key == SDLK_m) {
@@ -74,6 +75,10 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 if (key == SDLK_ESCAPE) {
                     closeMainMenu();
                 }
+            } else if (eventType == SDL_MOUSEBUTTONDOWN) {
+                SDL_GetMouseState(&x, &y);
+                if(x > ATBox.x && y > ATBox.y && x < ATBox.x + ATBox.w && y < ATBox.y + ATBox.h)
+                    closeMainMenu();
             }
         }
 });

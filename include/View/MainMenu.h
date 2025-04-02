@@ -3,6 +3,7 @@
 
 #include "xProcess.h"
 #include <SDL_ttf.h>
+#include <SDL.h>
 class MainMenu : public xProcess {
 private:
     SDL_Event e;
