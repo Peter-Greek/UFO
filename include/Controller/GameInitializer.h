@@ -40,6 +40,7 @@
 
 #include "GameManager.h" // has all the headers for the entities and components
 #include "UpgradeMenu.h"
+#include "MainMenu.h"
 #include "Scheduler.h"
 
 class GameInitializer : public xProcess {
