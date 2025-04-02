@@ -1,6 +1,6 @@
-#include "UpgradeMenu.h"
+#include "MainMenu.h"
 
-int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
+int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
     window = passed_window;
 
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -49,56 +49,46 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
         if (renderer == nullptr) {return;}
 
         //Drawing menu background
-        SDL_SetRenderDrawColor(renderer, 0, 0, 75, 255);
+        SDL_SetRenderDrawColor(renderer, 0, 75, 0, 255);
         SDL_RenderFillRect(renderer, &cbox);
         
-        //Drawing box to show AT count
+        //Drawing start button
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
         SDL_RenderDrawRect(renderer, &ATBox);
 
-        if (ATText.texture) {
+        /*if (ATText.texture) {
             SDL_SetTextureColorMod(ATText.texture, 255, 255, 255);
             SDL_RenderCopy(renderer, ATText.texture, nullptr, &ATText.dst);
-        }
-
-        //Draw Play Button
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderDrawRect(renderer, &PlayButton);
-
-        if (PlayText.texture) {
-            SDL_SetTextureColorMod(PlayText.texture, 255, 255, 255);
-            SDL_RenderCopy(renderer, PlayText.texture, nullptr, &PlayText.dst);
-        }
-
+        }*/
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         int x, y;
         if (isHidden) {
             if (eventType == SDL_KEYUP) {
-                if (key == SDLK_u) {
-                    showUpgradeMenu();
+                if (key == SDLK_m) {
+                    showMainMenu();
                 }
             }
         }else {
             if (eventType == SDL_KEYDOWN) {
                 if (key == SDLK_ESCAPE) {
-                    closeUpgradeMenu();
+                    closeMainMenu();
                 }
             } else if (eventType == SDL_MOUSEBUTTONDOWN) {
                 SDL_GetMouseState(&x, &y);
-                if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h)
-                    closeUpgradeMenu();
+                if(x > ATBox.x && y > ATBox.y && x < ATBox.x + ATBox.w && y < ATBox.y + ATBox.h)
+                    closeMainMenu();
             }
         }
 });
-    AddEventHandler("UFO::UpgradeMenu::DisplayATCount", [this](int ATCount) {
+    AddEventHandler("UFO::MainMenu::DisplayATCount", [this](int ATCount) {
         displayATCount(ATCount);
     });
     return 1;
 }
 
-void UpgradeMenu::update(float deltaMs) {
+void MainMenu::update(float deltaMs) {
     // While application is running
     if (!running) return;
     if (renderer == nullptr) { return; }
@@ -106,16 +96,15 @@ void UpgradeMenu::update(float deltaMs) {
     const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
 }
 
-void UpgradeMenu::showUpgradeMenu() {
+void MainMenu::showMainMenu() {
     isHidden = false;
     if (!running) return;
-    TriggerEvent("UFO::UpgradeMenu::State", true);
+    TriggerEvent("UFO::MainMenu::State", true);
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, "main menu", color);
     displayATCount(AT);
-    SDL_Surface* playSurface = TTF_RenderText_Solid(font, "Play", color);
-    PlayText.texture = SDL_CreateTextureFromSurface(renderer, playSurface);
 }
 
-void UpgradeMenu::displayATCount(int ATCount){
+void MainMenu::displayATCount(int ATCount){
     if (ATText.texture) {
         SDL_DestroyTexture(ATText.texture);
     }
@@ -125,46 +114,46 @@ void UpgradeMenu::displayATCount(int ATCount){
     SDL_FreeSurface(textSurface);
 }
 
-void UpgradeMenu::setATCount(int ATCount){
+void MainMenu::setATCount(int ATCount){
     AT = ATCount;
 }
 
-void UpgradeMenu::closeUpgradeMenu() {
+void MainMenu::closeMainMenu() {
     isHidden = true;
     if (!running) return;
-    TriggerEvent("UFO::UpgradeMenu::State", false);
+    TriggerEvent("UFO::MainMenu::State", false);
 }
 
 
-void UpgradeMenu::updateUpgradeMenuPositioning() {
+void MainMenu::updateMainMenuPositioning() {
     cbox = {
             static_cast<int>(position.x),
             static_cast<int>(position.y),
-            static_cast<int>(upgradeMenuSize.x),
-            static_cast<int>(upgradeMenuSize.y)
+            static_cast<int>(mainMenuSize.x),
+            static_cast<int>(mainMenuSize.y)
     };
 }
 
-void UpgradeMenu::setUpgradeMenuPosition(vector2 pos) {
-    upgradeMenuSize = pos;
-    updateUpgradeMenuPositioning();
+void MainMenu::setMainMenuPosition(vector2 pos) {
+    mainMenuSize = pos;
+    updateMainMenuPositioning();
 }
 
-void UpgradeMenu::setUpgradeMenuPosition(float x, float y) {
-    upgradeMenuSize = {x, y};
-    updateUpgradeMenuPositioning();
+void MainMenu::setMainMenuPosition(float x, float y) {
+    mainMenuSize = {x, y};
+    updateMainMenuPositioning();
 }
 
-void UpgradeMenu::setUpgradeMenuSize(vector2 size) {
-    upgradeMenuSize = size;
-    updateUpgradeMenuPositioning();
+void MainMenu::setMainMenuSize(vector2 size) {
+    mainMenuSize = size;
+    updateMainMenuPositioning();
 }
 
-void UpgradeMenu::setUpgradeMenuSize(float x, float y) {
-    upgradeMenuSize = {x, y};
-    updateUpgradeMenuPositioning();
+void MainMenu::setMainMenuSize(float x, float y) {
+    mainMenuSize = {x, y};
+    updateMainMenuPositioning();
 }
 
-void UpgradeMenu::setFontColor(int r, int g, int b, int a) {
+void MainMenu::setFontColor(int r, int g, int b, int a) {
     color = {static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b), static_cast<Uint8>(a)};
 }

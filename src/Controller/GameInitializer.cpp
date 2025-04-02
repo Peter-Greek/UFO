@@ -104,7 +104,9 @@ void GameInitializer::Init() {
 void GameInitializer::Start(){
     print("Game Start Called");
     auto uMenu = attachProcess<UpgradeMenu>();
+    auto mMenu = attachProcess<MainMenu>();
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    mMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
 
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);

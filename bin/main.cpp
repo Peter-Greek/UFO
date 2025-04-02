@@ -49,6 +49,7 @@
 #include "view.h"
 #include "ChatBox.h"
 #include "UpgradeMenu.h"
+#include "MainMenu.h"
 #include "GameInitializer.h"
 #include "GameStorage.h"
 
