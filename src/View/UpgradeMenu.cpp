@@ -70,6 +70,24 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             SDL_RenderCopy(renderer, PlayText.texture, nullptr, &PlayText.dst);
         }
 
+        //Draw Speed Button
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &SpeedButton);
+
+        if (SpeedText.texture) {
+            SDL_SetTextureColorMod(SpeedText.texture, 255, 255, 255);
+            SDL_RenderCopy(renderer, SpeedText.texture, nullptr, &SpeedText.dst);
+        }
+
+        //Draw Oxygen Button
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &OxygenButton);
+
+        if (OxygenText.texture) {
+            SDL_SetTextureColorMod(OxygenText.texture, 255, 255, 255);
+            SDL_RenderCopy(renderer, OxygenText.texture, nullptr, &OxygenText.dst);
+        }
+
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
@@ -88,6 +106,8 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             } else if (eventType == SDL_MOUSEBUTTONDOWN) {
                 SDL_GetMouseState(&x, &y);
                 if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h)
+                    closeUpgradeMenu();
+                else if(x > SpeedButton.x && y > SpeedButton.y && x < SpeedButton.x + SpeedButton.w && y < SpeedButton.y + SpeedButton.h)
                     closeUpgradeMenu();
             }
         }
@@ -113,6 +133,10 @@ void UpgradeMenu::showUpgradeMenu() {
     displayATCount(AT);
     SDL_Surface* playSurface = TTF_RenderText_Solid(font, "Play", color);
     PlayText.texture = SDL_CreateTextureFromSurface(renderer, playSurface);
+    SDL_Surface* speedSurface = TTF_RenderText_Solid(font, "2 AT: Speed", color);
+    SpeedText.texture = SDL_CreateTextureFromSurface(renderer, speedSurface);
+    SDL_Surface* oxygenSurface = TTF_RenderText_Solid(font, "2 AT: Oxygen", color);
+    OxygenText.texture = SDL_CreateTextureFromSurface(renderer, oxygenSurface);
 }
 
 void UpgradeMenu::displayATCount(int ATCount){
