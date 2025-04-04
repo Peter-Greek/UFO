@@ -69,6 +69,8 @@ public:
     void hideText();
     void showText();
     void showText(std::string new_text);
+
+    SDL_Rect getTextRect() const {return dst;};
 private:
     SDL_Event e;
     SDL_Window* window;
