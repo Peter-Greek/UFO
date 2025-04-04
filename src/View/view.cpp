@@ -119,19 +119,19 @@ int view::initialize() {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     });
 
-    AddEventHandler("UFO::MainMenu::Render", [this]() {
-        auto mainTxd = std::make_shared<TxdLoader>(passFunc, "../resource/MainMenuV1.png");
-
+    auto mainTxd = std::make_shared<TxdLoader>(passFunc, "../resource/MainMenuV1.png");
+    pM->attachProcess(mainTxd);
+    AddEventHandler("UFO::MainMenu::Render", [this, mainTxd]() {
         // Render the texture
         SDL_Rect srcRect = {0, 0, 1024, 768}; // load the entire texture
         SDL_Rect destRect = {
-            static_cast<int>(0 - (1024 / 2)),
-            static_cast<int>(0 - (768 / 2)),
+            static_cast<int>(0),
+            static_cast<int>(0),
             static_cast<int>(1024),
             static_cast<int>(768) // down scale the texture
         };
         //Causes segmentation fault
-        //mainTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+        mainTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
     });
 
     // Chat State To prevent key presses from doing anything when the chat box is open
