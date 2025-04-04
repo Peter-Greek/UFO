@@ -88,6 +88,33 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             SDL_RenderCopy(renderer, OxygenText.texture, nullptr, &OxygenText.dst);
         }
 
+        //Draw Shield Button
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &ShieldButton);
+
+        if (ShieldText.texture) {
+            SDL_SetTextureColorMod(ShieldText.texture, 255, 255, 255);
+            SDL_RenderCopy(renderer, ShieldText.texture, nullptr, &ShieldText.dst);
+        }
+
+        //Draw Invisibility Button
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &InvisButton);
+
+        if (InvisibilityText.texture) {
+            SDL_SetTextureColorMod(InvisibilityText.texture, 255, 255, 255);
+            SDL_RenderCopy(renderer, InvisibilityText.texture, nullptr, &InvisibilityText.dst);
+        }
+
+        //Draw AT Cannon Button
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &CannonButton);
+
+        if (CannonText.texture) {
+            SDL_SetTextureColorMod(CannonText.texture, 255, 255, 255);
+            SDL_RenderCopy(renderer, CannonText.texture, nullptr, &CannonText.dst);
+        }        
+
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
@@ -103,11 +130,19 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 if (key == SDLK_ESCAPE) {
                     closeUpgradeMenu();
                 }
-            } else if (eventType == SDL_MOUSEBUTTONDOWN) {
+            } else if (eventType == SDL_MOUSEBUTTONDOWN) { //call appropriate action for each button clicked
                 SDL_GetMouseState(&x, &y);
                 if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h)
                     closeUpgradeMenu();
                 else if(x > SpeedButton.x && y > SpeedButton.y && x < SpeedButton.x + SpeedButton.w && y < SpeedButton.y + SpeedButton.h)
+                    closeUpgradeMenu();
+                else if(x > OxygenButton.x && y > OxygenButton.y && x < OxygenButton.x + OxygenButton.w && y < OxygenButton.y + OxygenButton.h)
+                    closeUpgradeMenu();
+                else if(x > ShieldButton.x && y > ShieldButton.y && x < ShieldButton.x + ShieldButton.w && y < ShieldButton.y + ShieldButton.h)
+                    closeUpgradeMenu();
+                else if(x > InvisButton.x && y > InvisButton.y && x < InvisButton.x + InvisButton.w && y < InvisButton.y + InvisButton.h)
+                    closeUpgradeMenu();
+                else if(x > CannonButton.x && y > CannonButton.y && x < CannonButton.x + CannonButton.w && y < CannonButton.y + CannonButton.h)
                     closeUpgradeMenu();
             }
         }
@@ -137,6 +172,12 @@ void UpgradeMenu::showUpgradeMenu() {
     SpeedText.texture = SDL_CreateTextureFromSurface(renderer, speedSurface);
     SDL_Surface* oxygenSurface = TTF_RenderText_Solid(font, "2 AT: Oxygen", color);
     OxygenText.texture = SDL_CreateTextureFromSurface(renderer, oxygenSurface);
+    SDL_Surface* shieldSurface = TTF_RenderText_Solid(font, "10 AT: Shield", color);
+    ShieldText.texture = SDL_CreateTextureFromSurface(renderer, shieldSurface);
+    SDL_Surface* invisSurface = TTF_RenderText_Solid(font, "10 AT: Invisibility", color);
+    InvisibilityText.texture = SDL_CreateTextureFromSurface(renderer, invisSurface);
+    SDL_Surface* cannonSurface = TTF_RenderText_Solid(font, "25 AT: Cannon", color);
+    CannonText.texture = SDL_CreateTextureFromSurface(renderer, cannonSurface);
 }
 
 void UpgradeMenu::displayATCount(int ATCount){

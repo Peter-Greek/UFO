@@ -50,15 +50,15 @@ private:
     SDL_Rect OxygenButtonText = {OxygenButton.x+30, OxygenButton.y+30, OxygenButton.w-60, OxygenButton.h-60};
     UpgradeText OxygenText = {nullptr, OxygenButtonText, "Play"}; 
 
-    SDL_Rect ShieldButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/10, SCREEN_WIDTH/5, SCREEN_HEIGHT/7};
+    SDL_Rect ShieldButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/2, SCREEN_WIDTH/4, SCREEN_HEIGHT/6};
     SDL_Rect ShieldButtonText = {ShieldButton.x+30, ShieldButton.y+30, ShieldButton.w-60, ShieldButton.h-60};
     UpgradeText ShieldText = {nullptr, ShieldButtonText, "Play"}; 
 
-    SDL_Rect InvisButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/10, SCREEN_WIDTH/5, SCREEN_HEIGHT/7};
+    SDL_Rect InvisButton = {2*(SCREEN_WIDTH/5), SCREEN_HEIGHT/2, SCREEN_WIDTH/4, SCREEN_HEIGHT/6};
     SDL_Rect InvisButtonText = {InvisButton.x+30, InvisButton.y+30, InvisButton.w-60, InvisButton.h-60};
     UpgradeText InvisibilityText = {nullptr, InvisButtonText, "Play"}; 
 
-    SDL_Rect CannonButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/10, SCREEN_WIDTH/5, SCREEN_HEIGHT/7};
+    SDL_Rect CannonButton = {SCREEN_WIDTH/9, 3*(SCREEN_HEIGHT/4), SCREEN_WIDTH/2, SCREEN_HEIGHT/5};
     SDL_Rect CannonButtonText = {CannonButton.x+30, CannonButton.y+30, CannonButton.w-60, CannonButton.h-60};
     UpgradeText CannonText = {nullptr, CannonButtonText, "Play"}; 
     int fontSize = 50;
