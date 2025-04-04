@@ -106,7 +106,6 @@ void GameInitializer::Start(){
     auto uMenu = attachProcess<UpgradeMenu>();
     auto mMenu = attachProcess<MainMenu>();
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-    mMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
 
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
@@ -270,7 +269,10 @@ void GameInitializer::LoadTextures() {
         auto fAnimIdle = attachGameMappedNonProcess<Animation>("FSS_IDLE", fAnim->getJSONData(), "Ferret Sprite Sheet (Idle)");
         auto fAnimMove = attachGameMappedNonProcess<Animation>("FSS_MOVE", fAnim->getJSONData(), "Ferret Sprite Sheet (Movement)");
 
+    // [[Background Textures]]
 
+    //Create Main Menu Texture
+    //auto mainTxd = attachGameMappedProcess<TxdLoader>("MAINMENU::TEXTURE", "../resource/MainMenuV1.png");
 
     // [[Normal Textures]]
 

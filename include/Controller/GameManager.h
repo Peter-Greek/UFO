@@ -41,6 +41,7 @@
 #include "Laser.h"
 #include "camera.h"
 #include "world.h"
+#include "MainMenu.h"
 #include "text.h"
 #include "AsepriteLoader.h"
 #include "TxdLoader.h"
@@ -115,6 +116,7 @@ public:
     void renderWorld(float deltaMs);
     void handleDebugWorldCreator(float deltaMs);
     void drawWall(wall *cur_wall);
+    void renderMainMenu(vector2 dim);
     void renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& at);
     void renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e& e);
     void renderHeart(vector2 screenCoords, vector2 dim);

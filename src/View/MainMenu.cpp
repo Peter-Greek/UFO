@@ -54,7 +54,7 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
         
         //Drawing start button
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
-        SDL_RenderDrawRect(renderer, &ATBox);
+        SDL_RenderDrawRect(renderer, &StartBox);
 
         /*if (ATText.texture) {
             SDL_SetTextureColorMod(ATText.texture, 255, 255, 255);
@@ -77,14 +77,11 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 }
             } else if (eventType == SDL_MOUSEBUTTONDOWN) {
                 SDL_GetMouseState(&x, &y);
-                if(x > ATBox.x && y > ATBox.y && x < ATBox.x + ATBox.w && y < ATBox.y + ATBox.h)
+                if(x > StartBox.x && y > StartBox.y && x < StartBox.x + StartBox.w && y < StartBox.y + StartBox.h)
                     closeMainMenu();
             }
         }
 });
-    AddEventHandler("UFO::MainMenu::DisplayATCount", [this](int ATCount) {
-        displayATCount(ATCount);
-    });
     return 1;
 }
 
@@ -101,21 +98,6 @@ void MainMenu::showMainMenu() {
     if (!running) return;
     TriggerEvent("UFO::MainMenu::State", true);
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, "main menu", color);
-    displayATCount(AT);
-}
-
-void MainMenu::displayATCount(int ATCount){
-    if (ATText.texture) {
-        SDL_DestroyTexture(ATText.texture);
-    }
-    std::string ATCountText = "AT Count: " + std::to_string(ATCount);
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, ATCountText.c_str(), color);
-    ATText.texture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    SDL_FreeSurface(textSurface);
-}
-
-void MainMenu::setATCount(int ATCount){
-    AT = ATCount;
 }
 
 void MainMenu::closeMainMenu() {
