@@ -169,6 +169,9 @@ void GameInitializer::Start(){
     // Create Key Card Pickup
     auto key = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::KEY_CARD, vector2{0.0f, 250.0f});
 
+    // Create Escape Pod "Pickup"
+    auto escape = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::ESCAPE_POD, vector2{0.0f, 550.0f});
+
     print("Game Environment Created");
 }
 
@@ -183,7 +186,7 @@ void GameInitializer::End() {
 
     if (debugMode == 1) {
         print("Starting new game due to debug mode");
-        sch->setTimeout(1000, [this]() {
+        sch->setTimeout(5000, [this]() {
             TriggerEvent("UFO::StartGame");
         });
     }

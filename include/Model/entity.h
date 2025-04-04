@@ -52,6 +52,7 @@ public:
         HEART = 2,
         OXY_TANK = 3,
         KEY_CARD = 4,
+        ESCAPE_POD = 5,
     };
 
 private:
