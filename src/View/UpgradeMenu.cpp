@@ -143,7 +143,7 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 else if(x > InvisButton.x && y > InvisButton.y && x < InvisButton.x + InvisButton.w && y < InvisButton.y + InvisButton.h)
                     TriggerEvent("UFO::UpgradePurchased", "invisibility", 10);
                 else if(x > CannonButton.x && y > CannonButton.y && x < CannonButton.x + CannonButton.w && y < CannonButton.y + CannonButton.h)
-                    TriggerEvent("UFO::UpgradePurchased", "cannon", 25);
+                    TriggerEvent("UFO::UpgradePurchased", "at_cannon", 25);
             }
         }
 });

@@ -82,10 +82,9 @@ void GameInitializer::Init() {
         (*gameStorage).save();
         TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>());
 
-
         //setting max amound that a user can purchase depending on which upgrade they are buying
         int max = 5;
-        if (upgrade == "cannon") max = 1;
+        if (upgrade == "at_cannon") max = 1;
         if (upgrade == "invisibility" or upgrade == "shield") max = 3;
 
         int up = (*gameStorage)["player"]["upgrades"][upgrade].get<int>();
