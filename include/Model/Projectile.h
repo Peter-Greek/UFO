@@ -42,15 +42,12 @@ private:
     std::weak_ptr<entity> owner;
     float range = 1000;
 
-    int length_p = 10;
-    int width_p = 10;
-
     vector2 getProjectileDimensions(std::shared_ptr<entity> parent, int damage) {
         print("Parent: ", parent->getEntityType(), " Damage: ", damage);
         if (parent->isEntityAPlayer()) {
             return {static_cast<float>(40 * damage), static_cast<float>(40 * damage)};
         }else {
-            return {10.0f, 10.0f};
+            return {20.0f, 20.0f};
         }
     }
 

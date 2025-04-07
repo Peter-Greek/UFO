@@ -445,9 +445,24 @@ void GameManager::renderProjectile(vector2 screenCoords, vector2 dim, const sh_p
             TriggerEvent("SDL::Render::ResetDrawColor");
         }
     }else {
-        TriggerEvent("SDL::Render::SetDrawColor", 255, 255, 255, 255);
-        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-        TriggerEvent("SDL::Render::ResetDrawColor");
+        auto it = txdMap.find("LASER::TEXTURE");
+        if (it == txdMap.end() || !it->second) {
+            return;
+        }
+        SDL_Rect srcRect = {40, 96, 79-40, 135-96};
+        SDL_Rect destRect = {
+                static_cast<int>(screenCoords.x),
+                static_cast<int>(screenCoords.y),
+                static_cast<int>(dim.x),
+                static_cast<int>(dim.y)
+        };
+        txdMap["LASER::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+
+        if (isDebug()) {
+            TriggerEvent("SDL::Render::SetDrawColor", 155, 40, 10, 100);
+            TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+            TriggerEvent("SDL::Render::ResetDrawColor");
+        }
     }
 }
 
