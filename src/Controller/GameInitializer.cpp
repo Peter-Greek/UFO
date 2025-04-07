@@ -36,8 +36,37 @@
 // NOTE: Only create event handlers inside of methods that are not called multiple times as this class does not get
 // destroyed when the game loop ends. This is to prevent multiple event handlers from being created and causing issues.
 
+void GameInitializer::ShutdownMainMenu() {
+    if (mMenu != nullptr) {
+        mMenu->abort();
+        mMenu = nullptr;
+    }
+}
+
+void GameInitializer::ShutdownUpgradeMenu() {
+    if (uMenu != nullptr) {
+        uMenu->abort();
+        uMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateMainMenu() {
+    ShutdownUpgradeMenu();
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
+    mMenu = attachProcess<MainMenu>(menuTxd);
+}
+
+void GameInitializer::CreateUpgradeMenu() {
+    ShutdownMainMenu();
+    uMenu = attachProcess<UpgradeMenu>();
+    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    uMenu->showUpgradeMenu();
+}
+
 void GameInitializer::Init() {
     print("Game Init");
+
+    // Config Changes
     AddEventHandler("UFO::OnConfigUpdate", [this](const std::string configName) {
         updateSettings(); // Update settings based on global variables
 
@@ -65,14 +94,27 @@ void GameInitializer::Init() {
         TriggerEvent("UFO::OnConfigUpdate", configName);
     });
 
+    // Main Menu Press Start
     AddEventHandler("UFO::StartGame", [this]() {
         // Create Game Environment
         print("Starting Game...");
-        Debug();
+        ShutdownMainMenu();
+        CreateUpgradeMenu();
+    });
 
-        uMenu = attachProcess<UpgradeMenu>();
-        uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-        uMenu->showUpgradeMenu();
+    // Upgrade Menu Press Play
+    AddEventHandler("UFO::UpgradeMenu::StartGameLoop", [this]() {
+        ShutdownUpgradeMenu();
+        Start();
+        GameDebug();
+    });
+
+    // Press ESC in upgrade menu
+    AddEventHandler("UFO::UpgradeMenu::State", [this](bool state) {
+        if (state == false && uMenu != nullptr) {
+            ShutdownUpgradeMenu();
+            CreateMainMenu();
+        }
     });
 
     AddEventHandler("UFO::UpgradePurchased", [this](std::string upgrade, int atCount) {
@@ -103,6 +145,7 @@ void GameInitializer::Init() {
         }
     });
 
+    // GameManager Triggers Game End, we check if the player is dead or if the boss is dead
     AddEventHandler("UFO::EndGame", [this]() {
         int atcount = 0;
         bool isDead = true;
@@ -133,14 +176,9 @@ void GameInitializer::Init() {
         End();
     });
 
-    AddEventHandler("UFO::UpgradeMenu::State", [this](bool state) {
-        if (state == false && uMenu != nullptr) {
-            Start();
-            GameDebug();
-            uMenu->abort();
-            uMenu = nullptr;
-        }
-    });
+    // Display the MainMenu and Debug text
+    CreateMainMenu();
+    Debug();
 }
 
 void GameInitializer::Start(){

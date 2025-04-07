@@ -119,21 +119,6 @@ int view::initialize() {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     });
 
-    auto mainTxd = std::make_shared<TxdLoader>(passFunc, "../resource/MainMenuV1.png");
-    pM->attachProcess(mainTxd);
-    AddEventHandler("UFO::MainMenu::Render", [this, mainTxd]() {
-        // Render the texture
-        SDL_Rect srcRect = {0, 0, 1024, 768}; // load the entire texture
-        SDL_Rect destRect = {
-            static_cast<int>(0),
-            static_cast<int>(0),
-            static_cast<int>(1024),
-            static_cast<int>(768) // down scale the texture
-        };
-        //Causes segmentation fault
-        mainTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
-    });
-
     // Chat State To prevent key presses from doing anything when the chat box is open
     AddEventHandler("UFO::Chat::State", [this](bool state) {
         chatState = state;
@@ -152,9 +137,6 @@ int view::initialize() {
     auto* WC = new WorldCreator(passFunc);
     pM->attachProcess(WC);
     chatBox->addMessage("World Creator Attached");
-
-    auto* mainMenu = new MainMenu(passFunc);
-    pM->attachProcess(mainMenu);
 
     return 1;
 }
@@ -183,9 +165,6 @@ void view::update(float deltaMs) {
                 }
                 if ( e.key.keysym.sym == SDLK_b ) {
                     TriggerEvent("UFO::ChangeConfigValue", "debugMode");
-                }
-                if ( e.key.keysym.sym == SDLK_m ) {
-                    TriggerEvent("UFO::MainMenu::Render");
                 }
             }else {
                 const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);

@@ -43,9 +43,14 @@
 #include "MainMenu.h"
 #include "Scheduler.h"
 
+#include "MainMenu.h"
+#include "UpgradeMenu.h"
+
 class GameInitializer : public xProcess {
 private:
+    std::shared_ptr<MainMenu> mMenu;
     std::shared_ptr<UpgradeMenu> uMenu;
+
 
     passFunc_t passFunc;
     std::shared_ptr<ProcessManager> processManager;
@@ -54,6 +59,8 @@ private:
     std::shared_ptr<GameManager> gameManager;
 
     std::list<sh_ptr<text>> debugTexts;
+
+    std::list<sh_ptr<TxdLoader>> txdLoaders;
 
 public:
     GameInitializer(passFunc_t p1,
@@ -127,6 +134,18 @@ public:
         return instance;
     }
 
+    template<typename T, typename... Args>
+    sh_ptr<T> attachMappedProcess(std::string name, Args&&... args) {
+        auto instance = std::make_shared<T>(passFunc, std::forward<Args>(args)...);
+        processManager->attachProcess(instance);
+
+        if constexpr (std::is_base_of_v<TxdLoader, T>) {
+            txdLoaders.push_back(instance);
+        }
+
+        return instance;
+    }
+
 
 
 
@@ -145,6 +164,14 @@ public:
     void LoadEntitiesFromWorld(sh_ptr<world> w);
 
     void GameDebug();
+
+    void CreateMainMenu();
+
+    void CreateUpgradeMenu();
+
+    void ShutdownMainMenu();
+
+    void ShutdownUpgradeMenu();
 };
 
 

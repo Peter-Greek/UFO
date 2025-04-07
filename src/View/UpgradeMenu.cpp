@@ -143,18 +143,19 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 }
             } else if (eventType == SDL_MOUSEBUTTONDOWN) { //call appropriate action for each button clicked
                 SDL_GetMouseState(&x, &y);
-                if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h)
-                    closeUpgradeMenu();
-                else if(x > SpeedButton.x && y > SpeedButton.y && x < SpeedButton.x + SpeedButton.w && y < SpeedButton.y + SpeedButton.h)
+                if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h) {
+                    TriggerEvent("UFO::UpgradeMenu::StartGameLoop", false);
+                }else if(x > SpeedButton.x && y > SpeedButton.y && x < SpeedButton.x + SpeedButton.w && y < SpeedButton.y + SpeedButton.h) {
                     TriggerEvent("UFO::UpgradePurchased", "speed", 2);
-                else if(x > OxygenButton.x && y > OxygenButton.y && x < OxygenButton.x + OxygenButton.w && y < OxygenButton.y + OxygenButton.h)
+                }else if(x > OxygenButton.x && y > OxygenButton.y && x < OxygenButton.x + OxygenButton.w && y < OxygenButton.y + OxygenButton.h) {
                     TriggerEvent("UFO::UpgradePurchased", "oxygen", 2);
-                else if(x > ShieldButton.x && y > ShieldButton.y && x < ShieldButton.x + ShieldButton.w && y < ShieldButton.y + ShieldButton.h)
+                }else if(x > ShieldButton.x && y > ShieldButton.y && x < ShieldButton.x + ShieldButton.w && y < ShieldButton.y + ShieldButton.h) {
                     TriggerEvent("UFO::UpgradePurchased", "shield", 10);
-                else if(x > InvisButton.x && y > InvisButton.y && x < InvisButton.x + InvisButton.w && y < InvisButton.y + InvisButton.h)
+                }else if(x > InvisButton.x && y > InvisButton.y && x < InvisButton.x + InvisButton.w && y < InvisButton.y + InvisButton.h) {
                     TriggerEvent("UFO::UpgradePurchased", "invisibility", 10);
-                else if(x > CannonButton.x && y > CannonButton.y && x < CannonButton.x + CannonButton.w && y < CannonButton.y + CannonButton.h)
+                }else if(x > CannonButton.x && y > CannonButton.y && x < CannonButton.x + CannonButton.w && y < CannonButton.y + CannonButton.h) {
                     TriggerEvent("UFO::UpgradePurchased", "at_cannon", 25);
+                }
             }
         }
 });
