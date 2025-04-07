@@ -36,6 +36,7 @@
 
 #include "xProcess.h"
 
+
 class entity : public xProcess {
 public:
     enum eType {
@@ -200,8 +201,11 @@ public:
     void setEntityInvincible(bool invincible, float time);
     void setEntityInvincibleTime(float time);
 
-    eType getEntityType() const;
+    [[nodiscard]] eType getEntityType() const;
+
+    [[nodiscard]] bool isEntityInEntity(const sh_ptr<entity>& other) const;
 };
 
+using sh_ptr_e = sh_ptr<entity>;
 
 #endif //CSCI437_ENTITY_H

@@ -1162,11 +1162,11 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
 
         }else if (e2->isEntityAProjectile()) {
             vector2 projCoords = e2->getPosition();
-            if (p->isPointInEntity(projCoords)) {
+            if (e2->isEntityInEntity(p)) {
                 if (e2->getHearts() > 0) {
                     auto proj = std::dynamic_pointer_cast<Projectile>(e2);
-                    if (!proj) continue;
-                    if (proj->getOwner() == e2) {
+                    if (!proj || !proj->getOwner()) continue;
+                    if (proj->getOwner() == e) {
                         // if the projectile is from the player ignore it
                         continue;
                     }
@@ -1209,7 +1209,7 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             vector2 pVel = angleToVector2(h) * 0.35f;
 
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
-            auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, p);
+            auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, e);
             pM->attachProcess(proj);
             attachEntity(proj);
             proj->setVelocity(pVel);
@@ -1249,7 +1249,7 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
             continue;
         }else if (e2->isEntityAProjectile()) {
             vector2 projCoords = e2->getPosition();
-            if (e->isPointInEntity(projCoords)) {
+            if (e2->isEntityInEntity(e)) {
                 if (e2->getHearts() > 0) {
                     auto proj = std::dynamic_pointer_cast<Projectile>(e2);
                     if (!proj) continue;
@@ -1370,7 +1370,7 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
             continue;
         }else if (e2->isEntityAProjectile()) {
             vector2 projCoords = e2->getPosition();
-            if (e->isPointInEntity(projCoords)) {
+            if (e2->isEntityInEntity(e)) {
                 if (e2->getHearts() > 0) {
                     auto proj = std::dynamic_pointer_cast<Projectile>(e2);
                     if (!proj) continue;

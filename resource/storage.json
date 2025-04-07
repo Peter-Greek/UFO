@@ -1,14 +1,14 @@
 {
-    "loads": 1358,
+    "loads": 1366,
     "player": {
-        "ATCount": 470,
-        "TotalAT": 524,
+        "ATCount": 462,
+        "TotalAT": 526,
         "upgrades": {
             "at_cannon": 1,
             "invisibility": 1,
             "oxygen": 0,
             "shield": 0,
-            "speed": 0
+            "speed": 5
         }
     },
     "settings": {
