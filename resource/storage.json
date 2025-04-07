@@ -1,8 +1,8 @@
 {
-    "loads": 1302,
+    "loads": 1308,
     "player": {
-        "ATCount": 178,
-        "TotalAT": 178,
+        "ATCount": 189,
+        "TotalAT": 189,
         "upgrades": {
             "at_cannon": 1,
             "invisibility": 1,
@@ -13,7 +13,7 @@
     },
     "settings": {
         "curRoomIndex": 1,
-        "debugMode": 1,
+        "debugMode": 0,
         "unlimitedFrames": false
     }
 }

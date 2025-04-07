@@ -278,6 +278,13 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
     asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
     asepriteMap["FSS"]->resetTextureAlpha();
 
+    for (auto & e2 : entityList) {
+        if (!e2->isEntityAPickup()) {
+            continue;
+        }
+        renderPickupInteraction(p, e2, currentCoords);
+    }
+
     if (isDebug()) {
         // draw the hit box of the player
         TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 50);
@@ -792,6 +799,120 @@ void GameManager::renderWorld(float deltaMs) {
     }
 }
 
+void GameManager::renderTextOnEntity(const sh_ptr_e& e, const std::string& textMapName, const std::string& textDefault) {
+    if (textMapName.empty()) {
+        return;
+    }
+
+    auto it = textMap.find(textMapName);
+    if (it == textMap.end() || !it->second) {
+        return;
+    }
+
+    auto mapped = it->second;
+
+
+    if (textDefault.empty()) {
+        mapped->hideText();
+        return;
+    }
+
+    vector2 screenCoords = cam->worldToScreenCoords(e->getPosition());
+    vector2 dim = e->getDimensions();
+    SDL_Rect rec = mapped->getTextRect();
+    mapped->setTextPosition(screenCoords.x + dim.x/2 - rec.w/2, screenCoords.y - dim.y/2 - rec.h);
+    mapped->showText(textDefault);
+}
+
+void GameManager::clearPickupInteraction(const sh_ptr_e& e) {
+    if (!e) {
+        return;
+    }
+
+    entity::pType pickupType = e->getPickupType();
+    if (pickupType != entity::KEY_CARD && pickupType != entity::ESCAPE_POD) {
+        return;
+    }
+
+    std::string textMapName;
+
+    if (pickupType == entity::KEY_CARD) {
+        textMapName = "KEYCARD::" + e->getId();
+    }else if (pickupType == entity::ESCAPE_POD) {
+        textMapName = "ESCAPE::" + e->getId();
+    }
+
+    auto it = textMap.find(textMapName);
+    if (it != textMap.end()) {
+        it->second->hideText();
+        textMap.erase(it);
+    }
+}
+
+void GameManager::renderPickupInteraction(const sh_ptr_ply& ply, const sh_ptr_e& e, vector2& currentCoords) {
+    if (!e || !ply) {
+        return;
+    }
+
+    entity::pType pickupType = e->getPickupType();
+    if (pickupType != entity::KEY_CARD && pickupType != entity::ESCAPE_POD) {
+        return;
+    }
+
+
+    vector2 enemyCoords = e->getPosition();
+    bool isInside = ply->isPointInEntity(enemyCoords);
+
+    std::string textMapName;
+
+    if (pickupType == entity::KEY_CARD) {
+        textMapName = "KEYCARD::" + e->getId();
+    }else if (pickupType == entity::ESCAPE_POD) {
+        textMapName = "ESCAPE::" + e->getId();
+    }
+
+    bool inView = cam->isPointInView(enemyCoords);
+    bool isClose = ((enemyCoords - currentCoords).length() < 150);
+
+    sh_ptr<text> mapped = textMap[textMapName];
+
+    if (!inView) {
+        if (mapped) {mapped->hideText();}
+        return;
+    }
+
+    if (!mapped) {
+        textMap[textMapName] = std::make_shared<text>(passFunc, "[E]", 25);
+        pM->attachProcess(textMap[textMapName]);
+        mapped = textMap[textMapName];
+    }
+
+    if (!isClose) {
+        mapped->hideText();
+        return;
+    }
+
+    vector2 dim = e->getDimensions();
+    vector2 screenCoords = cam->worldToScreenCoords(enemyCoords);
+    std::string displayText = "[E]";
+    if (isInside) {
+        switch (pickupType) {
+            case entity::KEY_CARD:
+                displayText = "Press [E] to pick up keycard!";
+                break;
+            case entity::ESCAPE_POD:
+                displayText = "Press [E] to enter ESCAPE POD!";
+                break;
+            default:
+                break;
+        }
+    }
+
+    mapped->showText(displayText);
+    SDL_Rect rec = mapped->getTextRect();
+    mapped->setTextPosition(screenCoords.x + dim.x/2 - rec.w/2, screenCoords.y - dim.y/2 - rec.h);
+}
+
 
 
 // Update Controller Functions
@@ -874,90 +995,6 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             std::string keyCardName;
             bool isInside = p->isPointInEntity(enemyCoords);
 
-            if (pickupType == entity::KEY_CARD) {
-                keyCardName = "KEYCARD::" + e2->getId();
-
-
-
-                if (!cam->isPointInView(enemyCoords) || (enemyCoords - currentCoords).length() > 150) {
-                    if (textMap[keyCardName]) {
-                        textMap[keyCardName]->hideText();
-                    }
-                    continue;
-                }
-
-
-                vector2 dim = e2->getDimensions();
-                vector2 screenCoords = cam->worldToScreenCoords(enemyCoords);
-                if (! textMap[keyCardName]) {
-                    textMap[keyCardName] = std::make_shared<text>(passFunc, "[E]", 25);
-                    pM->attachProcess(textMap[keyCardName]);
-                    textMap[keyCardName]->setTextPosition(screenCoords.x - dim.x/2, screenCoords.y - dim.y/2 - 25);
-                    continue; // need to wait 1 tick to allow the process to init
-
-                }else {
-                    SDL_Rect rec = textMap[keyCardName]->getTextRect();
-                    textMap[keyCardName]->setTextPosition(screenCoords.x + dim.x/2 - rec.w/2, screenCoords.y - dim.y/2 - rec.h);
-                }
-
-                // keyboard state
-                if (isInside) {
-                    textMap[keyCardName]->showText("Press [E] to pick up keycard!");
-                    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
-                    if (keyboard_state_array[SDL_SCANCODE_E]) {
-                        e2->setHearts(0);
-                        e2->succeed();
-                        textMap[keyCardName]->hideText();
-                    }
-                }else {
-                    textMap[keyCardName]->showText("[E]");
-                }
-
-                continue;
-            }else if (pickupType == entity::ESCAPE_POD) {
-                keyCardName = "ESCAPE::" + e2->getId();
-
-
-
-                if (!cam->isPointInView(enemyCoords) || (enemyCoords - currentCoords).length() > 150) {
-                    if (textMap[keyCardName]) {
-                        textMap[keyCardName]->hideText();
-                    }
-                    continue;
-                }
-
-
-                vector2 dim = e2->getDimensions();
-                vector2 screenCoords = cam->worldToScreenCoords(enemyCoords);
-                if (! textMap[keyCardName]) {
-                    textMap[keyCardName] = std::make_shared<text>(passFunc, "[E]", 25);
-                    pM->attachProcess(textMap[keyCardName]);
-                    textMap[keyCardName]->setTextPosition(screenCoords.x - dim.x/2, screenCoords.y - dim.y/2 - 25);
-                    continue; // need to wait 1 tick to allow the process to init
-
-                }else {
-                    SDL_Rect rec = textMap[keyCardName]->getTextRect();
-                    textMap[keyCardName]->setTextPosition(screenCoords.x + dim.x/2 - rec.w/2, screenCoords.y - dim.y/2 - rec.h);
-                }
-
-                // keyboard state
-                if (isInside) {
-                    textMap[keyCardName]->showText("Press [E] to enter ESCAPE POD!");
-                    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
-                    if (keyboard_state_array[SDL_SCANCODE_E]) {
-                        e2->setHearts(0);
-                        e2->succeed();
-                        textMap[keyCardName]->hideText();
-                        TriggerEvent("UFO::EndGame");
-                    }
-                }else {
-                    textMap[keyCardName]->showText("[E]");
-                }
-
-                continue;
-            }
-
-
             if (isInside) {
                 if (pickupType == entity::AT) {
                     e2->setHearts(0);
@@ -977,6 +1014,21 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
                     e2->succeed();
                     p->addOxygen(30000.0f); // adds 30 seconds of oxygen
                     textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
+                }else if (pickupType == entity::KEY_CARD) {
+                    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
+                    if (keyboard_state_array[SDL_SCANCODE_E]) {
+                        e2->setHearts(0);
+                        clearPickupInteraction(e2);
+                        e2->succeed();
+                    }
+                }else if (pickupType == entity::ESCAPE_POD) {
+                    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
+                    if (keyboard_state_array[SDL_SCANCODE_E]) {
+                        e2->setHearts(0);
+                        clearPickupInteraction(e2);
+                        e2->succeed();
+                        TriggerEvent("UFO::EndGame");
+                    }
                 }
             }
         }else if (e2->isEntityAnEnemy()) {

@@ -122,6 +122,12 @@ public:
     void handleBossUpdate(const sh_ptr_e& e, float deltaMs);
 
     void terminateGame();
+
+    void renderTextOnEntity(const sh_ptr_e &e, const std::string &textMapName, const std::string &textDefault);
+
+    void renderPickupInteraction(const sh_ptr_ply &ply, const sh_ptr_e &e, vector2 &currentCoords);
+
+    void clearPickupInteraction(const sh_ptr_e &e);
 };
 
 
