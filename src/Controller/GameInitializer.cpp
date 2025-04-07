@@ -35,34 +35,6 @@
 
 // NOTE: Only create event handlers inside of methods that are not called multiple times as this class does not get
 // destroyed when the game loop ends. This is to prevent multiple event handlers from being created and causing issues.
-
-void GameInitializer::ShutdownMainMenu() {
-    if (mMenu != nullptr) {
-        mMenu->abort();
-        mMenu = nullptr;
-    }
-}
-
-void GameInitializer::ShutdownUpgradeMenu() {
-    if (uMenu != nullptr) {
-        uMenu->abort();
-        uMenu = nullptr;
-    }
-}
-
-void GameInitializer::CreateMainMenu() {
-    ShutdownUpgradeMenu();
-    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
-    mMenu = attachProcess<MainMenu>(menuTxd);
-}
-
-void GameInitializer::CreateUpgradeMenu() {
-    ShutdownMainMenu();
-    uMenu = attachProcess<UpgradeMenu>();
-    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-    uMenu->showUpgradeMenu();
-}
-
 void GameInitializer::Init() {
     print("Game Init");
 
@@ -337,6 +309,33 @@ void GameInitializer::GameDebug() {
 
     auto rHeading = attachGameMappedProcess<text>("RelHeading", "Heading: 0", 35);
     rHeading->setTextRelativePosition(0.0f, -0.7f);
+}
+
+void GameInitializer::ShutdownMainMenu() {
+    if (mMenu != nullptr) {
+        mMenu->abort();
+        mMenu = nullptr;
+    }
+}
+
+void GameInitializer::ShutdownUpgradeMenu() {
+    if (uMenu != nullptr) {
+        uMenu->abort();
+        uMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateMainMenu() {
+    ShutdownUpgradeMenu();
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
+    mMenu = attachProcess<MainMenu>(menuTxd);
+}
+
+void GameInitializer::CreateUpgradeMenu() {
+    ShutdownMainMenu();
+    uMenu = attachProcess<UpgradeMenu>();
+    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    uMenu->showUpgradeMenu();
 }
 
 void GameInitializer::LoadTextures() {

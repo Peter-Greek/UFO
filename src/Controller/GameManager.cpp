@@ -428,7 +428,7 @@ void GameManager::renderMainMenu(vector2 dim) {
     }
 
     // Render the texture
-    SDL_Rect srcRect = {0, 0, 1024, 768}; // load the entire texture
+    SDL_Rect srcRect = {0, 0, 1024, SCREEN_HEIGHT}; // load the entire texture
     SDL_Rect destRect = {
             static_cast<int>(0),
             static_cast<int>(0),

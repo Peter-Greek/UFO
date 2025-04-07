@@ -41,6 +41,13 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, "main menu", color);
 
 
+    // Set the button coords
+    StartBox = {
+            static_cast<int>(414 * (SCREEN_WIDTH / 1024.0f)),
+            static_cast<int>(475 * (SCREEN_HEIGHT / 768.0f)),
+            static_cast<int>(195 * (SCREEN_WIDTH / 1024.0f)),
+            static_cast<int>(84 * (SCREEN_HEIGHT / 768.0f))
+    };
 
 
     running = true;
@@ -53,23 +60,15 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
 
         if (renderer == nullptr) {return;}
 
-        //Drawing menu background
-        SDL_SetRenderDrawColor(renderer, 0, 75, 0, 255);
-        SDL_RenderFillRect(renderer, &cbox);
+        if (menuTxd != nullptr && menuTxd->state() == xProcess::RUNNING) {
+            menuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+        }
         
         //Drawing start button
-        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
-        SDL_RenderDrawRect(renderer, &StartBox);
-
-        /*if (ATText.texture) {
-            SDL_SetTextureColorMod(ATText.texture, 255, 255, 255);
-            SDL_RenderCopy(renderer, ATText.texture, nullptr, &ATText.dst);
-        }*/
-
-        if (menuTxd == nullptr || menuTxd->state() != xProcess::RUNNING) {
-            return;
+        if (isDebug()) {
+            SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
+            SDL_RenderDrawRect(renderer, &StartBox);
         }
-        menuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {

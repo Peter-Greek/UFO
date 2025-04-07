@@ -39,8 +39,8 @@ private:
         std::string text;
         bool isCut = false;
     };
-
-    SDL_Rect StartBox = {cbox.x + (SCREEN_WIDTH/2) - 100, cbox.y + 500, 200, 80};
+    //
+    SDL_Rect StartBox = {414, 475, 195, 84};
     SDL_Rect StartBoxText = {StartBox.x+30, StartBox.y+30, StartBox.w-60, StartBox.h-60};
     UpgradeText StartText = {nullptr, StartBoxText, "START"};
     int fontSize = 50;
@@ -51,8 +51,8 @@ private:
     SDL_Rect destRect = {
             static_cast<int>(0),
             static_cast<int>(0),
-            static_cast<int>(1024),
-            static_cast<int>(768) // down scale the texture
+            static_cast<int>(SCREEN_WIDTH),
+            static_cast<int>(SCREEN_HEIGHT) // down scale the texture
     };
 
 
