@@ -135,15 +135,15 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h)
                     closeUpgradeMenu();
                 else if(x > SpeedButton.x && y > SpeedButton.y && x < SpeedButton.x + SpeedButton.w && y < SpeedButton.y + SpeedButton.h)
-                    closeUpgradeMenu();
+                    TriggerEvent("UFO::UpgradePurchased", "speed", 2);
                 else if(x > OxygenButton.x && y > OxygenButton.y && x < OxygenButton.x + OxygenButton.w && y < OxygenButton.y + OxygenButton.h)
-                    closeUpgradeMenu();
+                    TriggerEvent("UFO::UpgradePurchased", "oxygen", 2);
                 else if(x > ShieldButton.x && y > ShieldButton.y && x < ShieldButton.x + ShieldButton.w && y < ShieldButton.y + ShieldButton.h)
-                    closeUpgradeMenu();
+                    TriggerEvent("UFO::UpgradePurchased", "shield", 10);
                 else if(x > InvisButton.x && y > InvisButton.y && x < InvisButton.x + InvisButton.w && y < InvisButton.y + InvisButton.h)
-                    closeUpgradeMenu();
+                    TriggerEvent("UFO::UpgradePurchased", "invisibility", 10);
                 else if(x > CannonButton.x && y > CannonButton.y && x < CannonButton.x + CannonButton.w && y < CannonButton.y + CannonButton.h)
-                    closeUpgradeMenu();
+                    TriggerEvent("UFO::UpgradePurchased", "cannon", 25);
             }
         }
 });

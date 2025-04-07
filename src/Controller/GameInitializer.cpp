@@ -70,6 +70,36 @@ void GameInitializer::Init() {
         Debug();
     });
 
+    AddEventHandler("UFO::UpgradePurchased", [this](std::string upgrade, int atCount) {
+        int curAT = (*gameStorage)["player"]["ATCount"].get<int>();
+        if (curAT < atCount) {
+            print("Not enough AT to purchase upgrade");
+            TriggerEvent("UFO::Chat::AddMessage", "Not enough AT to purchase upgrade");
+            return;
+            }
+        
+        (*gameStorage)["player"]["ATCount"] = curAT - atCount;
+        (*gameStorage).save();
+        TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>());
+
+
+        //setting max amound that a user can purchase depending on which upgrade they are buying
+        int max = 5;
+        if (upgrade == "cannon") max = 1;
+        if (upgrade == "invisibility" or upgrade == "shield") max = 3;
+
+        int up = (*gameStorage)["player"]["upgrades"][upgrade].get<int>();
+        if (up < max) {
+            (*gameStorage)["player"]["upgrades"][upgrade] = up + 1;
+            (*gameStorage).save();
+            print("Upgrade purchased: ", upgrade, " AT Count: ", atCount);
+            TriggerEvent("UFO::Chat::AddMessage", "Upgrade purchased: " + upgrade + " AT Count: " + std::to_string(atCount));
+        } else {
+            print("Upgrade already maxed out");
+            TriggerEvent("UFO::Chat::AddMessage", "Upgrade already maxed out");
+    }
+    });
+
     AddEventHandler("UFO::EndGame", [this]() {
         int atcount = 0;
         bool isDead = true;
