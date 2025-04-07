@@ -8,6 +8,7 @@
 #include "xProcess.h"
 #include "ChatBox.h"
 #include "ProcessManager.h"
+#include "MainMenu.h"
 #include <memory>
 
 class view : public xProcess {

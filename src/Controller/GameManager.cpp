@@ -420,6 +420,37 @@ void GameManager::renderLaser(vector2 screenCoords, vector2 dim, const sh_ptr_la
     }
 }
 
+void GameManager::renderMainMenu(vector2 dim) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("MAINMENU::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, 1024, 768}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(0),
+            static_cast<int>(0),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    if (isDebug()) { // draw a rec around the texture (background)
+        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+        TriggerEvent("SDL::Render::DrawRect", 0 - (dim.x / 2), 0 - (dim.y / 2), dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+
+    }
+    txdMap["MAINMENU::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+    if (isDebug()) { // draw a center point of the AT
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
+        TriggerEvent("SDL::Render::DrawPoint", 0, 0);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+
+    }
+}
+
 void GameManager::renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& at) {
     // Check if the texture exists in txdMap
     auto it = txdMap.find("AT::TEXTURE");

@@ -4,6 +4,8 @@
 #include "xProcess.h"
 #include <SDL_ttf.h>
 #include <SDL.h>
+#include <GameManager.h>
+
 class MainMenu : public xProcess {
 private:
     SDL_Event e;
@@ -35,9 +37,9 @@ private:
         bool isCut = false;
     };
 
-    SDL_Rect ATBox = {cbox.x + 2*(SCREEN_WIDTH/3), cbox.y+ 10, SCREEN_WIDTH - (10+ATBox.x), SCREEN_HEIGHT/7};
-    SDL_Rect ATBoxText = {ATBox.x+30, ATBox.y+30, ATBox.w-60, ATBox.h-60};
-    UpgradeText ATText = {nullptr, ATBoxText, "AT Count: 0"};
+    SDL_Rect StartBox = {cbox.x + (SCREEN_WIDTH/2) - 100, cbox.y + 500, 200, 80};
+    SDL_Rect StartBoxText = {StartBox.x+30, StartBox.y+30, StartBox.w-60, StartBox.h-60};
+    UpgradeText StartText = {nullptr, StartBoxText, "START"};
     int fontSize = 50;
 public:
     explicit MainMenu(passFunc_t& func) : xProcess(true, func){
@@ -55,8 +57,6 @@ public:
     void setMainMenuSize(vector2 size);
     void setMainMenuSize(float x, float y);
     void updateMainMenuPositioning();
-    void displayATCount(int ATCount);
-    void setATCount(int ATCount);
     void setFontColor(int r, int g, int b, int a);
 };
 #endif //CSCI437_MAINMENU_H
