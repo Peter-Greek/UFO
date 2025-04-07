@@ -59,6 +59,7 @@ vector2 entity::getSpawnCoords() {
 }
 
 // Entity Type Methods
+entity::eType entity::getEntityType() const {return type;}
 bool entity::isEntityAPlayer() {return type == PLAYER;};
 bool entity::isEntityAnEnemy() {return type == ENEMY;};
 bool entity::isEntityAnEnemyBoss() {return type == ENEMY_BOSS;};

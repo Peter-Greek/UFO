@@ -106,6 +106,20 @@ public:
         setDefaultLengthWidth();
     }
 
+    explicit entity(
+            passFunc_t& func,
+            int eTypeIndex, int hearts, vector2 position,
+            vector2 dimensions
+    ) : xProcess(false, func), length(dimensions.x), width(dimensions.y), hearts(hearts), maxHearts(hearts), coords(position) {
+        print("Entity: ", eTypeIndex, " Length: ", length, " Width: ", width);
+        appliedLength = length;
+        appliedWidth = width;
+        type = static_cast<eType>(eTypeIndex);
+        spawnCoords = {position.x, position.y};
+        lastCoords = {position.x, position.y};
+        setDefaultLengthWidth();
+    }
+
     int initialize() override;
     void update(float deltaMs) override;
     bool isDone() override;
@@ -185,6 +199,8 @@ public:
     void setEntityInvincible(bool invincible);
     void setEntityInvincible(bool invincible, float time);
     void setEntityInvincibleTime(float time);
+
+    eType getEntityType() const;
 };
 
 

@@ -97,10 +97,12 @@ int GameManager::initialize() {
                     }
                 }
             }else if (e->isEntityAProjectile()) {
-                //TODO: Render Projectile Like Hearts and AT
-                TriggerEvent("SDL::Render::SetDrawColor", 255, 255, 255, 255);
-                TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                TriggerEvent("SDL::Render::ResetDrawColor");
+                if (auto p = std::dynamic_pointer_cast<Projectile>(e)) {
+                    if (p->isOutOfRange()) {
+                        continue;
+                    }
+                    renderProjectile(screenCoords, dim, p);
+                }
             }
         }
         handleDebugWorldCreator(deltaMs); // handle the debug world creator (used to create walls)
@@ -156,11 +158,11 @@ int GameManager::initialize() {
 }
 
 void GameManager::terminateGame() {
-    for (auto& e : entityList) {e->abort();}
-    for (auto& t : textMap) {t.second->abort();}
-    for (auto& a : asepriteMap) {a.second->abort();}
-    for (auto& t : txdMap) {t.second->abort();}
-    for (auto& a : audioMap) {a.second->abort();}
+    for (auto& e : entityList) {e->abort();};
+    for (auto& t : textMap) {if (t.second) {t.second->abort();}};
+    for (auto& a : asepriteMap) {if (a.second) {a.second->abort();}};
+    for (auto& t : txdMap) {if (t.second) {t.second->abort();}};
+    for (auto& a : audioMap) {if (a.second) {a.second->abort();}};
     if (cam) {cam->abort();}
     if (world_ptr) {world_ptr->abort();}
     entityList.clear();
@@ -420,34 +422,32 @@ void GameManager::renderLaser(vector2 screenCoords, vector2 dim, const sh_ptr_la
     }
 }
 
-void GameManager::renderMainMenu(vector2 dim) {
+void GameManager::renderProjectile(vector2 screenCoords, vector2 dim, const sh_ptr_pew& pw) {
     // Check if the texture exists in txdMap
-    auto it = txdMap.find("MAINMENU::TEXTURE");
-    if (it == txdMap.end() || !it->second) {
-        return;
-    }
 
-    // Render the texture
-    SDL_Rect srcRect = {0, 0, 1024, SCREEN_HEIGHT}; // load the entire texture
-    SDL_Rect destRect = {
-            static_cast<int>(0),
-            static_cast<int>(0),
-            static_cast<int>(dim.x),
-            static_cast<int>(dim.y) // down scale the texture
-    };
+    auto owner = pw->getOwner();
 
-    if (isDebug()) { // draw a rec around the texture (background)
-        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-        TriggerEvent("SDL::Render::DrawRect", 0 - (dim.x / 2), 0 - (dim.y / 2), dim.x, dim.y);
+    if (owner->isEntityAPlayer()) {
+        // a bunch of AT combined into a ball
+        int damage = pw->getDamage();
+        int sprites = damage*4;
+        print("Player Projectile: ", damage, " Sprites: ", sprites);
+        vector2 dim2 = {32, 32};
+        for (int i = 0; i < sprites; i++) {
+            Heading h = Heading(i * (360 / sprites));
+            vector2 dir = angleToVector2(h);
+            vector2 drawCoords = (screenCoords + dim/2) + (dir * ((dim / sprites)));
+            renderAT(drawCoords, dim2);
+        }
+        if (isDebug()) {
+            TriggerEvent("SDL::Render::SetDrawColor", 155, 40, 10, 100);
+            TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+            TriggerEvent("SDL::Render::ResetDrawColor");
+        }
+    }else {
+        TriggerEvent("SDL::Render::SetDrawColor", 255, 255, 255, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
         TriggerEvent("SDL::Render::ResetDrawColor");
-
-    }
-    txdMap["MAINMENU::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
-    if (isDebug()) { // draw a center point of the AT
-        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
-        TriggerEvent("SDL::Render::DrawPoint", 0, 0);
-        TriggerEvent("SDL::Render::ResetDrawColor");
-
     }
 }
 
@@ -482,6 +482,27 @@ void GameManager::renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& a
         TriggerEvent("SDL::Render::ResetDrawColor");
 
     }
+}
+
+void GameManager::renderAT(vector2 screenCoords, vector2 dim) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("AT::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    int textureSize = 125;
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x - (dim.x / 2)),
+            static_cast<int>(screenCoords.y - (dim.y / 2)),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    txdMap["AT::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 }
 
 void GameManager::renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e& e) {
@@ -1173,7 +1194,7 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             vector2 pVel = angleToVector2(h) * 0.35f;
 
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
-            auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, std::shared_ptr<Player>(p));
+            auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, p);
             pM->attachProcess(proj);
             attachEntity(proj);
             proj->setVelocity(pVel);

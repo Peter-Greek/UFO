@@ -41,18 +41,41 @@ class Projectile : public entity {
 private:
     std::weak_ptr<entity> owner;
     float range = 1000;
+
+    int length_p = 10;
+    int width_p = 10;
+
+    vector2 getProjectileDimensions(std::shared_ptr<entity> parent, int damage) {
+        print("Parent: ", parent->getEntityType(), " Damage: ", damage);
+        if (parent->isEntityAPlayer()) {
+            return {static_cast<float>(40 * damage), static_cast<float>(40 * damage)};
+        }else {
+            return {10.0f, 10.0f};
+        }
+    }
+
 public:
     explicit Projectile(passFunc_t& func, vector2 position)
             : entity(func, entity::PROJECTILE, 1, position) {}
 
-    Projectile(passFunc_t& func, vector2 position, const std::shared_ptr<entity>& parent)
-            : entity(func, entity::PROJECTILE, 1, position), owner(parent) {}
+    Projectile(passFunc_t& func, vector2 position, std::shared_ptr<entity> parent)
+        : entity(func,
+                 entity::PROJECTILE,
+                 1,
+                 position,
+                 getProjectileDimensions(parent, 1)
+        ), owner(parent) {}
 
     Projectile(passFunc_t& func, vector2 position, int damage)
             : entity(func, entity::PROJECTILE, damage, position) {}
 
-    Projectile(passFunc_t& func, vector2 position, int damage, const std::shared_ptr<entity>& parent)
-            : entity(func, entity::PROJECTILE, damage, position), owner(parent) {}
+    Projectile(passFunc_t& func, vector2 position, int damage, std::shared_ptr<entity> parent)
+        : entity(func,
+                 entity::PROJECTILE,
+                 damage,
+                 position,
+                 getProjectileDimensions(parent, damage)
+        ),owner(parent) {}
 
     // Owner Management
     void setOwner(const std::shared_ptr<entity>& newOwner) {owner = newOwner;}
@@ -65,6 +88,8 @@ public:
     void setRange(float r) { range = r; }
     [[nodiscard]] float getRange() const { return range; }
     bool isOutOfRange() {return (getPosition() - getSpawnCoords()).length() > range;}
+
+    int getDamage() const {return getHearts();} // get the damage of the projectile
 };
 
 #endif // CSCI437_PROJECTILE_H
