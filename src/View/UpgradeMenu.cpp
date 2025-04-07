@@ -37,7 +37,18 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
         return 0;
     }
 
-
+    SDL_Surface* playSurface = TTF_RenderText_Solid(font, "Play", color);
+    PlayText.texture = SDL_CreateTextureFromSurface(renderer, playSurface);
+    SDL_Surface* speedSurface = TTF_RenderText_Solid(font, "2 AT: Speed", color);
+    SpeedText.texture = SDL_CreateTextureFromSurface(renderer, speedSurface);
+    SDL_Surface* oxygenSurface = TTF_RenderText_Solid(font, "2 AT: Oxygen", color);
+    OxygenText.texture = SDL_CreateTextureFromSurface(renderer, oxygenSurface);
+    SDL_Surface* shieldSurface = TTF_RenderText_Solid(font, "10 AT: Shield", color);
+    ShieldText.texture = SDL_CreateTextureFromSurface(renderer, shieldSurface);
+    SDL_Surface* invisSurface = TTF_RenderText_Solid(font, "10 AT: Invisibility", color);
+    InvisibilityText.texture = SDL_CreateTextureFromSurface(renderer, invisSurface);
+    SDL_Surface* cannonSurface = TTF_RenderText_Solid(font, "25 AT: Cannon", color);
+    CannonText.texture = SDL_CreateTextureFromSurface(renderer, cannonSurface);
 
     running = true;
     // Using Layer 2 for rendering so it is on top of everything else
@@ -150,6 +161,8 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
     AddEventHandler("UFO::UpgradeMenu::DisplayATCount", [this](int ATCount) {
         displayATCount(ATCount);
     });
+
+    displayATCount(AT);
     return 1;
 }
 
@@ -166,18 +179,6 @@ void UpgradeMenu::showUpgradeMenu() {
     if (!running) return;
     TriggerEvent("UFO::UpgradeMenu::State", true);
     displayATCount(AT);
-    SDL_Surface* playSurface = TTF_RenderText_Solid(font, "Play", color);
-    PlayText.texture = SDL_CreateTextureFromSurface(renderer, playSurface);
-    SDL_Surface* speedSurface = TTF_RenderText_Solid(font, "2 AT: Speed", color);
-    SpeedText.texture = SDL_CreateTextureFromSurface(renderer, speedSurface);
-    SDL_Surface* oxygenSurface = TTF_RenderText_Solid(font, "2 AT: Oxygen", color);
-    OxygenText.texture = SDL_CreateTextureFromSurface(renderer, oxygenSurface);
-    SDL_Surface* shieldSurface = TTF_RenderText_Solid(font, "10 AT: Shield", color);
-    ShieldText.texture = SDL_CreateTextureFromSurface(renderer, shieldSurface);
-    SDL_Surface* invisSurface = TTF_RenderText_Solid(font, "10 AT: Invisibility", color);
-    InvisibilityText.texture = SDL_CreateTextureFromSurface(renderer, invisSurface);
-    SDL_Surface* cannonSurface = TTF_RenderText_Solid(font, "25 AT: Cannon", color);
-    CannonText.texture = SDL_CreateTextureFromSurface(renderer, cannonSurface);
 }
 
 void UpgradeMenu::displayATCount(int ATCount){

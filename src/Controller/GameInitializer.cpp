@@ -33,6 +33,9 @@
 
 #include "GameInitializer.h"
 
+// NOTE: Only create event handlers inside of methods that are not called multiple times as this class does not get
+// destroyed when the game loop ends. This is to prevent multiple event handlers from being created and causing issues.
+
 void GameInitializer::Init() {
     print("Game Init");
     AddEventHandler("UFO::OnConfigUpdate", [this](const std::string configName) {
@@ -65,9 +68,11 @@ void GameInitializer::Init() {
     AddEventHandler("UFO::StartGame", [this]() {
         // Create Game Environment
         print("Starting Game...");
-        Start();
-        GameDebug();
         Debug();
+
+        uMenu = attachProcess<UpgradeMenu>();
+        uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+        uMenu->showUpgradeMenu();
     });
 
     AddEventHandler("UFO::UpgradePurchased", [this](std::string upgrade, int atCount) {
@@ -76,11 +81,7 @@ void GameInitializer::Init() {
             print("Not enough AT to purchase upgrade");
             TriggerEvent("UFO::Chat::AddMessage", "Not enough AT to purchase upgrade");
             return;
-            }
-        
-        (*gameStorage)["player"]["ATCount"] = curAT - atCount;
-        (*gameStorage).save();
-        TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>());
+        }
 
         //setting max amound that a user can purchase depending on which upgrade they are buying
         int max = 5;
@@ -89,14 +90,17 @@ void GameInitializer::Init() {
 
         int up = (*gameStorage)["player"]["upgrades"][upgrade].get<int>();
         if (up < max) {
+            (*gameStorage)["player"]["ATCount"] = curAT - atCount;
             (*gameStorage)["player"]["upgrades"][upgrade] = up + 1;
             (*gameStorage).save();
+
+            TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>());
             print("Upgrade purchased: ", upgrade, " AT Count: ", atCount);
             TriggerEvent("UFO::Chat::AddMessage", "Upgrade purchased: " + upgrade + " AT Count: " + std::to_string(atCount));
         } else {
             print("Upgrade already maxed out");
             TriggerEvent("UFO::Chat::AddMessage", "Upgrade already maxed out");
-    }
+        }
     });
 
     AddEventHandler("UFO::EndGame", [this]() {
@@ -128,15 +132,19 @@ void GameInitializer::Init() {
 
         End();
     });
+
+    AddEventHandler("UFO::UpgradeMenu::State", [this](bool state) {
+        if (state == false && uMenu != nullptr) {
+            Start();
+            GameDebug();
+            uMenu->abort();
+            uMenu = nullptr;
+        }
+    });
 }
 
 void GameInitializer::Start(){
     print("Game Start Called");
-    auto uMenu = attachProcess<UpgradeMenu>();
-    auto mMenu = attachProcess<MainMenu>();
-    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-    mMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
     gameManager = gM;
@@ -211,14 +219,13 @@ void GameInitializer::End() {
 
     gameManager = nullptr;
 
-    print("Game Ended");
+    print("Game Loop Ended");
 
-    if (debugMode == 1) {
-        print("Starting new game due to debug mode");
-        sch->setTimeout(5000, [this]() {
-            TriggerEvent("UFO::StartGame");
-        });
-    }
+    //TODO: Add in some game result screen
+
+    uMenu = attachProcess<UpgradeMenu>();
+    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    uMenu->showUpgradeMenu();
 }
 
 void GameInitializer::Debug() {

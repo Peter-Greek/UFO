@@ -15,7 +15,7 @@ private:
     SDL_Point rot;
     vector2 position = {0, 0};
     vector2 upgradeMenuSize = {static_cast<float>(SCREEN_WIDTH), static_cast<float>(SCREEN_HEIGHT)};
-    int AT;
+    int AT = 0;
 
     bool running = false;
     bool isHidden = true;

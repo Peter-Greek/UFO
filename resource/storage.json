@@ -1,8 +1,8 @@
 {
-    "loads": 1308,
+    "loads": 1318,
     "player": {
-        "ATCount": 189,
-        "TotalAT": 189,
+        "ATCount": 359,
+        "TotalAT": 413,
         "upgrades": {
             "at_cannon": 1,
             "invisibility": 1,

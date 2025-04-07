@@ -45,6 +45,8 @@
 
 class GameInitializer : public xProcess {
 private:
+    std::shared_ptr<UpgradeMenu> uMenu;
+
     passFunc_t passFunc;
     std::shared_ptr<ProcessManager> processManager;
     std::shared_ptr<GameStorage> gameStorage;
