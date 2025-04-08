@@ -1,44 +1,44 @@
 {
-    "curPlayer": -1,
-    "loads": 1413,
+    "curPlayer": 0,
+    "loads": 1426,
     "player": {
-        "ATCount": 0,
-        "TotalAT": 0,
+        "ATCount": 40,
+        "TotalAT": 80,
         "date": 1744095919,
-        "loads": 6,
+        "loads": 19,
         "name": "Peter Greek",
         "settings": {
             "curRoomIndex": 0,
             "debugMode": 0,
             "unlimitedFrames": false
         },
-        "time": 42450,
+        "time": 47699,
         "upgrades": {
             "at_cannon": 0,
-            "invisibility": 0,
+            "invisibility": 1,
             "oxygen": 0,
-            "shield": 0,
-            "speed": 0
+            "shield": 2,
+            "speed": 5
         }
     },
     "saves": [
         {
-            "ATCount": 53,
-            "TotalAT": 73,
+            "ATCount": 40,
+            "TotalAT": 80,
             "date": 1744095919,
-            "loads": 6,
+            "loads": 19,
             "name": "Peter Greek",
             "settings": {
                 "curRoomIndex": 0,
                 "debugMode": 0,
                 "unlimitedFrames": false
             },
-            "time": 42450,
+            "time": 47699,
             "upgrades": {
                 "at_cannon": 0,
                 "invisibility": 1,
                 "oxygen": 0,
-                "shield": 0,
+                "shield": 2,
                 "speed": 5
             }
         }

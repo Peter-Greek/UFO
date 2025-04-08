@@ -55,6 +55,7 @@ int GameStorage::apply() {
 int GameStorage::load() {
     gameStorage.update();
 
+    // if no saves exist ensure we create a default save
     if (gameStorage["saves"] == nullptr || gameStorage["saves"].size() == 0) {
         gameStorage["saves"] = json::array();
         gameStorage["saves"][0] = json::object();

@@ -234,13 +234,16 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
     // Update Hearts
     if (p->getMaxHearts() < 10) {
         int currentHearts = p->getHearts();
+        int sheildCount = p->getShieldCount() - 1;
         int x = 0;
         int y = 0;
         for (int i = 0; i < currentHearts; i++) {
             if (i != 0) {
                 x += 32;
             }
-            renderHeart(vector2(x, y), vector2(32, 32));
+            bool isBlue = sheildCount >= 0 && i <= sheildCount;
+            print("Heart: ", i, " ", isBlue);
+            renderHeart(vector2(x, y), vector2(32, 32), isBlue);
         }
     }
 
@@ -545,7 +548,7 @@ void GameManager::renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e&
     txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 }
 
-void GameManager::renderHeart(vector2 screenCoords, vector2 dim) {
+void GameManager::renderHeart(vector2 screenCoords, vector2 dim, bool isBlue) {
     // Check if the texture exists in txdMap
     auto it = txdMap.find("HEART::TEXTURE");
     if (it == txdMap.end() || !it->second) {
@@ -561,7 +564,19 @@ void GameManager::renderHeart(vector2 screenCoords, vector2 dim) {
             static_cast<int>(dim.x),
             static_cast<int>(dim.y) // down scale the texture
     };
-    txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+
+    if (isBlue) {
+        print("Blue Heart");
+        if (!txdMap["HEART::TEXTURE"]->isRecolored()) {
+            txdMap["HEART::TEXTURE"]->recolorTo({0, 0, 255, 255}); // fully blue
+        }
+
+        txdMap["HEART::TEXTURE"]->renderRecolored(srcRect, destRect, 0, SDL_FLIP_NONE);
+    }else {
+        txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+    }
+
+
 }
 
 void GameManager::handleDebugWorldCreator(float deltaMs) {

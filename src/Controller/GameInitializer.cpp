@@ -112,7 +112,7 @@ void GameInitializer::Init() {
 
         //setting max amound that a user can purchase depending on which upgrade they are buying
         int max = 5;
-        if (upgrade == "at_cannon") max = 5;
+        if (upgrade == "at_cannon") max = 2;
         if (upgrade == "invisibility" or upgrade == "shield") max = 3;
 
         int up = (*gameStorage)["player"]["upgrades"][upgrade].get<int>();
@@ -400,6 +400,7 @@ void GameInitializer::LoadTextures() {
 
     // Create Heart Texture
     auto HeartTxd = attachGameMappedProcess<TxdLoader>("HEART::TEXTURE", "../resource/HeartSS.png");
+
 }
 
 void GameInitializer::LoadAudio() {

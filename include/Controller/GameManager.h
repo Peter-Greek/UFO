@@ -120,7 +120,7 @@ public:
     void renderProjectile(vector2 screenCoords, vector2 dim, const sh_ptr_pew &e);
     void renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& at);
     void renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e& e);
-    void renderHeart(vector2 screenCoords, vector2 dim);
+    void renderHeart(vector2 screenCoords, vector2 dim, bool isBlue = false);
 
     void handleBossUpdate(const sh_ptr_e& e, float deltaMs);
 
