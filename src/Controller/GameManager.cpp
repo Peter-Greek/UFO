@@ -431,7 +431,6 @@ void GameManager::renderProjectile(vector2 screenCoords, vector2 dim, const sh_p
         // a bunch of AT combined into a ball
         int damage = pw->getDamage();
         int sprites = damage*4;
-        print("Player Projectile: ", damage, " Sprites: ", sprites);
         vector2 dim2 = {32, 32};
         for (int i = 0; i < sprites; i++) {
             Heading h = Heading(i * (360 / sprites));

@@ -33,6 +33,7 @@
 
 #include "GameInitializer.h"
 
+
 // NOTE: Only create event handlers inside of methods that are not called multiple times as this class does not get
 // destroyed when the game loop ends. This is to prevent multiple event handlers from being created and causing issues.
 void GameInitializer::Init() {
@@ -71,6 +72,18 @@ void GameInitializer::Init() {
         // Create Game Environment
         print("Starting Game...");
         ShutdownMainMenu();
+        CreateSaveSelector();
+    });
+
+    AddEventHandler("UFO::SaveSelector::Select", [this](int slotIndex) {
+        print("Selected Slot: ", slotIndex);
+        if ((*gameStorage)["saves"].size() <= slotIndex) {
+            print("Invalid Slot Index");
+            return;
+        }
+
+        ShutdownSaveSelector();
+        (*gameStorage).SelectPlayer(slotIndex);
         CreateUpgradeMenu();
     });
 
@@ -99,7 +112,7 @@ void GameInitializer::Init() {
 
         //setting max amound that a user can purchase depending on which upgrade they are buying
         int max = 5;
-        if (upgrade == "at_cannon") max = 1;
+        if (upgrade == "at_cannon") max = 5;
         if (upgrade == "invisibility" or upgrade == "shield") max = 3;
 
         int up = (*gameStorage)["player"]["upgrades"][upgrade].get<int>();
@@ -143,7 +156,8 @@ void GameInitializer::Init() {
         print("Ending Game Loop, AT Count: ", atcount);
         (*gameStorage)["player"]["ATCount"] = (*gameStorage)["player"]["ATCount"].get<int>() + atcount;
         (*gameStorage)["player"]["TotalAT"] = (*gameStorage)["player"]["TotalAT"].get<int>() + atcount;
-        (*gameStorage).save();
+        (*gameStorage)["player"]["time"] = (*gameStorage)["player"]["time"].get<int>() + int (sch->getGameTime() - gameStartTime);
+        (*gameStorage).SavePlayer();
 
         End();
     });
@@ -155,6 +169,7 @@ void GameInitializer::Init() {
 
 void GameInitializer::Start(){
     print("Game Start Called");
+    gameStartTime = sch->getGameTime();
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
     gameManager = gM;
@@ -311,6 +326,14 @@ void GameInitializer::GameDebug() {
     rHeading->setTextRelativePosition(0.0f, -0.7f);
 }
 
+void GameInitializer::CreateMainMenu() {
+    ShutdownSaveSelector();
+    ShutdownUpgradeMenu();
+    (*gameStorage).ResetPlayer();
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
+    mMenu = attachProcess<MainMenu>(menuTxd);
+}
+
 void GameInitializer::ShutdownMainMenu() {
     if (mMenu != nullptr) {
         mMenu->abort();
@@ -318,24 +341,31 @@ void GameInitializer::ShutdownMainMenu() {
     }
 }
 
+void GameInitializer::CreateSaveSelector() {
+    ShutdownMainMenu();
+    sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"]);
+}
+
+void GameInitializer::ShutdownSaveSelector() {
+    if (sMenu != nullptr) {
+        sMenu->abort();
+        sMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateUpgradeMenu() {
+    ShutdownMainMenu();
+    ShutdownSaveSelector();
+    uMenu = attachProcess<UpgradeMenu>();
+    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    uMenu->showUpgradeMenu();
+}
+
 void GameInitializer::ShutdownUpgradeMenu() {
     if (uMenu != nullptr) {
         uMenu->abort();
         uMenu = nullptr;
     }
-}
-
-void GameInitializer::CreateMainMenu() {
-    ShutdownUpgradeMenu();
-    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
-    mMenu = attachProcess<MainMenu>(menuTxd);
-}
-
-void GameInitializer::CreateUpgradeMenu() {
-    ShutdownMainMenu();
-    uMenu = attachProcess<UpgradeMenu>();
-    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-    uMenu->showUpgradeMenu();
 }
 
 void GameInitializer::LoadTextures() {

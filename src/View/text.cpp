@@ -233,7 +233,7 @@ void text::showText(std::string new_text) {
 
 void text::setFontSize(int toFontSize) {
     fontSize = toFontSize;
-    font = TTF_OpenFont("../resource/Arial.ttf", 50);
+    font = TTF_OpenFont("../resource/Arial.ttf", fontSize);
     if (font == nullptr) {
         error("Unable to open font! ", SDL_GetError());
     }

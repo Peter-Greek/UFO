@@ -28,33 +28,52 @@
  */
 
 //
-// Created by xerxe on 3/28/2025.
+// Created by xerxe on 4/8/2025.
 //
 
-#ifndef CSCI437_GAMESTORAGE_H
-#define CSCI437_GAMESTORAGE_H
+#ifndef CSCI437_SAVESELECTOR_H
+#define CSCI437_SAVESELECTOR_H
 
-#include "Util.h"
-#include "jsonLoader.h"
-class GameStorage {
+
+#include "xProcess.h"
+#include <SDL_ttf.h>
+
+class SaveSelector : public xProcess {
 private:
-    jLoader gameStorage;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    TTF_Font* font;
+
+    json saveData;
+    bool running = false;
+    int fontSize = 24;
+
+    int max_display = 3;
+    int pagnation = 0;
+
+    SDL_Rect templateBox = {
+            0,
+            static_cast<int>(SCREEN_HEIGHT/6),
+            SCREEN_WIDTH / 4,
+            static_cast<int>(SCREEN_HEIGHT / 6 * 4)
+    };
+    int padding = ((SCREEN_WIDTH / 4) / 6);
+
+    std::list<std::pair<SDL_Texture*, SDL_Rect>> textures;
 public:
-    GameStorage() : gameStorage("../resource/storage.json") {};
-    int load();
-    int apply();
-    jLoader& getStorage();
-    void save();
-    json& operator[](const std::string& key) {
-        return gameStorage[key];
-    }
+    SaveSelector(passFunc_t p1, json saveData): xProcess(true, p1), saveData(std::move(saveData)) {}
+    ~SaveSelector() override = default;
 
-    void SelectPlayer(int playerIndex);
+    int initialize_SDL_process(SDL_Window* passed_window) override;
+    void update(float deltaMs) override;
+    bool isDone() override { return !running; };
+    void postSuccess() override {};
+    void postFail() override {};
+    void postAbort() override {};
 
-    void SavePlayer();
-
-    void ResetPlayer();
+    void drawRect(int x, int y, int w, int h);
+    void reloadTextures();
 };
 
 
-#endif //CSCI437_GAMESTORAGE_H
+#endif //CSCI437_SAVESELECTOR_H

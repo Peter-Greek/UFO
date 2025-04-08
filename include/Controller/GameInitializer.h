@@ -44,12 +44,14 @@
 #include "Scheduler.h"
 
 #include "MainMenu.h"
+#include "SaveSelector.h"
 #include "UpgradeMenu.h"
 
 class GameInitializer : public xProcess {
 private:
     std::shared_ptr<MainMenu> mMenu;
     std::shared_ptr<UpgradeMenu> uMenu;
+    std::shared_ptr<SaveSelector> sMenu;
 
 
     passFunc_t passFunc;
@@ -61,6 +63,8 @@ private:
     std::list<sh_ptr<text>> debugTexts;
 
     std::list<sh_ptr<TxdLoader>> txdLoaders;
+
+    float gameStartTime = 0.0f;
 
 public:
     GameInitializer(passFunc_t p1,
@@ -172,6 +176,10 @@ public:
     void ShutdownMainMenu();
 
     void ShutdownUpgradeMenu();
+
+    void CreateSaveSelector();
+
+    void ShutdownSaveSelector();
 };
 
 
