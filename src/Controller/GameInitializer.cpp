@@ -119,7 +119,7 @@ void GameInitializer::Init() {
         if (up < max) {
             (*gameStorage)["player"]["ATCount"] = curAT - atCount;
             (*gameStorage)["player"]["upgrades"][upgrade] = up + 1;
-            (*gameStorage).save();
+            (*gameStorage).SavePlayer();
 
             TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>());
             print("Upgrade purchased: ", upgrade, " AT Count: ", atCount);
