@@ -15,7 +15,7 @@ private:
     SDL_Point rot;
     vector2 position = {0, 0};
     vector2 upgradeMenuSize = {static_cast<float>(SCREEN_WIDTH), static_cast<float>(SCREEN_HEIGHT)};
-    int AT;
+    int AT = 0;
 
     bool running = false;
     bool isHidden = true;
@@ -38,7 +38,7 @@ private:
     SDL_Rect ATBoxText = {ATBox.x+30, ATBox.y+30, ATBox.w-60, ATBox.h-60};
     UpgradeText ATText = {nullptr, ATBoxText, "AT Count: 0"};
     
-    SDL_Rect PlayButton = {2*(SCREEN_WIDTH/3), 6*(SCREEN_HEIGHT/7), SCREEN_WIDTH - (10+PlayButton.x), SCREEN_HEIGHT - (10+PlayButton.y)};
+    SDL_Rect PlayButton = {7*(SCREEN_WIDTH/10), 3*(SCREEN_HEIGHT/4), SCREEN_WIDTH/4, SCREEN_HEIGHT/7};
     SDL_Rect PlayButtonText = {PlayButton.x+30, PlayButton.y+30, PlayButton.w-60, PlayButton.h-60};
     UpgradeText PlayText = {nullptr, PlayButtonText, "Play"};   
 

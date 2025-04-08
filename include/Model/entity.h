@@ -36,6 +36,7 @@
 
 #include "xProcess.h"
 
+
 class entity : public xProcess {
 public:
     enum eType {
@@ -52,6 +53,7 @@ public:
         HEART = 2,
         OXY_TANK = 3,
         KEY_CARD = 4,
+        ESCAPE_POD = 5,
     };
 
 private:
@@ -97,6 +99,20 @@ public:
             int eTypeIndex, int hearts, vector2 position,
             int length, int width
     ) : xProcess(false, func), length(length), width(width), hearts(hearts), maxHearts(hearts), coords(position) {
+        appliedLength = length;
+        appliedWidth = width;
+        type = static_cast<eType>(eTypeIndex);
+        spawnCoords = {position.x, position.y};
+        lastCoords = {position.x, position.y};
+        setDefaultLengthWidth();
+    }
+
+    explicit entity(
+            passFunc_t& func,
+            int eTypeIndex, int hearts, vector2 position,
+            vector2 dimensions
+    ) : xProcess(false, func), length(dimensions.x), width(dimensions.y), hearts(hearts), maxHearts(hearts), coords(position) {
+        print("Entity: ", eTypeIndex, " Length: ", length, " Width: ", width);
         appliedLength = length;
         appliedWidth = width;
         type = static_cast<eType>(eTypeIndex);
@@ -184,7 +200,12 @@ public:
     void setEntityInvincible(bool invincible);
     void setEntityInvincible(bool invincible, float time);
     void setEntityInvincibleTime(float time);
+
+    [[nodiscard]] eType getEntityType() const;
+
+    [[nodiscard]] bool isEntityInEntity(const sh_ptr<entity>& other) const;
 };
 
+using sh_ptr_e = sh_ptr<entity>;
 
 #endif //CSCI437_ENTITY_H

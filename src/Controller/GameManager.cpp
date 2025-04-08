@@ -85,6 +85,10 @@ int GameManager::initialize() {
                     TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                     TriggerEvent("SDL::Render::ResetDrawColor");
+                }else if (e->getPickupType() == entity::ESCAPE_POD) {
+                    TriggerEvent("SDL::Render::SetDrawColor", 255, 215, 0, 255);
+                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                    TriggerEvent("SDL::Render::ResetDrawColor");
                 }
             }else if (e->isEntityALaser()) {
                 if (auto l = std::dynamic_pointer_cast<Laser>(e)) {
@@ -93,10 +97,12 @@ int GameManager::initialize() {
                     }
                 }
             }else if (e->isEntityAProjectile()) {
-                //TODO: Render Projectile Like Hearts and AT
-                TriggerEvent("SDL::Render::SetDrawColor", 255, 255, 255, 255);
-                TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                TriggerEvent("SDL::Render::ResetDrawColor");
+                if (auto p = std::dynamic_pointer_cast<Projectile>(e)) {
+                    if (p->isOutOfRange()) {
+                        continue;
+                    }
+                    renderProjectile(screenCoords, dim, p);
+                }
             }
         }
         handleDebugWorldCreator(deltaMs); // handle the debug world creator (used to create walls)
@@ -152,11 +158,11 @@ int GameManager::initialize() {
 }
 
 void GameManager::terminateGame() {
-    for (auto& e : entityList) {e->abort();}
-    for (auto& t : textMap) {t.second->abort();}
-    for (auto& a : asepriteMap) {a.second->abort();}
-    for (auto& t : txdMap) {t.second->abort();}
-    for (auto& a : audioMap) {a.second->abort();}
+    for (auto& e : entityList) {e->abort();};
+    for (auto& t : textMap) {if (t.second) {t.second->abort();}};
+    for (auto& a : asepriteMap) {if (a.second) {a.second->abort();}};
+    for (auto& t : txdMap) {if (t.second) {t.second->abort();}};
+    for (auto& a : audioMap) {if (a.second) {a.second->abort();}};
     if (cam) {cam->abort();}
     if (world_ptr) {world_ptr->abort();}
     entityList.clear();
@@ -228,13 +234,16 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
     // Update Hearts
     if (p->getMaxHearts() < 10) {
         int currentHearts = p->getHearts();
+        int sheildCount = p->getShieldCount() - 1;
         int x = 0;
         int y = 0;
         for (int i = 0; i < currentHearts; i++) {
             if (i != 0) {
                 x += 32;
             }
-            renderHeart(vector2(x, y), vector2(32, 32));
+            bool isBlue = sheildCount >= 0 && i <= sheildCount;
+            print("Heart: ", i, " ", isBlue);
+            renderHeart(vector2(x, y), vector2(32, 32), isBlue);
         }
     }
 
@@ -273,6 +282,13 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
     }
     asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
     asepriteMap["FSS"]->resetTextureAlpha();
+
+    for (auto & e2 : entityList) {
+        if (!e2->isEntityAPickup()) {
+            continue;
+        }
+        renderPickupInteraction(p, e2, currentCoords);
+    }
 
     if (isDebug()) {
         // draw the hit box of the player
@@ -409,34 +425,46 @@ void GameManager::renderLaser(vector2 screenCoords, vector2 dim, const sh_ptr_la
     }
 }
 
-void GameManager::renderMainMenu(vector2 dim) {
+void GameManager::renderProjectile(vector2 screenCoords, vector2 dim, const sh_ptr_pew& pw) {
     // Check if the texture exists in txdMap
-    auto it = txdMap.find("MAINMENU::TEXTURE");
-    if (it == txdMap.end() || !it->second) {
-        return;
-    }
 
-    // Render the texture
-    SDL_Rect srcRect = {0, 0, 1024, 768}; // load the entire texture
-    SDL_Rect destRect = {
-            static_cast<int>(0),
-            static_cast<int>(0),
-            static_cast<int>(dim.x),
-            static_cast<int>(dim.y) // down scale the texture
-    };
+    auto owner = pw->getOwner();
 
-    if (isDebug()) { // draw a rec around the texture (background)
-        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-        TriggerEvent("SDL::Render::DrawRect", 0 - (dim.x / 2), 0 - (dim.y / 2), dim.x, dim.y);
-        TriggerEvent("SDL::Render::ResetDrawColor");
+    if (owner->isEntityAPlayer()) {
+        // a bunch of AT combined into a ball
+        int damage = pw->getDamage();
+        int sprites = damage*4;
+        vector2 dim2 = {32, 32};
+        for (int i = 0; i < sprites; i++) {
+            Heading h = Heading(i * (360 / sprites));
+            vector2 dir = angleToVector2(h);
+            vector2 drawCoords = (screenCoords + dim/2) + (dir * ((dim / sprites)));
+            renderAT(drawCoords, dim2);
+        }
+        if (isDebug()) {
+            TriggerEvent("SDL::Render::SetDrawColor", 155, 40, 10, 100);
+            TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+            TriggerEvent("SDL::Render::ResetDrawColor");
+        }
+    }else {
+        auto it = txdMap.find("LASER::TEXTURE");
+        if (it == txdMap.end() || !it->second) {
+            return;
+        }
+        SDL_Rect srcRect = {40, 96, 79-40, 135-96};
+        SDL_Rect destRect = {
+                static_cast<int>(screenCoords.x),
+                static_cast<int>(screenCoords.y),
+                static_cast<int>(dim.x),
+                static_cast<int>(dim.y)
+        };
+        txdMap["LASER::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 
-    }
-    txdMap["MAINMENU::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
-    if (isDebug()) { // draw a center point of the AT
-        TriggerEvent("SDL::Render::SetDrawColor", 255, 0, 0, 255);
-        TriggerEvent("SDL::Render::DrawPoint", 0, 0);
-        TriggerEvent("SDL::Render::ResetDrawColor");
-
+        if (isDebug()) {
+            TriggerEvent("SDL::Render::SetDrawColor", 155, 40, 10, 100);
+            TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+            TriggerEvent("SDL::Render::ResetDrawColor");
+        }
     }
 }
 
@@ -473,6 +501,27 @@ void GameManager::renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& a
     }
 }
 
+void GameManager::renderAT(vector2 screenCoords, vector2 dim) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("AT::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    int textureSize = 125;
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, textureSize, textureSize}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x - (dim.x / 2)),
+            static_cast<int>(screenCoords.y - (dim.y / 2)),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    txdMap["AT::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+}
+
 void GameManager::renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e& e) {
     // Check if the texture exists in txdMap
     auto it = txdMap.find("HEART::TEXTURE");
@@ -499,7 +548,7 @@ void GameManager::renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e&
     txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 }
 
-void GameManager::renderHeart(vector2 screenCoords, vector2 dim) {
+void GameManager::renderHeart(vector2 screenCoords, vector2 dim, bool isBlue) {
     // Check if the texture exists in txdMap
     auto it = txdMap.find("HEART::TEXTURE");
     if (it == txdMap.end() || !it->second) {
@@ -515,7 +564,19 @@ void GameManager::renderHeart(vector2 screenCoords, vector2 dim) {
             static_cast<int>(dim.x),
             static_cast<int>(dim.y) // down scale the texture
     };
-    txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+
+    if (isBlue) {
+        print("Blue Heart");
+        if (!txdMap["HEART::TEXTURE"]->isRecolored()) {
+            txdMap["HEART::TEXTURE"]->recolorTo({0, 0, 255, 255}); // fully blue
+        }
+
+        txdMap["HEART::TEXTURE"]->renderRecolored(srcRect, destRect, 0, SDL_FLIP_NONE);
+    }else {
+        txdMap["HEART::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+    }
+
+
 }
 
 void GameManager::handleDebugWorldCreator(float deltaMs) {
@@ -819,6 +880,120 @@ void GameManager::renderWorld(float deltaMs) {
     }
 }
 
+void GameManager::renderTextOnEntity(const sh_ptr_e& e, const std::string& textMapName, const std::string& textDefault) {
+    if (textMapName.empty()) {
+        return;
+    }
+
+    auto it = textMap.find(textMapName);
+    if (it == textMap.end() || !it->second) {
+        return;
+    }
+
+    auto mapped = it->second;
+
+
+    if (textDefault.empty()) {
+        mapped->hideText();
+        return;
+    }
+
+    vector2 screenCoords = cam->worldToScreenCoords(e->getPosition());
+    vector2 dim = e->getDimensions();
+    SDL_Rect rec = mapped->getTextRect();
+    mapped->setTextPosition(screenCoords.x + dim.x/2 - rec.w/2, screenCoords.y - dim.y/2 - rec.h);
+    mapped->showText(textDefault);
+}
+
+void GameManager::clearPickupInteraction(const sh_ptr_e& e) {
+    if (!e) {
+        return;
+    }
+
+    entity::pType pickupType = e->getPickupType();
+    if (pickupType != entity::KEY_CARD && pickupType != entity::ESCAPE_POD) {
+        return;
+    }
+
+    std::string textMapName;
+
+    if (pickupType == entity::KEY_CARD) {
+        textMapName = "KEYCARD::" + e->getId();
+    }else if (pickupType == entity::ESCAPE_POD) {
+        textMapName = "ESCAPE::" + e->getId();
+    }
+
+    auto it = textMap.find(textMapName);
+    if (it != textMap.end()) {
+        it->second->hideText();
+        textMap.erase(it);
+    }
+}
+
+void GameManager::renderPickupInteraction(const sh_ptr_ply& ply, const sh_ptr_e& e, vector2& currentCoords) {
+    if (!e || !ply) {
+        return;
+    }
+
+    entity::pType pickupType = e->getPickupType();
+    if (pickupType != entity::KEY_CARD && pickupType != entity::ESCAPE_POD) {
+        return;
+    }
+
+
+    vector2 enemyCoords = e->getPosition();
+    bool isInside = ply->isPointInEntity(enemyCoords);
+
+    std::string textMapName;
+
+    if (pickupType == entity::KEY_CARD) {
+        textMapName = "KEYCARD::" + e->getId();
+    }else if (pickupType == entity::ESCAPE_POD) {
+        textMapName = "ESCAPE::" + e->getId();
+    }
+
+    bool inView = cam->isPointInView(enemyCoords);
+    bool isClose = ((enemyCoords - currentCoords).length() < 150);
+
+    sh_ptr<text> mapped = textMap[textMapName];
+
+    if (!inView) {
+        if (mapped) {mapped->hideText();}
+        return;
+    }
+
+    if (!mapped) {
+        textMap[textMapName] = std::make_shared<text>(passFunc, "[E]", 25);
+        pM->attachProcess(textMap[textMapName]);
+        mapped = textMap[textMapName];
+    }
+
+    if (!isClose) {
+        mapped->hideText();
+        return;
+    }
+
+    vector2 dim = e->getDimensions();
+    vector2 screenCoords = cam->worldToScreenCoords(enemyCoords);
+    std::string displayText = "[E]";
+    if (isInside) {
+        switch (pickupType) {
+            case entity::KEY_CARD:
+                displayText = "Press [E] to pick up keycard!";
+                break;
+            case entity::ESCAPE_POD:
+                displayText = "Press [E] to enter ESCAPE POD!";
+                break;
+            default:
+                break;
+        }
+    }
+
+    mapped->showText(displayText);
+    SDL_Rect rec = mapped->getTextRect();
+    mapped->setTextPosition(screenCoords.x + dim.x/2 - rec.w/2, screenCoords.y - dim.y/2 - rec.h);
+}
+
 
 
 // Update Controller Functions
@@ -901,50 +1076,6 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             std::string keyCardName;
             bool isInside = p->isPointInEntity(enemyCoords);
 
-            if (pickupType == entity::KEY_CARD) {
-
-                keyCardName = "KEYCARD::" + e2->getId();
-
-
-
-                if (!cam->isPointInView(enemyCoords) || (enemyCoords - currentCoords).length() > 150) {
-                    if (textMap[keyCardName]) {
-                        textMap[keyCardName]->hideText();
-                    }
-                    continue;
-                }
-
-
-                vector2 dim = e2->getDimensions();
-                vector2 screenCoords = cam->worldToScreenCoords(enemyCoords);
-                if (! textMap[keyCardName]) {
-                    textMap[keyCardName] = std::make_shared<text>(passFunc, "[E]", 25);
-                    pM->attachProcess(textMap[keyCardName]);
-                    textMap[keyCardName]->setTextPosition(screenCoords.x - dim.x/2, screenCoords.y - dim.y/2 - 25);
-                    continue; // need to wait 1 tick to allow the process to init
-
-                }else {
-                    SDL_Rect rec = textMap[keyCardName]->getTextRect();
-                    textMap[keyCardName]->setTextPosition(screenCoords.x + dim.x/2 - rec.w/2, screenCoords.y - dim.y/2 - rec.h);
-                }
-
-                // keyboard state
-                if (isInside) {
-                    textMap[keyCardName]->showText("Press [E] to pick up keycard!");
-                    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
-                    if (keyboard_state_array[SDL_SCANCODE_E]) {
-                        e2->setHearts(0);
-                        e2->succeed();
-                        textMap[keyCardName]->hideText();
-                    }
-                }else {
-                    textMap[keyCardName]->showText("[E]");
-                }
-
-                continue;
-            }
-
-
             if (isInside) {
                 if (pickupType == entity::AT) {
                     e2->setHearts(0);
@@ -964,6 +1095,21 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
                     e2->succeed();
                     p->addOxygen(30000.0f); // adds 30 seconds of oxygen
                     textMap["OxyTimer"]->setText("Oxygen: " + p->getOxygenString());
+                }else if (pickupType == entity::KEY_CARD) {
+                    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
+                    if (keyboard_state_array[SDL_SCANCODE_E]) {
+                        e2->setHearts(0);
+                        clearPickupInteraction(e2);
+                        e2->succeed();
+                    }
+                }else if (pickupType == entity::ESCAPE_POD) {
+                    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
+                    if (keyboard_state_array[SDL_SCANCODE_E]) {
+                        e2->setHearts(0);
+                        clearPickupInteraction(e2);
+                        e2->succeed();
+                        TriggerEvent("UFO::EndGame");
+                    }
                 }
             }
         }else if (e2->isEntityAnEnemy()) {
@@ -1030,11 +1176,11 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
 
         }else if (e2->isEntityAProjectile()) {
             vector2 projCoords = e2->getPosition();
-            if (p->isPointInEntity(projCoords)) {
+            if (e2->isEntityInEntity(p)) {
                 if (e2->getHearts() > 0) {
                     auto proj = std::dynamic_pointer_cast<Projectile>(e2);
-                    if (!proj) continue;
-                    if (proj->getOwner() == e2) {
+                    if (!proj || !proj->getOwner()) continue;
+                    if (proj->getOwner() == e) {
                         // if the projectile is from the player ignore it
                         continue;
                     }
@@ -1077,7 +1223,7 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             vector2 pVel = angleToVector2(h) * 0.35f;
 
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
-            auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, std::shared_ptr<Player>(p));
+            auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, e);
             pM->attachProcess(proj);
             attachEntity(proj);
             proj->setVelocity(pVel);
@@ -1117,7 +1263,7 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
             continue;
         }else if (e2->isEntityAProjectile()) {
             vector2 projCoords = e2->getPosition();
-            if (e->isPointInEntity(projCoords)) {
+            if (e2->isEntityInEntity(e)) {
                 if (e2->getHearts() > 0) {
                     auto proj = std::dynamic_pointer_cast<Projectile>(e2);
                     if (!proj) continue;
@@ -1238,7 +1384,7 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
             continue;
         }else if (e2->isEntityAProjectile()) {
             vector2 projCoords = e2->getPosition();
-            if (e->isPointInEntity(projCoords)) {
+            if (e2->isEntityInEntity(e)) {
                 if (e2->getHearts() > 0) {
                     auto proj = std::dynamic_pointer_cast<Projectile>(e2);
                     if (!proj) continue;

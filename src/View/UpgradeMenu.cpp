@@ -37,7 +37,18 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
         return 0;
     }
 
-
+    SDL_Surface* playSurface = TTF_RenderText_Solid(font, "Play", color);
+    PlayText.texture = SDL_CreateTextureFromSurface(renderer, playSurface);
+    SDL_Surface* speedSurface = TTF_RenderText_Solid(font, "2 AT: Speed", color);
+    SpeedText.texture = SDL_CreateTextureFromSurface(renderer, speedSurface);
+    SDL_Surface* oxygenSurface = TTF_RenderText_Solid(font, "2 AT: Oxygen", color);
+    OxygenText.texture = SDL_CreateTextureFromSurface(renderer, oxygenSurface);
+    SDL_Surface* shieldSurface = TTF_RenderText_Solid(font, "10 AT: Shield", color);
+    ShieldText.texture = SDL_CreateTextureFromSurface(renderer, shieldSurface);
+    SDL_Surface* invisSurface = TTF_RenderText_Solid(font, "10 AT: Invisibility", color);
+    InvisibilityText.texture = SDL_CreateTextureFromSurface(renderer, invisSurface);
+    SDL_Surface* cannonSurface = TTF_RenderText_Solid(font, "25 AT: Cannon", color);
+    CannonText.texture = SDL_CreateTextureFromSurface(renderer, cannonSurface);
 
     running = true;
     // Using Layer 2 for rendering so it is on top of everything else
@@ -132,24 +143,27 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 }
             } else if (eventType == SDL_MOUSEBUTTONDOWN) { //call appropriate action for each button clicked
                 SDL_GetMouseState(&x, &y);
-                if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h)
-                    closeUpgradeMenu();
-                else if(x > SpeedButton.x && y > SpeedButton.y && x < SpeedButton.x + SpeedButton.w && y < SpeedButton.y + SpeedButton.h)
-                    closeUpgradeMenu();
-                else if(x > OxygenButton.x && y > OxygenButton.y && x < OxygenButton.x + OxygenButton.w && y < OxygenButton.y + OxygenButton.h)
-                    closeUpgradeMenu();
-                else if(x > ShieldButton.x && y > ShieldButton.y && x < ShieldButton.x + ShieldButton.w && y < ShieldButton.y + ShieldButton.h)
-                    closeUpgradeMenu();
-                else if(x > InvisButton.x && y > InvisButton.y && x < InvisButton.x + InvisButton.w && y < InvisButton.y + InvisButton.h)
-                    closeUpgradeMenu();
-                else if(x > CannonButton.x && y > CannonButton.y && x < CannonButton.x + CannonButton.w && y < CannonButton.y + CannonButton.h)
-                    closeUpgradeMenu();
+                if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h) {
+                    TriggerEvent("UFO::UpgradeMenu::StartGameLoop", false);
+                }else if(x > SpeedButton.x && y > SpeedButton.y && x < SpeedButton.x + SpeedButton.w && y < SpeedButton.y + SpeedButton.h) {
+                    TriggerEvent("UFO::UpgradePurchased", "speed", 2);
+                }else if(x > OxygenButton.x && y > OxygenButton.y && x < OxygenButton.x + OxygenButton.w && y < OxygenButton.y + OxygenButton.h) {
+                    TriggerEvent("UFO::UpgradePurchased", "oxygen", 2);
+                }else if(x > ShieldButton.x && y > ShieldButton.y && x < ShieldButton.x + ShieldButton.w && y < ShieldButton.y + ShieldButton.h) {
+                    TriggerEvent("UFO::UpgradePurchased", "shield", 10);
+                }else if(x > InvisButton.x && y > InvisButton.y && x < InvisButton.x + InvisButton.w && y < InvisButton.y + InvisButton.h) {
+                    TriggerEvent("UFO::UpgradePurchased", "invisibility", 10);
+                }else if(x > CannonButton.x && y > CannonButton.y && x < CannonButton.x + CannonButton.w && y < CannonButton.y + CannonButton.h) {
+                    TriggerEvent("UFO::UpgradePurchased", "at_cannon", 25);
+                }
             }
         }
 });
     AddEventHandler("UFO::UpgradeMenu::DisplayATCount", [this](int ATCount) {
         displayATCount(ATCount);
     });
+
+    displayATCount(AT);
     return 1;
 }
 
@@ -166,18 +180,6 @@ void UpgradeMenu::showUpgradeMenu() {
     if (!running) return;
     TriggerEvent("UFO::UpgradeMenu::State", true);
     displayATCount(AT);
-    SDL_Surface* playSurface = TTF_RenderText_Solid(font, "Play", color);
-    PlayText.texture = SDL_CreateTextureFromSurface(renderer, playSurface);
-    SDL_Surface* speedSurface = TTF_RenderText_Solid(font, "2 AT: Speed", color);
-    SpeedText.texture = SDL_CreateTextureFromSurface(renderer, speedSurface);
-    SDL_Surface* oxygenSurface = TTF_RenderText_Solid(font, "2 AT: Oxygen", color);
-    OxygenText.texture = SDL_CreateTextureFromSurface(renderer, oxygenSurface);
-    SDL_Surface* shieldSurface = TTF_RenderText_Solid(font, "10 AT: Shield", color);
-    ShieldText.texture = SDL_CreateTextureFromSurface(renderer, shieldSurface);
-    SDL_Surface* invisSurface = TTF_RenderText_Solid(font, "10 AT: Invisibility", color);
-    InvisibilityText.texture = SDL_CreateTextureFromSurface(renderer, invisSurface);
-    SDL_Surface* cannonSurface = TTF_RenderText_Solid(font, "25 AT: Cannon", color);
-    CannonText.texture = SDL_CreateTextureFromSurface(renderer, cannonSurface);
 }
 
 void UpgradeMenu::displayATCount(int ATCount){

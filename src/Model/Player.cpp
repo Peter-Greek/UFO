@@ -237,6 +237,10 @@ bool Player::doesPlayerHaveUpgrade(Player::UPGRADES upgrade) {
 }
 
 // Shield functions
+int Player::getShieldCount() const {
+    return SHIELD_COUNT;
+}
+
 bool Player::doesPlayerHaveShield() {
     return SHIELD_COUNT > 0;
 }

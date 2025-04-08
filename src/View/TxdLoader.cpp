@@ -120,6 +120,92 @@ void TxdLoader::render(SDL_Rect srcRect, SDL_Rect destRect, Heading angle, SDL_P
     SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, angle.get(), &center, flip);
 }
 
+SDL_Texture* TxdLoader::getTexture() {
+    return texture;
+}
+
+
+void TxdLoader::recolorTo(SDL_Color newColor) {
+    // Load the original image surface again
+    SDL_Surface* surface = IMG_Load(txdPath.c_str());
+    if (!surface) {
+        error("Failed to reload surface for recoloring: ", IMG_GetError());
+        return;
+    }
+
+    // Lock the surface if needed
+    if (SDL_MUSTLOCK(surface)) {
+        SDL_LockSurface(surface);
+    }
+
+    Uint32* pixels = (Uint32*)surface->pixels;
+    int total = surface->w * surface->h;
+    SDL_PixelFormat* fmt = surface->format;
+
+    for (int i = 0; i < total; ++i) {
+        Uint8 r, g, b, a;
+        SDL_GetRGBA(pixels[i], fmt, &r, &g, &b, &a);
+
+        if (txdPath == "../resource/HeartSS.png") {
+            // Special case for HEART texture: preserve white part
+            if (r > 200 && g > 200 && b > 200) {
+                pixels[i] = SDL_MapRGBA(fmt, r, g, b, a);
+                continue;
+            }
+
+        }
+
+        // Apply new color, preserve alpha
+        pixels[i] = SDL_MapRGBA(fmt, newColor.r, newColor.g, newColor.b, a);
+    }
+
+    if (SDL_MUSTLOCK(surface)) {
+        SDL_UnlockSurface(surface);
+    }
+
+    // Free old recolored texture if exists
+    if (recoloredTexture) {
+        SDL_DestroyTexture(recoloredTexture);
+    }
+
+    recoloredTexture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    if (!recoloredTexture) {
+        error("Failed to create recolored texture: ", SDL_GetError());
+    }
+}
+
+void TxdLoader::renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, int angle) {
+    if (!recoloredTexture) { return ; } // Ensure recolored texture is available
+    SDL_RenderCopyEx(renderer, recoloredTexture, &srcRect, &destRect, angle, nullptr, SDL_FLIP_NONE);
+}
+
+void TxdLoader::renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, Heading angle) {
+    if (!recoloredTexture) { return ; } // Ensure recolored texture is available
+    SDL_RenderCopyEx(renderer, recoloredTexture, &srcRect, &destRect, angle.get(), nullptr, SDL_FLIP_NONE);
+}
+
+void TxdLoader::renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, Heading angle, SDL_RendererFlip flip) {
+    if (!recoloredTexture) { return ; } // Ensure recolored texture is available
+    SDL_RenderCopyEx(renderer, recoloredTexture, &srcRect, &destRect, angle.get(), nullptr, flip);
+}
+
+void TxdLoader::renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, int angle, SDL_RendererFlip flip) {
+    if (!recoloredTexture) { return ; } // Ensure recolored texture is available
+    SDL_RenderCopyEx(renderer, recoloredTexture, &srcRect, &destRect, angle, nullptr, flip);
+}
+
+void TxdLoader::renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, int angle, SDL_Point center, SDL_RendererFlip flip) {
+    if (!recoloredTexture) { return ; } // Ensure recolored texture is available
+    SDL_RenderCopyEx(renderer, recoloredTexture, &srcRect, &destRect, angle, &center, flip);
+}
+
+void TxdLoader::renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, Heading angle, SDL_Point center, SDL_RendererFlip flip) {
+    if (!recoloredTexture) { return ; } // Ensure recolored texture is available
+    SDL_RenderCopyEx(renderer, recoloredTexture, &srcRect, &destRect, angle.get(), &center, flip);
+}
+
 
 //void TxdLoader::setSrcRect(SDL_Rect srcRect) {
 //    TxdLoader::srcRect = srcRect;

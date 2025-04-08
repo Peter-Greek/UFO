@@ -28,27 +28,52 @@
  */
 
 //
-// Created by xerxe on 2/11/2025.
+// Created by xerxe on 4/8/2025.
 //
 
-#include "config.h"
+#ifndef CSCI437_SAVESELECTOR_H
+#define CSCI437_SAVESELECTOR_H
 
-// Define global variables
-bool unlimitedFrames = false;
-int debugMode = 0;
-int curRoomIndex = -1;
 
-int SCREEN_WIDTH = 1920;
-int SCREEN_HEIGHT = 1080;
+#include "xProcess.h"
+#include <SDL_ttf.h>
 
-vector2 WORLD_MIN = vector2(5.0f * -SCREEN_WIDTH, 5.0f * -SCREEN_HEIGHT);
-vector2 WORLD_MAX = vector2(5.0f * SCREEN_WIDTH, 5.0f * SCREEN_HEIGHT);
-float WORLD_MIN_X = WORLD_MIN.x;
-float WORLD_MIN_Y = WORLD_MIN.y;
-float WORLD_MAX_X = WORLD_MAX.x;
-float WORLD_MAX_Y = WORLD_MAX.y;
+class SaveSelector : public xProcess {
+private:
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    TTF_Font* font;
 
-// Function to update settings dynamically
-void updateSettings() {
+    json saveData;
+    bool running = false;
+    int fontSize = 24;
 
-}
+    int max_display = 3;
+    int pagnation = 0;
+
+    SDL_Rect templateBox = {
+            0,
+            static_cast<int>(SCREEN_HEIGHT/6),
+            SCREEN_WIDTH / 4,
+            static_cast<int>(SCREEN_HEIGHT / 6 * 4)
+    };
+    int padding = ((SCREEN_WIDTH / 4) / 6);
+
+    std::list<std::pair<SDL_Texture*, SDL_Rect>> textures;
+public:
+    SaveSelector(passFunc_t p1, json saveData): xProcess(true, p1), saveData(std::move(saveData)) {}
+    ~SaveSelector() override = default;
+
+    int initialize_SDL_process(SDL_Window* passed_window) override;
+    void update(float deltaMs) override;
+    bool isDone() override { return !running; };
+    void postSuccess() override {};
+    void postFail() override {};
+    void postAbort() override {};
+
+    void drawRect(int x, int y, int w, int h);
+    void reloadTextures();
+};
+
+
+#endif //CSCI437_SAVESELECTOR_H

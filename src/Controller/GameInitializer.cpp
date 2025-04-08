@@ -33,8 +33,13 @@
 
 #include "GameInitializer.h"
 
+
+// NOTE: Only create event handlers inside of methods that are not called multiple times as this class does not get
+// destroyed when the game loop ends. This is to prevent multiple event handlers from being created and causing issues.
 void GameInitializer::Init() {
     print("Game Init");
+
+    // Config Changes
     AddEventHandler("UFO::OnConfigUpdate", [this](const std::string configName) {
         updateSettings(); // Update settings based on global variables
 
@@ -62,14 +67,70 @@ void GameInitializer::Init() {
         TriggerEvent("UFO::OnConfigUpdate", configName);
     });
 
+    // Main Menu Press Start
     AddEventHandler("UFO::StartGame", [this]() {
         // Create Game Environment
         print("Starting Game...");
-        Start();
-        GameDebug();
-        Debug();
+        ShutdownMainMenu();
+        CreateSaveSelector();
     });
 
+    AddEventHandler("UFO::SaveSelector::Select", [this](int slotIndex) {
+        print("Selected Slot: ", slotIndex);
+        if ((*gameStorage)["saves"].size() <= slotIndex) {
+            print("Invalid Slot Index");
+            return;
+        }
+
+        ShutdownSaveSelector();
+        (*gameStorage).SelectPlayer(slotIndex);
+        CreateUpgradeMenu();
+    });
+
+    // Upgrade Menu Press Play
+    AddEventHandler("UFO::UpgradeMenu::StartGameLoop", [this]() {
+        ShutdownUpgradeMenu();
+        Start();
+        GameDebug();
+    });
+
+    // Press ESC in upgrade menu
+    AddEventHandler("UFO::UpgradeMenu::State", [this](bool state) {
+        if (state == false && uMenu != nullptr) {
+            ShutdownUpgradeMenu();
+            CreateMainMenu();
+        }
+    });
+
+    AddEventHandler("UFO::UpgradePurchased", [this](std::string upgrade, int atCount) {
+        int curAT = (*gameStorage)["player"]["ATCount"].get<int>();
+        if (curAT < atCount) {
+            print("Not enough AT to purchase upgrade");
+            TriggerEvent("UFO::Chat::AddMessage", "Not enough AT to purchase upgrade");
+            return;
+        }
+
+        //setting max amound that a user can purchase depending on which upgrade they are buying
+        int max = 5;
+        if (upgrade == "at_cannon") max = 2;
+        if (upgrade == "invisibility" or upgrade == "shield") max = 3;
+
+        int up = (*gameStorage)["player"]["upgrades"][upgrade].get<int>();
+        if (up < max) {
+            (*gameStorage)["player"]["ATCount"] = curAT - atCount;
+            (*gameStorage)["player"]["upgrades"][upgrade] = up + 1;
+            (*gameStorage).SavePlayer();
+
+            TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>());
+            print("Upgrade purchased: ", upgrade, " AT Count: ", atCount);
+            TriggerEvent("UFO::Chat::AddMessage", "Upgrade purchased: " + upgrade + " AT Count: " + std::to_string(atCount));
+        } else {
+            print("Upgrade already maxed out");
+            TriggerEvent("UFO::Chat::AddMessage", "Upgrade already maxed out");
+        }
+    });
+
+    // GameManager Triggers Game End, we check if the player is dead or if the boss is dead
     AddEventHandler("UFO::EndGame", [this]() {
         int atcount = 0;
         bool isDead = true;
@@ -95,18 +156,20 @@ void GameInitializer::Init() {
         print("Ending Game Loop, AT Count: ", atcount);
         (*gameStorage)["player"]["ATCount"] = (*gameStorage)["player"]["ATCount"].get<int>() + atcount;
         (*gameStorage)["player"]["TotalAT"] = (*gameStorage)["player"]["TotalAT"].get<int>() + atcount;
-        (*gameStorage).save();
+        (*gameStorage)["player"]["time"] = (*gameStorage)["player"]["time"].get<int>() + int (sch->getGameTime() - gameStartTime);
+        (*gameStorage).SavePlayer();
 
         End();
     });
+
+    // Display the MainMenu and Debug text
+    CreateMainMenu();
+    Debug();
 }
 
 void GameInitializer::Start(){
     print("Game Start Called");
-    auto uMenu = attachProcess<UpgradeMenu>();
-    auto mMenu = attachProcess<MainMenu>();
-    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-
+    gameStartTime = sch->getGameTime();
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
     gameManager = gM;
@@ -168,6 +231,9 @@ void GameInitializer::Start(){
     // Create Key Card Pickup
     auto key = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::KEY_CARD, vector2{0.0f, 250.0f});
 
+    // Create Escape Pod "Pickup"
+    auto escape = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::ESCAPE_POD, vector2{0.0f, 550.0f});
+
     print("Game Environment Created");
 }
 
@@ -178,14 +244,13 @@ void GameInitializer::End() {
 
     gameManager = nullptr;
 
-    print("Game Ended");
+    print("Game Loop Ended");
 
-    if (debugMode == 1) {
-        print("Starting new game due to debug mode");
-        sch->setTimeout(1000, [this]() {
-            TriggerEvent("UFO::StartGame");
-        });
-    }
+    //TODO: Add in some game result screen
+
+    uMenu = attachProcess<UpgradeMenu>();
+    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    uMenu->showUpgradeMenu();
 }
 
 void GameInitializer::Debug() {
@@ -261,6 +326,48 @@ void GameInitializer::GameDebug() {
     rHeading->setTextRelativePosition(0.0f, -0.7f);
 }
 
+void GameInitializer::CreateMainMenu() {
+    ShutdownSaveSelector();
+    ShutdownUpgradeMenu();
+    (*gameStorage).ResetPlayer();
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
+    mMenu = attachProcess<MainMenu>(menuTxd);
+}
+
+void GameInitializer::ShutdownMainMenu() {
+    if (mMenu != nullptr) {
+        mMenu->abort();
+        mMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateSaveSelector() {
+    ShutdownMainMenu();
+    sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"]);
+}
+
+void GameInitializer::ShutdownSaveSelector() {
+    if (sMenu != nullptr) {
+        sMenu->abort();
+        sMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateUpgradeMenu() {
+    ShutdownMainMenu();
+    ShutdownSaveSelector();
+    uMenu = attachProcess<UpgradeMenu>();
+    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    uMenu->showUpgradeMenu();
+}
+
+void GameInitializer::ShutdownUpgradeMenu() {
+    if (uMenu != nullptr) {
+        uMenu->abort();
+        uMenu = nullptr;
+    }
+}
+
 void GameInitializer::LoadTextures() {
     print("Loading Textures");
     // [[Asperite Textures]]
@@ -272,10 +379,7 @@ void GameInitializer::LoadTextures() {
         auto fAnimIdle = attachGameMappedNonProcess<Animation>("FSS_IDLE", fAnim->getJSONData(), "Ferret Sprite Sheet (Idle)");
         auto fAnimMove = attachGameMappedNonProcess<Animation>("FSS_MOVE", fAnim->getJSONData(), "Ferret Sprite Sheet (Movement)");
 
-    // [[Background Textures]]
 
-    //Create Main Menu Texture
-    //auto mainTxd = attachGameMappedProcess<TxdLoader>("MAINMENU::TEXTURE", "../resource/MainMenuV1.png");
 
     // [[Normal Textures]]
 
@@ -296,6 +400,7 @@ void GameInitializer::LoadTextures() {
 
     // Create Heart Texture
     auto HeartTxd = attachGameMappedProcess<TxdLoader>("HEART::TEXTURE", "../resource/HeartSS.png");
+
 }
 
 void GameInitializer::LoadAudio() {

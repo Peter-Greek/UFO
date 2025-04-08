@@ -46,6 +46,8 @@ private:
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     SDL_Surface* surface;
+
+    SDL_Texture* recoloredTexture = nullptr;  // New
 public:
     TxdLoader(
             passFunc_t passFunc, std::string txdPath
@@ -67,6 +69,24 @@ public:
     void render(SDL_Rect srcRect, SDL_Rect destRect, Heading angle);
     void render(SDL_Rect srcRect, SDL_Rect destRect, int angle);
     void render(SDL_Rect srcRect, SDL_Rect destRect, Heading angle, SDL_Point center, SDL_RendererFlip flip);
+
+    SDL_Texture *getTexture();
+
+    void recolorTo(SDL_Color color);
+    [[nodiscard]] SDL_Texture* getRecoloredTexture() const { return recoloredTexture; };
+    [[nodiscard]] bool isRecolored() const { return recoloredTexture != nullptr; }
+
+    void renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, int angle);
+
+    void renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, Heading angle);
+
+    void renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, Heading angle, SDL_RendererFlip flip);
+
+    void renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, int angle, SDL_RendererFlip flip);
+
+    void renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, int angle, SDL_Point center, SDL_RendererFlip flip);
+
+    void renderRecolored(SDL_Rect srcRect, SDL_Rect destRect, Heading angle, SDL_Point center, SDL_RendererFlip flip);
 };
 
 

@@ -37,9 +37,21 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
         return 0;
     }
 
+    // Render the texture
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, "main menu", color);
+
+
+    // Set the button coords
+    StartBox = {
+            static_cast<int>(414 * (SCREEN_WIDTH / 1024.0f)),
+            static_cast<int>(475 * (SCREEN_HEIGHT / 768.0f)),
+            static_cast<int>(195 * (SCREEN_WIDTH / 1024.0f)),
+            static_cast<int>(84 * (SCREEN_HEIGHT / 768.0f))
+    };
 
 
     running = true;
+    isHidden = false;
     // Using Layer 2 for rendering so it is on top of everything else
     AddEventHandler("SDL::OnUpdate::Layer2", [this](float deltaMs) {
         // While application is running
@@ -48,40 +60,26 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
 
         if (renderer == nullptr) {return;}
 
-        //Drawing menu background
-        SDL_SetRenderDrawColor(renderer, 0, 75, 0, 255);
-        SDL_RenderFillRect(renderer, &cbox);
+        if (menuTxd != nullptr && menuTxd->state() == xProcess::RUNNING) {
+            menuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+        }
         
         //Drawing start button
-        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
-        SDL_RenderDrawRect(renderer, &StartBox);
-
-        /*if (ATText.texture) {
-            SDL_SetTextureColorMod(ATText.texture, 255, 255, 255);
-            SDL_RenderCopy(renderer, ATText.texture, nullptr, &ATText.dst);
-        }*/
+        if (isDebug()) {
+            SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
+            SDL_RenderDrawRect(renderer, &StartBox);
+        }
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         int x, y;
-        if (isHidden) {
-            if (eventType == SDL_KEYUP) {
-                if (key == SDLK_m) {
-                    showMainMenu();
-                }
-            }
-        }else {
-            if (eventType == SDL_KEYDOWN) {
-                if (key == SDLK_ESCAPE) {
-                    closeMainMenu();
-                }
-            } else if (eventType == SDL_MOUSEBUTTONDOWN) {
-                SDL_GetMouseState(&x, &y);
-                if(x > StartBox.x && y > StartBox.y && x < StartBox.x + StartBox.w && y < StartBox.y + StartBox.h)
-                    closeMainMenu();
+        if (eventType == SDL_MOUSEBUTTONDOWN) {
+            SDL_GetMouseState(&x, &y);
+            if(x > StartBox.x && y > StartBox.y && x < StartBox.x + StartBox.w && y < StartBox.y + StartBox.h) {
+                TriggerEvent("UFO::StartGame");
             }
         }
-});
+    });
     return 1;
 }
 
@@ -97,7 +95,7 @@ void MainMenu::showMainMenu() {
     isHidden = false;
     if (!running) return;
     TriggerEvent("UFO::MainMenu::State", true);
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, "main menu", color);
+
 }
 
 void MainMenu::closeMainMenu() {

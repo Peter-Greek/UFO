@@ -137,6 +137,8 @@ public:
 
     // Misc functions
     bool isFacingLeft();
+
+    [[nodiscard]] int getShieldCount() const;
 };
 
 

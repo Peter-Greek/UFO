@@ -48,6 +48,12 @@ public:
     json& operator[](const std::string& key) {
         return gameStorage[key];
     }
+
+    void SelectPlayer(int playerIndex);
+
+    void SavePlayer();
+
+    void ResetPlayer();
 };
 
 

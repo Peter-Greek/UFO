@@ -43,8 +43,17 @@
 #include "MainMenu.h"
 #include "Scheduler.h"
 
+#include "MainMenu.h"
+#include "SaveSelector.h"
+#include "UpgradeMenu.h"
+
 class GameInitializer : public xProcess {
 private:
+    std::shared_ptr<MainMenu> mMenu;
+    std::shared_ptr<UpgradeMenu> uMenu;
+    std::shared_ptr<SaveSelector> sMenu;
+
+
     passFunc_t passFunc;
     std::shared_ptr<ProcessManager> processManager;
     std::shared_ptr<GameStorage> gameStorage;
@@ -52,6 +61,10 @@ private:
     std::shared_ptr<GameManager> gameManager;
 
     std::list<sh_ptr<text>> debugTexts;
+
+    std::list<sh_ptr<TxdLoader>> txdLoaders;
+
+    float gameStartTime = 0.0f;
 
 public:
     GameInitializer(passFunc_t p1,
@@ -125,6 +138,18 @@ public:
         return instance;
     }
 
+    template<typename T, typename... Args>
+    sh_ptr<T> attachMappedProcess(std::string name, Args&&... args) {
+        auto instance = std::make_shared<T>(passFunc, std::forward<Args>(args)...);
+        processManager->attachProcess(instance);
+
+        if constexpr (std::is_base_of_v<TxdLoader, T>) {
+            txdLoaders.push_back(instance);
+        }
+
+        return instance;
+    }
+
 
 
 
@@ -143,6 +168,18 @@ public:
     void LoadEntitiesFromWorld(sh_ptr<world> w);
 
     void GameDebug();
+
+    void CreateMainMenu();
+
+    void CreateUpgradeMenu();
+
+    void ShutdownMainMenu();
+
+    void ShutdownUpgradeMenu();
+
+    void CreateSaveSelector();
+
+    void ShutdownSaveSelector();
 };
 
 

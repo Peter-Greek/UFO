@@ -63,7 +63,6 @@ void ProcessManager::abortAllProcess() {
 }
 
 int ProcessManager::removeProcess(const std::shared_ptr<xProcess>& p) {
-    print("Removing process: ", p.get());
     processList.remove(p);
     return 0;
 }

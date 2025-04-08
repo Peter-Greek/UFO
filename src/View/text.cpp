@@ -156,10 +156,14 @@ void text::postAbort() {
 void text::setTextPosition(int x, int y) {
     resetRelativePosition();
     position = vector2(x, y);
+    dst.x = position.x;
+    dst.y = position.y;
 };
 void text::setTextPosition(vector2 pos) {
     resetRelativePosition();
     position = pos;
+    dst.x = position.x;
+    dst.y = position.y;
 };
 void text::setTextRelativePosition(float x, float y) {
     relativePosition = vector2(x, y);
@@ -221,6 +225,7 @@ void text::showText() {
     setText(textContent);
 }
 void text::showText(std::string new_text) {
+    if (!isHidden && running && textContent == new_text) return; // efficiency
     isHidden = false;
     running = true;
     setText(std::move(new_text));
@@ -228,7 +233,7 @@ void text::showText(std::string new_text) {
 
 void text::setFontSize(int toFontSize) {
     fontSize = toFontSize;
-    font = TTF_OpenFont("../resource/Arial.ttf", 50);
+    font = TTF_OpenFont("../resource/Arial.ttf", fontSize);
     if (font == nullptr) {
         error("Unable to open font! ", SDL_GetError());
     }
@@ -252,9 +257,6 @@ void text::setText(std::string basicString) {
 
     const char* textInput = textContent.c_str();
 
-    int textWidth;
-    int textHeight;
-
     // render text
     color = { 255, 255, 255 };
     sText = TTF_RenderText_Solid( font, textInput, color );
@@ -276,7 +278,4 @@ void text::setText(std::string basicString) {
     dst.y = position.y;
     dst.w = textWidth;
     dst.h = textHeight;
-
-    SDL_SetTextureColorMod(texture, red * 255, green * 255, blue * 255);
-    SDL_RenderCopyEx(renderer, texture, nullptr, &dst, angle, &rot, SDL_FLIP_NONE);
 }
