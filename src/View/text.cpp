@@ -240,6 +240,10 @@ void text::setText(std::string basicString) {
     textContent = std::move(basicString);
     if (!running) return;
 
+    if (state() == UNINITIALIZED) {
+        return;
+    }
+
 
     if (sText != nullptr) {
         SDL_FreeSurface( sText );
@@ -250,7 +254,6 @@ void text::setText(std::string basicString) {
 
     int textWidth;
     int textHeight;
-    TTF_SizeText(font, textInput, &textWidth, &textHeight);
 
     // render text
     color = { 255, 255, 255 };
@@ -266,6 +269,13 @@ void text::setText(std::string basicString) {
         error("Could not create texture from surface! ", SDL_GetError());
         return;
     }
+
+    SDL_QueryTexture(texture, nullptr, nullptr, &textWidth, &textHeight);
+
+    dst.x = position.x;
+    dst.y = position.y;
+    dst.w = textWidth;
+    dst.h = textHeight;
 
     SDL_SetTextureColorMod(texture, red * 255, green * 255, blue * 255);
     SDL_RenderCopyEx(renderer, texture, nullptr, &dst, angle, &rot, SDL_FLIP_NONE);

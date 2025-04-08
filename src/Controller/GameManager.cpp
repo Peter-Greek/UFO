@@ -81,6 +81,10 @@ int GameManager::initialize() {
                     TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
                     TriggerEvent("SDL::Render::ResetDrawColor");
+                }else if (e->getPickupType() == entity::KEY_CARD) {
+                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+                    TriggerEvent("SDL::Render::ResetDrawColor");
                 }
             }else if (e->isEntityALaser()) {
                 if (auto l = std::dynamic_pointer_cast<Laser>(e)) {
@@ -167,6 +171,7 @@ void GameManager::terminateGame() {
     gameRunning = false;
     print("Game Manager Terminated!");
 }
+
 
 // Update View Functions
 void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float deltaMs) {
@@ -701,7 +706,6 @@ void GameManager::handleDebugWorldCreator(float deltaMs) {
     }
 }
 
-
 void GameManager::drawWall(wall* cur_wall) {
     int textureLength = 32;
     int textureWidth = 4;
@@ -893,13 +897,61 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
     for (auto& e2 : entityList) {
         if (e2->isEntityAPickup()) {
             vector2 enemyCoords = e2->getPosition();
-            if (p->isPointInEntity(enemyCoords)) {
-                if (e2->getPickupType() == entity::AT) {
+            int pickupType = e2->getPickupType();
+            std::string keyCardName;
+            bool isInside = p->isPointInEntity(enemyCoords);
+
+            if (pickupType == entity::KEY_CARD) {
+
+                keyCardName = "KEYCARD::" + e2->getId();
+
+
+
+                if (!cam->isPointInView(enemyCoords) || (enemyCoords - currentCoords).length() > 150) {
+                    if (textMap[keyCardName]) {
+                        textMap[keyCardName]->hideText();
+                    }
+                    continue;
+                }
+
+
+                vector2 dim = e2->getDimensions();
+                vector2 screenCoords = cam->worldToScreenCoords(enemyCoords);
+                if (! textMap[keyCardName]) {
+                    textMap[keyCardName] = std::make_shared<text>(passFunc, "[E]", 25);
+                    pM->attachProcess(textMap[keyCardName]);
+                    textMap[keyCardName]->setTextPosition(screenCoords.x - dim.x/2, screenCoords.y - dim.y/2 - 25);
+                    continue; // need to wait 1 tick to allow the process to init
+
+                }else {
+                    SDL_Rect rec = textMap[keyCardName]->getTextRect();
+                    textMap[keyCardName]->setTextPosition(screenCoords.x + dim.x/2 - rec.w/2, screenCoords.y - dim.y/2 - rec.h);
+                }
+
+                // keyboard state
+                if (isInside) {
+                    textMap[keyCardName]->showText("Press [E] to pick up keycard!");
+                    const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
+                    if (keyboard_state_array[SDL_SCANCODE_E]) {
+                        e2->setHearts(0);
+                        e2->succeed();
+                        textMap[keyCardName]->hideText();
+                    }
+                }else {
+                    textMap[keyCardName]->showText("[E]");
+                }
+
+                continue;
+            }
+
+
+            if (isInside) {
+                if (pickupType == entity::AT) {
                     e2->setHearts(0);
                     e2->succeed();
                     p->addATCount(); // adds 1 AT to player current loop total
                     textMap["ATScore"]->setText("AT: " + std::to_string(p->getATCount()));
-                }else if (e2->getPickupType() == entity::HEART) {
+                }else if (pickupType == entity::HEART) {
                     if (p->getHearts() == p->getMaxHearts()) {
                         continue; // This is a design choice to not allow the player to pick up hearts if they are full
                     }
@@ -907,7 +959,7 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
                     e2->succeed();
                     p->addHearts(1); // adds 1 heart
                     textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
-                }else if (e2->getPickupType() == entity::OXY_TANK) {
+                }else if (pickupType == entity::OXY_TANK) {
                     e2->setHearts(0);
                     e2->succeed();
                     p->addOxygen(30000.0f); // adds 30 seconds of oxygen
@@ -1223,6 +1275,7 @@ void GameManager::setWorld(sh_ptr<world> w) {
     world_ptr = std::move(w);
 }
 
+
 // Attach Functions
 void GameManager::attachEntity(sh_ptr<entity> e) {
     entityList.push_back(e);
@@ -1273,6 +1326,7 @@ sh_ptr_e GameManager::getBoss() {
     return nullptr;
 }
 
+
 // Logic Functions
 void GameManager::playerTakeHit(const sh_ptr_ply& p, int damage) {
     //TODO: move to player class
@@ -1302,11 +1356,3 @@ void GameManager::bounceEntities(sh_ptr_e e1, sh_ptr_e e2) {
     e1->setKnockedBack(true, 250.0f);
     e2->setKnockedBack(true, 250.0f);
 }
-
-
-
-
-
-
-
-

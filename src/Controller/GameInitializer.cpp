@@ -156,7 +156,7 @@ void GameInitializer::Start(){
     auto npc = attachGameProcess<entity>(entity::ENEMY, 3, vector2{350.0f, 0.0f});
 
     // Create Boss
-    auto boss = attachGameProcess<Boss>(vector2{0.0f, 0.0f});
+    auto boss = attachGameProcess<Boss>(vector2{0.0f, -550.0f});
 
     // Create Heart Pickup
 
@@ -164,6 +164,9 @@ void GameInitializer::Start(){
 
     // Create Oxy Pickup
     auto oxy = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::OXY_TANK, vector2{0.0f, 50.0f});
+
+    // Create Key Card Pickup
+    auto key = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::KEY_CARD, vector2{0.0f, 250.0f});
 
     print("Game Environment Created");
 }
