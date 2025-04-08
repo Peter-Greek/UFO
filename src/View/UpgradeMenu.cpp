@@ -124,8 +124,19 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
         if (CannonText.texture) {
             SDL_SetTextureColorMod(CannonText.texture, 255, 255, 255);
             SDL_RenderCopy(renderer, CannonText.texture, nullptr, &CannonText.dst);
-        }        
+        }   
 
+        //Draw Speed Tracker Bar
+        for (int i = 0; i < 5; i++) {
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white (or any other color)
+            SDL_RenderDrawRect(renderer, &SpeedTracker.rects[i]);
+        }
+
+        //Draw Oxygen Tracker Bar
+        for (int i = 0; i < 5; i++) {
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white (or any other color)
+            SDL_RenderDrawRect(renderer, &OxygenTracker.rects[i]);
+        }
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {

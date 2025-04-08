@@ -34,7 +34,7 @@ private:
         bool isCut = false;
     };
 
-    SDL_Rect ATBox = {cbox.x + 2*(SCREEN_WIDTH/3), cbox.y+ 10, SCREEN_WIDTH - (10+ATBox.x), SCREEN_HEIGHT/7};
+    SDL_Rect ATBox = {2*(SCREEN_WIDTH/3), 10, SCREEN_WIDTH - (10+ATBox.x), SCREEN_HEIGHT/7};
     SDL_Rect ATBoxText = {ATBox.x+30, ATBox.y+30, ATBox.w-60, ATBox.h-60};
     UpgradeText ATText = {nullptr, ATBoxText, "AT Count: 0"};
     
@@ -61,6 +61,21 @@ private:
     SDL_Rect CannonButton = {SCREEN_WIDTH/9, 3*(SCREEN_HEIGHT/4), SCREEN_WIDTH/2, SCREEN_HEIGHT/5};
     SDL_Rect CannonButtonText = {CannonButton.x+30, CannonButton.y+30, CannonButton.w-60, CannonButton.h-60};
     UpgradeText CannonText = {nullptr, CannonButtonText, "Play"}; 
+
+    struct UpgradeTracker {
+        int height;
+        SDL_Rect rects[5] = {
+            {SCREEN_WIDTH/3 +10, height, 100, 150},  // one
+            {SCREEN_WIDTH/3+110, height, 100, 150}, // two
+            {SCREEN_WIDTH/3+210, height, 100, 150}, // three
+            {SCREEN_WIDTH/3+310, height, 100, 150}, // four
+            {SCREEN_WIDTH/3+410, height, 100, 150}  // five
+        };
+    };
+
+    UpgradeTracker SpeedTracker = {SCREEN_HEIGHT/10};
+    UpgradeTracker OxygenTracker = {3*(SCREEN_HEIGHT/10)};
+
     int fontSize = 50;
 public:
     explicit UpgradeMenu(passFunc_t& func) : xProcess(true, func){
