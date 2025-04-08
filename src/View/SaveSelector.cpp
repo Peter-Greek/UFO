@@ -72,7 +72,7 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
         return 0;
     }
 
-    AddEventHandler("SDL::OnUpdate::Layer2", [this](float deltaMs) {
+    AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         if (!running) return;
         if (renderer == nullptr) { return; }
 

@@ -162,6 +162,16 @@ void GameInitializer::Init() {
         End();
     });
 
+    AddEventHandler("UFO::View::UpdateWindowSize", [this](int w, int h) {
+        print("Game Initializer: Window Size Resetting main menu: ", mMenu, sMenu, uMenu, SCREEN_WIDTH, "x", SCREEN_HEIGHT);
+        sch->setTimeout(100, [=]() {
+            if (mMenu != nullptr) {
+                ShutdownMainMenu();
+                CreateMainMenu();
+            }
+        });
+    });
+
     // Display the MainMenu and Debug text
     CreateMainMenu();
     Debug();
@@ -174,7 +184,7 @@ void GameInitializer::Start(){
     gM->setProcessManager(processManager);
     gameManager = gM;
 
-    gM->AddEventHandler("UFO::CHECK::UUID", [this](UUID id) {
+    gM->AddEventHandler("UFO::CHECK::UUID", [this](UUID_t id) {
         print("Checking UUID: ", id);
         print(processManager->containsUUID(id));
     });

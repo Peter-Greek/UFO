@@ -242,7 +242,6 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
                 x += 32;
             }
             bool isBlue = sheildCount >= 0 && i <= sheildCount;
-            print("Heart: ", i, " ", isBlue);
             renderHeart(vector2(x, y), vector2(32, 32), isBlue);
         }
     }
@@ -566,7 +565,6 @@ void GameManager::renderHeart(vector2 screenCoords, vector2 dim, bool isBlue) {
     };
 
     if (isBlue) {
-        print("Blue Heart");
         if (!txdMap["HEART::TEXTURE"]->isRecolored()) {
             txdMap["HEART::TEXTURE"]->recolorTo({0, 0, 255, 255}); // fully blue
         }

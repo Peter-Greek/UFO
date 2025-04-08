@@ -53,7 +53,7 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
     running = true;
     isHidden = false;
     // Using Layer 2 for rendering so it is on top of everything else
-    AddEventHandler("SDL::OnUpdate::Layer2", [this](float deltaMs) {
+    AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         // While application is running
         if (!running) return;
         if (isHidden) {return;}
