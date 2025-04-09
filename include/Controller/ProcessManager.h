@@ -14,7 +14,7 @@ using json = nlohmann::json;
 class ProcessManager {
 private:
     std::list<std::shared_ptr<xProcess>> processList;
-    std::list<UUID> uuidList;
+    std::list<UUID_t> uuidList;
     passFunc_t passFunc;
 
 public:
@@ -26,10 +26,12 @@ public:
     void abortAllProcess();
     int removeProcess(const std::shared_ptr<xProcess>& p);
     void triggerEventInAll(const std::string& eventName, const json& eventData);
-    UUID generateUUID();
-    bool containsUUID(UUID uuid);
+    UUID_t generateUUID();
+    bool containsUUID(UUID_t uuid);
 
     void attachProcess(xProcess *p);
+
+    int removeProcess(xProcess *p);
 };
 
 

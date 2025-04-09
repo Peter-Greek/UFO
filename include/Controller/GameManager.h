@@ -41,6 +41,7 @@
 #include "Laser.h"
 #include "camera.h"
 #include "world.h"
+#include "MainMenu.h"
 #include "text.h"
 #include "AsepriteLoader.h"
 #include "TxdLoader.h"
@@ -55,6 +56,7 @@ using sh_ptr_e = sh_ptr<entity>;
 using sh_ptr_at = sh_ptr<AT>;
 using sh_ptr_laser = sh_ptr<Laser>;
 using sh_ptr_ply =  sh_ptr<Player>;
+using sh_ptr_pew = sh_ptr<Projectile>;
 
 class GameManager : public xProcess {
 public:
@@ -115,13 +117,23 @@ public:
     void renderWorld(float deltaMs);
     void handleDebugWorldCreator(float deltaMs);
     void drawWall(wall *cur_wall);
+    void renderProjectile(vector2 screenCoords, vector2 dim, const sh_ptr_pew &e);
     void renderAT(vector2 screenCoords, vector2 dim, const sh_ptr_at& at);
     void renderHeart(vector2 screenCoords, vector2 dim, const sh_ptr_e& e);
-    void renderHeart(vector2 screenCoords, vector2 dim);
+    void renderHeart(vector2 screenCoords, vector2 dim, bool isBlue = false);
 
     void handleBossUpdate(const sh_ptr_e& e, float deltaMs);
 
     void terminateGame();
+
+    void renderTextOnEntity(const sh_ptr_e &e, const std::string &textMapName, const std::string &textDefault);
+
+    void renderPickupInteraction(const sh_ptr_ply &ply, const sh_ptr_e &e, vector2 &currentCoords);
+
+    void clearPickupInteraction(const sh_ptr_e &e);
+
+
+    void renderAT(vector2 screenCoords, vector2 dim);
 };
 
 

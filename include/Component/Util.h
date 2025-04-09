@@ -46,7 +46,7 @@
 #include "config.h"
 
 using json = nlohmann::json;
-using UUID = std::string;
+using UUID_t = std::string;
 using passFunc_t = std::function<void(const std::string& eventName, const json& eventData)>;
 using vectorList_t = std::vector<vector2>;
 using sList_t = std::vector<std::string>;

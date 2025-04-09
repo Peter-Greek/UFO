@@ -59,6 +59,7 @@ vector2 entity::getSpawnCoords() {
 }
 
 // Entity Type Methods
+entity::eType entity::getEntityType() const {return type;}
 bool entity::isEntityAPlayer() {return type == PLAYER;};
 bool entity::isEntityAnEnemy() {return type == ENEMY;};
 bool entity::isEntityAnEnemyBoss() {return type == ENEMY_BOSS;};
@@ -208,4 +209,25 @@ void entity::setLength(int newLength) {
 
 void entity::setWidth(int newWidth) {
     width = newWidth;
+}
+
+bool entity::isEntityInEntity(const sh_ptr_e& other) const {
+    if (other == nullptr) return false;
+    vector2 o_p1 = other->getPosition() + vector2(-other->getLength()/2, other->getWidth()/2); // Top-left
+    vector2 o_p2 = other->getPosition() + vector2(other->getLength()/2, other->getWidth()/2); // Top-right
+    vector2 o_p3 = other->getPosition() + vector2(other->getLength()/2, -other->getWidth()/2); // Bottom-right
+    vector2 o_p4 = other->getPosition() + vector2(-other->getLength()/2, -other->getWidth()/2); // Bottom-left
+
+    vector2 p1 = coords + vector2(-length/2, width/2); // Top-left
+    vector2 p2 = coords + vector2(length/2, width/2); // Top-right
+    vector2 p3 = coords + vector2(length/2, -width/2); // Bottom-right
+    vector2 p4 = coords + vector2(-length/2, -width/2); // Bottom-left
+
+    vectorList_t oPList = {o_p1, o_p2, o_p3, o_p4};
+
+    return  isPointInBounds(coords, oPList) ||
+            isPointInBounds(p1, oPList) ||
+            isPointInBounds(p2, oPList) ||
+            isPointInBounds(p3, oPList) ||
+            isPointInBounds(p4, oPList);
 }

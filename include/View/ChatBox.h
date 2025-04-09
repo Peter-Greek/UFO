@@ -37,6 +37,13 @@
 #include "xProcess.h"
 #include <SDL_ttf.h>
 class ChatBox : public xProcess {
+public:
+    struct ChatMessage {
+        SDL_Texture* texture;
+        SDL_Rect dst;
+        std::string text;
+        bool isCut = false;
+    };
 private:
     SDL_Event e;
     SDL_Window* window;
@@ -59,12 +66,7 @@ private:
         static_cast<int>(chatBoxSize.y)
     };
 
-    struct ChatMessage {
-        SDL_Texture* texture;
-        SDL_Rect dst;
-        std::string text;
-        bool isCut = false;
-    };
+
     // list of messages
     std::vector<ChatMessage> messages;
     static const int MAX_VISIBLE_MESSAGES = 8;
@@ -114,6 +116,17 @@ public:
 
     void createInputMessage();
     void hideInputMessage();
+
+    std::pair<std::vector<ChatMessage>, sList_t> getMessagesAndCommands() {
+        return {messages, commands};
+    }
+    void setMessagesAndCommands(std::pair<std::vector<ChatMessage>, sList_t> messagesAndCommands) {
+        if (messagesAndCommands.first.empty()) {
+            return;
+        }
+        messages = messagesAndCommands.first;
+        commands = messagesAndCommands.second;
+    }
 };
 
 

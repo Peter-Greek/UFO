@@ -8,8 +8,6 @@
 #include "entity.h"
 #include "Projectile.h"
 
-using sh_ptr_e = sh_ptr<entity>;
-
 class Boss : public entity, public std::enable_shared_from_this<Boss> {
 private:
     int timeBetweenSpawnsMinion = 15000;

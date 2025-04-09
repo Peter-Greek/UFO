@@ -38,8 +38,8 @@ bool unlimitedFrames = false;
 int debugMode = 0;
 int curRoomIndex = -1;
 
-int SCREEN_WIDTH = 1024;
-int SCREEN_HEIGHT = 768;
+int SCREEN_WIDTH = 2400;
+int SCREEN_HEIGHT = 1600;
 
 vector2 WORLD_MIN = vector2(5.0f * -SCREEN_WIDTH, 5.0f * -SCREEN_HEIGHT);
 vector2 WORLD_MAX = vector2(5.0f * SCREEN_WIDTH, 5.0f * SCREEN_HEIGHT);

@@ -54,7 +54,7 @@ public:
         ABORT
     };
 private:
-    UUID id;
+    UUID_t id;
     State state_;
     xProcess* child_;
     bool isSDLProcess = false;
@@ -66,8 +66,8 @@ public:
     }
     virtual ~xProcess() = default;
 
-    UUID getId() const { return id; }
-    void setId(UUID UID) { id = UID; }
+    UUID_t getId() const { return id; }
+    void setId(UUID_t UID) { id = UID; }
 
     bool isSDLSubProcess() const { return isSDLProcess; }
 

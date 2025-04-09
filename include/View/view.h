@@ -8,6 +8,7 @@
 #include "xProcess.h"
 #include "ChatBox.h"
 #include "ProcessManager.h"
+#include "MainMenu.h"
 #include <memory>
 
 class view : public xProcess {
@@ -24,6 +25,8 @@ private:
     std::shared_ptr<ProcessManager> pM;
     passFunc_t& passFunc;
 
+    std::shared_ptr<ChatBox> chatBox = nullptr;
+
 public:
     view(passFunc_t& func, std::shared_ptr<ProcessManager> pPm)
             : xProcess(false, func), pM(std::move(pPm)), passFunc(func) {}
@@ -38,6 +41,8 @@ public:
     void postSuccess() override;
     void postFail() override;
     void postAbort() override;
+
+    void resizeWindow(int width, int height, bool center);
 };
 
 #endif //CSCI437_VIEW_H

@@ -63,9 +63,18 @@ void ProcessManager::abortAllProcess() {
 }
 
 int ProcessManager::removeProcess(const std::shared_ptr<xProcess>& p) {
-    print("Removing process: ", p.get());
     processList.remove(p);
     return 0;
+}
+
+int ProcessManager::removeProcess(xProcess* p) {
+    auto it = std::find_if(processList.begin(), processList.end(),
+                           [p](const std::shared_ptr<xProcess>& process) { return process.get() == p; });
+    if (it != processList.end()) {
+        processList.erase(it);
+        return 0;
+    }
+    return -1; // Process not found
 }
 
 void ProcessManager::triggerEventInAll(const std::string &eventName, const json &eventData) {
@@ -75,12 +84,12 @@ void ProcessManager::triggerEventInAll(const std::string &eventName, const json 
     }
 }
 
-bool ProcessManager::containsUUID(UUID uuid) {
+bool ProcessManager::containsUUID(UUID_t uuid) {
     return std::find(uuidList.begin(), uuidList.end(), uuid) != uuidList.end();
 }
 
-UUID ProcessManager::generateUUID() {
-    UUID uuid;
+UUID_t ProcessManager::generateUUID() {
+    UUID_t uuid;
     do {
         uuid = "pm-xxxxxx-4xxx-yxxx";
         for (int i = 0; i < uuid.length(); ++i) {

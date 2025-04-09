@@ -117,7 +117,6 @@ int main(int argc, char* argv[])
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1 ms to allow the view process to initialize fully
     SDL_Window* window = viewProcess->getWindow();
     float deltaMs = 0;
-    viewProcess->TriggerEvent("UFO::StartGame"); // debug start game (later on we will have a main menu)
     while (scheduler->isRunning()) {
         deltaMs = scheduler->elapsedTime();
         deltaMs *= scheduler->getTimeFactor();

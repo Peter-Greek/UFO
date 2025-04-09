@@ -15,7 +15,7 @@ private:
     SDL_Point rot;
     vector2 position = {0, 0};
     vector2 upgradeMenuSize = {static_cast<float>(SCREEN_WIDTH), static_cast<float>(SCREEN_HEIGHT)};
-    int AT;
+    int AT = 0;
 
     bool running = false;
     bool isHidden = true;
@@ -34,11 +34,11 @@ private:
         bool isCut = false;
     };
 
-    SDL_Rect ATBox = {cbox.x + 2*(SCREEN_WIDTH/3), cbox.y+ 10, SCREEN_WIDTH - (10+ATBox.x), SCREEN_HEIGHT/7};
+    SDL_Rect ATBox = {2*(SCREEN_WIDTH/3), 10, SCREEN_WIDTH - (10+ATBox.x), SCREEN_HEIGHT/7};
     SDL_Rect ATBoxText = {ATBox.x+30, ATBox.y+30, ATBox.w-60, ATBox.h-60};
     UpgradeText ATText = {nullptr, ATBoxText, "AT Count: 0"};
     
-    SDL_Rect PlayButton = {2*(SCREEN_WIDTH/3), 6*(SCREEN_HEIGHT/7), SCREEN_WIDTH - (10+PlayButton.x), SCREEN_HEIGHT - (10+PlayButton.y)};
+    SDL_Rect PlayButton = {7*(SCREEN_WIDTH/10), 3*(SCREEN_HEIGHT/4), SCREEN_WIDTH/4, SCREEN_HEIGHT/7};
     SDL_Rect PlayButtonText = {PlayButton.x+30, PlayButton.y+30, PlayButton.w-60, PlayButton.h-60};
     UpgradeText PlayText = {nullptr, PlayButtonText, "Play"};   
 
@@ -50,17 +50,32 @@ private:
     SDL_Rect OxygenButtonText = {OxygenButton.x+30, OxygenButton.y+30, OxygenButton.w-60, OxygenButton.h-60};
     UpgradeText OxygenText = {nullptr, OxygenButtonText, "Play"}; 
 
-    SDL_Rect ShieldButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/10, SCREEN_WIDTH/5, SCREEN_HEIGHT/7};
+    SDL_Rect ShieldButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/2, SCREEN_WIDTH/4, SCREEN_HEIGHT/6};
     SDL_Rect ShieldButtonText = {ShieldButton.x+30, ShieldButton.y+30, ShieldButton.w-60, ShieldButton.h-60};
     UpgradeText ShieldText = {nullptr, ShieldButtonText, "Play"}; 
 
-    SDL_Rect InvisButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/10, SCREEN_WIDTH/5, SCREEN_HEIGHT/7};
+    SDL_Rect InvisButton = {2*(SCREEN_WIDTH/5), SCREEN_HEIGHT/2, SCREEN_WIDTH/4, SCREEN_HEIGHT/6};
     SDL_Rect InvisButtonText = {InvisButton.x+30, InvisButton.y+30, InvisButton.w-60, InvisButton.h-60};
     UpgradeText InvisibilityText = {nullptr, InvisButtonText, "Play"}; 
 
-    SDL_Rect CannonButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/10, SCREEN_WIDTH/5, SCREEN_HEIGHT/7};
+    SDL_Rect CannonButton = {SCREEN_WIDTH/9, 3*(SCREEN_HEIGHT/4), SCREEN_WIDTH/2, SCREEN_HEIGHT/5};
     SDL_Rect CannonButtonText = {CannonButton.x+30, CannonButton.y+30, CannonButton.w-60, CannonButton.h-60};
     UpgradeText CannonText = {nullptr, CannonButtonText, "Play"}; 
+
+    struct UpgradeTracker {
+        int height;
+        SDL_Rect rects[5] = {
+            {SCREEN_WIDTH/3 +10, height, 100, 150},  // one
+            {SCREEN_WIDTH/3+110, height, 100, 150}, // two
+            {SCREEN_WIDTH/3+210, height, 100, 150}, // three
+            {SCREEN_WIDTH/3+310, height, 100, 150}, // four
+            {SCREEN_WIDTH/3+410, height, 100, 150}  // five
+        };
+    };
+
+    UpgradeTracker SpeedTracker = {SCREEN_HEIGHT/10};
+    UpgradeTracker OxygenTracker = {3*(SCREEN_HEIGHT/10)};
+
     int fontSize = 50;
 public:
     explicit UpgradeMenu(passFunc_t& func) : xProcess(true, func){

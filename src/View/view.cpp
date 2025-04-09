@@ -36,71 +36,99 @@
 #include "view.h"
 #include "../Controller/WorldCreator.h"
 
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 // Process Functions
 int view::initialize() {
+    #ifdef _WIN32
+        // Force DPI Awareness at runtime (best cross-version compatibility)
+        typedef HRESULT(WINAPI *SetProcessDpiAwarenessFunc)(int);
+        typedef BOOL(WINAPI *SetProcessDPIAwareFunc)(void);
+
+        HMODULE shcore = LoadLibraryA("Shcore.dll");
+        if (shcore) {
+            auto setDpiAwareness = (SetProcessDpiAwarenessFunc)GetProcAddress(shcore, "SetProcessDpiAwareness");
+            if (setDpiAwareness) {
+                setDpiAwareness(2); // PROCESS_PER_MONITOR_DPI_AWARE
+            }
+            FreeLibrary(shcore);
+        } else {
+            HMODULE user32 = LoadLibraryA("user32.dll");
+            if (user32) {
+                auto setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(user32, "SetProcessDPIAware");
+                if (setDpiAware) {
+                    setDpiAware();
+                }
+                FreeLibrary(user32);
+            }
+        }
+    #endif
+
     print("View Initialize");
-    if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
+
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         error("SDL could not initialize!", SDL_GetError());
         return 0;
     }
 
-    // Create window
-    window = SDL_CreateWindow( "UFO", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
-    if( window == NULL ) {
+    // Create window with High DPI awareness
+    print("Creating Window", SCREEN_WIDTH, SCREEN_HEIGHT);
+    window = SDL_CreateWindow("UFO",
+                              SDL_WINDOWPOS_CENTERED,
+                              SDL_WINDOWPOS_CENTERED,
+                              SCREEN_WIDTH, SCREEN_HEIGHT,
+                              SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN);
+
+    if (!window) {
         error("Window could not be created!", SDL_GetError());
         return 0;
-    };
+    }
 
-    // Small delay to allow the system to create the window.
+    // Small delay to ensure surface is ready
     SDL_Delay(100);
 
-    // Create renderer
     #ifdef __APPLE__
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     #else
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     #endif
 
-    if (renderer == nullptr) {
+    if (!renderer) {
         error("Unable to create renderer: ", SDL_GetError());
         return 0;
     }
 
+    // Scale all rendering to logical screen resolution (1920x1080)
+    SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    // Only needed on Windows/Linux for visual debug background
     #ifndef __APPLE__
-        // Get window surface
-        screenSurface = SDL_GetWindowSurface( window );
-        if(screenSurface == nullptr) {
+        screenSurface = SDL_GetWindowSurface(window);
+        if (!screenSurface) {
             error("Unable to get window surface!", SDL_GetError());
             return 0;
         }
-
-        // Make the surface blue
-        SDL_FillRect( screenSurface, nullptr, SDL_MapRGB( screenSurface->format, 0, 0, 255 ) );
+        SDL_FillRect(screenSurface, nullptr, SDL_MapRGB(screenSurface->format, 0, 0, 255));
+        SDL_UpdateWindowSurface(window);
     #endif
 
-    // Set the blend mode
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    // Update the surface
-    SDL_UpdateWindowSurface( window );
-
-
-    // Events List
+    // Event Handlers
     AddEventHandler("SDL::Render::DrawRect", [this](int x, int y, int w, int h) {
         drawRect(x, y, w, h);
     });
 
     AddEventHandler("SDL::Render::DrawLines", [this](std::vector<vector2> points, int thickness) {
         SDL_Point p[5] = {
-                {static_cast<int>(points[0].x), static_cast<int>(points[0].y)},
-                {static_cast<int>(points[1].x), static_cast<int>(points[1].y)},
-                {static_cast<int>(points[2].x), static_cast<int>(points[2].y)},
-                {static_cast<int>(points[3].x), static_cast<int>(points[3].y)},
-                {static_cast<int>(points[0].x), static_cast<int>(points[0].y)}
+                {(int)points[0].x, (int)points[0].y},
+                {(int)points[1].x, (int)points[1].y},
+                {(int)points[2].x, (int)points[2].y},
+                {(int)points[3].x, (int)points[3].y},
+                {(int)points[0].x, (int)points[0].y}
         };
-        if (SDL_RenderDrawLines(renderer, p, 5)) {
-            error("SDL_RenderDrawLines Error: ", SDL_GetError());
-        }
+        SDL_RenderDrawLines(renderer, p, 5);
     });
 
     AddEventHandler("SDL::Render::DrawPoint", [this](int x, int y) {
@@ -108,7 +136,7 @@ int view::initialize() {
     });
 
     AddEventHandler("SDL::Render::DrawPointFromVector", [this](vector2 point) {
-        SDL_RenderDrawPoint(renderer, static_cast<int>(point.x), static_cast<int>(point.y));
+        SDL_RenderDrawPoint(renderer, (int)point.x, (int)point.y);
     });
 
     AddEventHandler("SDL::Render::SetDrawColor", [this](int r, int g, int b, int a) {
@@ -119,28 +147,106 @@ int view::initialize() {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     });
 
-
-    // Chat State To prevent key presses from doing anything when the chat box is open
     AddEventHandler("UFO::Chat::State", [this](bool state) {
         chatState = state;
     });
 
     running = true;
 
-
-    auto* chatBox = new ChatBox(passFunc);
+    // Init other processes
+    chatBox = std::make_shared<ChatBox>(passFunc);
     pM->attachProcess(chatBox);
     if (chatBox->initialize_SDL_process(window)) {
         chatBox->initialized();
     }
     chatBox->addMessage("Hello World");
+    AddEventHandler("UFO::View::UpdateWindowSize", [this](int w, int h) {
+        std::pair<std::vector<ChatBox::ChatMessage>, sList_t> messagesAndCommands;
+        if (chatBox != nullptr) {
+            messagesAndCommands = chatBox->getMessagesAndCommands();
+            chatBox->abort();
+            chatBox = nullptr;
+            chatState = false;
+        }
+        chatBox = std::make_shared<ChatBox>(passFunc);
+        pM->attachProcess(chatBox);
+        if (chatBox->initialize_SDL_process(window)) {
+            chatBox->initialized();
+        }
+        chatBox->setMessagesAndCommands(messagesAndCommands);
+        chatBox->addMessage("Hello World");
+    });
+
+
 
     auto* WC = new WorldCreator(passFunc);
     pM->attachProcess(WC);
     chatBox->addMessage("World Creator Attached");
 
+    // Debug print sizes
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+    print("Window Size: ", w, "x", h);
+
+    SDL_GetRendererOutputSize(renderer, &w, &h);
+    print("Renderer Output Size: ", w, "x", h);
+
+    float ddpi, hdpi, vdpi;
+    if (SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi) == 0) {
+        print("DPI: ", ddpi, " HDPI: ", hdpi, " VDPI: ", vdpi);
+    }
+
+    RegisterCommand("resizeWindow", [this](std::string command, sList_t args, std::string message) {
+        if (args.empty()) {
+            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: resizeWindow <width> <height>");
+            return;
+        }
+        if (args.size() < 2) {
+            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: resizeWindow <width> <height>");
+            return;
+        }
+
+        int width = std::stoi(args[0]);
+        int height = std::stoi(args[1]);
+        TriggerEvent("UFO::Chat::AddMessage", "Resizing Window to: " + std::to_string(width) + "x" + std::to_string(height));
+        resizeWindow(width, height, true);
+        TriggerEvent("UFO::Chat::AddMessage", "Window Resized: " + std::to_string(width) + "x" + std::to_string(height));
+    });
+
     return 1;
 }
+
+void view::resizeWindow(int width, int height, bool center) {
+    if (!window) return;
+    if (!renderer) return;
+    if (!running) return;
+
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+
+
+    SCREEN_WIDTH = width;
+    SCREEN_HEIGHT = height;
+
+    SDL_SetWindowSize(window, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    if (center) {
+        SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    }
+
+    SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    print("Window resized to: ", SCREEN_WIDTH, "x", SCREEN_HEIGHT);
+
+    // Optional: log new renderer output size
+    int rw, rh;
+    SDL_GetRendererOutputSize(renderer, &rw, &rh);
+    print("Renderer Output Size after resize: ", rw, "x", rh);
+
+    TriggerEvent("UFO::View::UpdateWindowSize", SCREEN_WIDTH, SCREEN_HEIGHT);
+}
+
 
 void view::update(float deltaMs) {
     if (!running) return;
