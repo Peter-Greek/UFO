@@ -10,6 +10,7 @@
 #include "ProcessManager.h"
 #include "MainMenu.h"
 #include <memory>
+#include <SDL_image.h>
 
 class view : public xProcess {
 private:

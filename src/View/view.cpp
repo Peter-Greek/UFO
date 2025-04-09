@@ -43,7 +43,7 @@
 // Process Functions
 int view::initialize() {
     #ifdef _WIN32
-        // Force DPI Awareness at runtime (best cross-version compatibility)
+        // Force DPI Awareness at runtime
         typedef HRESULT(WINAPI *SetProcessDpiAwarenessFunc)(int);
         typedef BOOL(WINAPI *SetProcessDPIAwareFunc)(void);
 
@@ -103,6 +103,52 @@ int view::initialize() {
     // Scale all rendering to logical screen resolution (1920x1080)
     SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+
+    // Favicon
+
+    // Load the full image
+//    SDL_Surface* fullImage = IMG_Load("../resource/MainMenuV2.png");
+//    if (!fullImage) {
+//        error("Failed to load image for icon: ", IMG_GetError());
+//    }
+//    // Define the subregion you want (x, y, width, height)
+//    SDL_Rect iconRect = { 265, 22, 765 - 265, 427-22 };
+
+    SDL_Surface* fullImage = IMG_Load("../resource/FSS.png");
+    if (!fullImage) {
+        error("Failed to load image for icon: ", IMG_GetError());
+    }
+    // Define the subregion you want (x, y, width, height)
+    SDL_Rect iconRect = { 0, 8, 32, 32 };  // cropped from y = 4, height = 28
+
+
+
+
+    // Create a surface to hold the icon
+    SDL_Surface* iconSurface = SDL_CreateRGBSurface(0, iconRect.w, iconRect.h,
+                                                    fullImage->format->BitsPerPixel,
+                                                    fullImage->format->Rmask,
+                                                    fullImage->format->Gmask,
+                                                    fullImage->format->Bmask,
+                                                    fullImage->format->Amask);
+
+    if (!iconSurface) {
+        SDL_FreeSurface(fullImage);
+        error("Failed to create surface for icon: ", SDL_GetError());
+    }
+
+    // Blit (copy) the region from full image into icon surface
+    SDL_BlitSurface(fullImage, &iconRect, iconSurface, nullptr);
+
+    // Set the window icon
+    SDL_SetWindowIcon(window, iconSurface);
+
+    // Clean up
+    SDL_FreeSurface(iconSurface);
+    SDL_FreeSurface(fullImage);
+
+
 
     // Only needed on Windows/Linux for visual debug background
     #ifndef __APPLE__

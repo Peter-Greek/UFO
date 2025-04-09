@@ -260,3 +260,11 @@ uint32_t jenkinsOneAtATimeHash(const std::string& key) {
 int mapHashToRange(uint32_t hash, int min, int max) {
     return (hash % (max - min + 1)) + min;
 }
+
+float pHeight(float num) {
+    return SCREEN_HEIGHT * (num / 100);
+}
+
+float pWidth(float num) {
+    return SCREEN_WIDTH * (num / 100);
+}
