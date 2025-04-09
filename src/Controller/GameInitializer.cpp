@@ -75,6 +75,16 @@ void GameInitializer::Init() {
         CreateSaveSelector();
     });
 
+    // Main Menu Press Settings
+    AddEventHandler("UFO::OpenSettings", [this]() {
+        print("TODO: Open Settings");
+    });
+
+    // Main Menu Press Leaderboard
+    AddEventHandler("UFO::OpenLeaderboard", [this]() {
+        print("TODO: Open Leaderboard");
+    });
+
     AddEventHandler("UFO::SaveSelector::Select", [this](int slotIndex) {
         print("Selected Slot: ", slotIndex);
         if ((*gameStorage)["saves"].size() <= slotIndex) {
