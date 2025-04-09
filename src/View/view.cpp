@@ -259,6 +259,12 @@ int view::initialize() {
         TriggerEvent("UFO::Chat::AddMessage", "Window Resized: " + std::to_string(width) + "x" + std::to_string(height));
     });
 
+    AddEventHandler("UFO::SaveSelector::Create", [this]() {
+        if (chatBox != nullptr) {
+            chatBox->hideChatBox(); // hide chatbox when creating a new user
+        }
+    });
+
     return 1;
 }
 
