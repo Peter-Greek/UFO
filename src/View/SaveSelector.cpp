@@ -91,15 +91,23 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         if (!running) return;
         if (renderer == nullptr) { return; }
-        // if click within a save box then trigger UFO::SaveSelector::Select
+
         if (eventType == SDL_MOUSEBUTTONDOWN) {
             int x, y;
             SDL_GetMouseState(&x, &y);
+
+            // if click within a save box then trigger UFO::SaveSelector::Select
             for (int i = 0; i < max_display; i++) {
                 int pad = (padding * 2) + ((padding + templateBox.w) * i);
                 if (x >= templateBox.x + pad && x <= templateBox.x + pad + templateBox.w &&
                     y >= templateBox.y && y <= templateBox.y + templateBox.h) {
-                    TriggerEvent("UFO::SaveSelector::Select", i + pagnation);
+                    if (i + pagnation >= saveData.size()) {
+                        // if we are at the end of the list then create a new save
+                        TriggerEvent("UFO::SaveSelector::Create");
+                        return;
+                    }else {
+                        TriggerEvent("UFO::SaveSelector::Select", i + pagnation);
+                    }
                 }
             }
         }

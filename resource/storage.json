@@ -1,24 +1,24 @@
 {
-    "curPlayer": 0,
-    "loads": 1484,
+    "curPlayer": -1,
+    "loads": 1505,
     "player": {
-        "ATCount": 743,
-        "TotalAT": 828,
-        "date": 1744095919,
-        "loads": 51,
-        "name": "Peter Greek",
+        "ATCount": 0,
+        "TotalAT": 0,
+        "date": 1744242406,
+        "loads": 1,
+        "name": "Bob",
         "settings": {
             "curRoomIndex": 0,
             "debugMode": 0,
             "unlimitedFrames": false
         },
-        "time": 542596,
+        "time": 15562,
         "upgrades": {
-            "at_cannon": 1,
-            "invisibility": 3,
+            "at_cannon": 0,
+            "invisibility": 0,
             "oxygen": 0,
-            "shield": 2,
-            "speed": 5
+            "shield": 0,
+            "speed": 0
         }
     },
     "saves": [
@@ -41,11 +41,51 @@
                 "shield": 2,
                 "speed": 5
             }
+        },
+        {
+            "ATCount": 0,
+            "TotalAT": 0,
+            "date": 1744242334,
+            "loads": 1,
+            "name": "Jog",
+            "settings": {
+                "curRoomIndex": 0,
+                "debugMode": 0,
+                "unlimitedFrames": false
+            },
+            "time": 0,
+            "upgrades": {
+                "at_cannon": 0,
+                "invisibility": 0,
+                "oxygen": 0,
+                "shield": 0,
+                "speed": 0
+            }
+        },
+        {
+            "ATCount": 25,
+            "TotalAT": 25,
+            "date": 1744242406,
+            "loads": 1,
+            "name": "Bob",
+            "settings": {
+                "curRoomIndex": 0,
+                "debugMode": 0,
+                "unlimitedFrames": false
+            },
+            "time": 15562,
+            "upgrades": {
+                "at_cannon": 0,
+                "invisibility": 0,
+                "oxygen": 0,
+                "shield": 0,
+                "speed": 0
+            }
         }
     ],
     "settings": {
         "curRoomIndex": 1,
-        "debugMode": 1,
+        "debugMode": 0,
         "unlimitedFrames": false
     }
 }
