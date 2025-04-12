@@ -191,7 +191,7 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
 
     vector2 currentCoords = e->getPosition();
     vector2 screenCoords = cam->worldToScreenCoords(currentCoords); // convert world coords to screen coords
-    vector2 playerDim = e->getDimensions();
+    vector2 dim = e->getDimensions();
 
     if (isDebug()) {
 
@@ -271,10 +271,10 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
 
     // Need to change the position based on the direction the player is moving so the sprite stays within the hit box
     SDL_Rect destRect = {
-            static_cast<int>(screenCoords.x - (angle == 90 ? 16.0f : (angle == -90 ? 48.0f : 32.0f))) ,
-            static_cast<int>(screenCoords.y - (std::abs(angle) == 90 ? 32.0f : 48.0f)) ,
-            64, // 64 px
-            64, // 64 px
+            static_cast<int>(screenCoords.x - dim.x/2),
+            static_cast<int>(screenCoords.y - dim.y),
+            getScaledPixelWidth(64), // 64 px
+            getScaledPixelHeight(64), // 64 px
     };
     if (p->isInvisible()) {
         asepriteMap["FSS"]->setTextureAlpha(80);
@@ -293,10 +293,10 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
         // draw the hit box of the player
         TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 50);
         TriggerEvent("SDL::Render::DrawRect",
-                     screenCoords.x - playerDim.x/2,
-                     screenCoords.y - playerDim.y/2,
-                     playerDim.x,
-                     playerDim.y
+                     screenCoords.x - dim.x/2,
+                     screenCoords.y - dim.y/2,
+                     dim.x,
+                     dim.y
         );
         TriggerEvent("SDL::Render::ResetDrawColor");
 
@@ -1023,6 +1023,24 @@ void GameManager::update(float deltaMs) {
                 e->abort();
                 removalList.push_back(e);
                 continue;
+            }else {
+                // Check if two projectiles hit each other
+                for (auto& e2 : entityList) {
+                    if (e2->isEntityAProjectile() && e2 != e) {
+                        auto p2 = std::dynamic_pointer_cast<Projectile>(e2);
+                        if (!p2) continue;
+
+                        if (p->isEntityInEntity(e2) && (e->getPosition() - e2->getPosition()).length() < 20) {
+                            if (p->getOwner() != p2->getOwner()) {
+                                p->abort();
+                                p2->abort();
+                                removalList.push_back(e);
+                                removalList.push_back(e2);
+                                continue;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -1338,7 +1356,7 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
             // create minions and projectiles
             auto p = std::dynamic_pointer_cast<Player>(e2);
             if (!p) return;
-            if (p->isInvisible()) { // cant see invisible players so no follow
+            if (p->isInvisible()) { // cant see invisible players so no react
                 continue;
             }
             vector2 playerCoords = e2->getPosition();
@@ -1346,7 +1364,7 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
                 if (b->canSpawnMinion()) {
                     Heading h = getHeadingFromVectors(currentCoords, playerCoords);
                     vector2 pVel = angleToVector2(h) * 0.35f;
-                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + 10.0f));
+                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x * 2.0f));
                     sh_ptr_e minion = b->spawnMinion(spawnCoords);
                     pM->attachProcess(minion);
                     attachEntity(minion);

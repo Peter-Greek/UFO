@@ -139,19 +139,19 @@ public:
         // this is staying in h file as its basically a config
         switch (type) {
             case PLAYER:
-                return {64, 48};
+                return {getScaledPixelWidth(64.0f), getScaledPixelHeight(48.0f)};
             case ENEMY:
-                return {32, 32};
+                return {getScaledPixelWidth(32.0f), getScaledPixelHeight(32.0f)};
             case ITEM_PICKUP:
                 switch (getPickupType()) {
                     case HEART:
-                        return {16, 16};
+                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
                     case OXY_TANK:
-                        return {16, 16};
+                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
                     case KEY_CARD:
-                        return {16, 16};
+                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
                     case AT:
-                        return {32, 32};
+                        return {getScaledPixelWidth(32.0f), getScaledPixelHeight(32.0f)};
                     default:
                         return {static_cast<float>(appliedLength), static_cast<float>(appliedWidth)};
                 }

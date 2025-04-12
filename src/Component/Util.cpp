@@ -268,3 +268,19 @@ float pHeight(float num) {
 float pWidth(float num) {
     return SCREEN_WIDTH * (num / 100);
 }
+
+int getScaledPixelWidth(int num) {
+    return static_cast<int>(num * (SCREEN_WIDTH / BASE_SCREEN_WIDTH));
+}
+
+int getScaledPixelHeight(int num) {
+    return static_cast<int>(num * (SCREEN_HEIGHT / BASE_SCREEN_HEIGHT));
+}
+
+float getScaledPixelWidth(float num) {
+    return num * (SCREEN_WIDTH / BASE_SCREEN_WIDTH);
+}
+
+float getScaledPixelHeight(float num) {
+    return num * (SCREEN_HEIGHT / BASE_SCREEN_HEIGHT);
+}

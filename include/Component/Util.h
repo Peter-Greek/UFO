@@ -121,4 +121,9 @@ int mapHashToRange(uint32_t hash, int min, int max);
 float pHeight(float num);
 float pWidth(float num);
 
+int getScaledPixelWidth(int num);
+int getScaledPixelHeight(int num);
+float getScaledPixelWidth(float num);
+float getScaledPixelHeight(float num);
+
 #endif //CSCI437_UTIL_H

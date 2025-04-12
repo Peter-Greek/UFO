@@ -244,8 +244,22 @@ int view::initialize() {
 
     RegisterCommand("resizeWindow", [this](std::string command, sList_t args, std::string message) {
         if (args.empty()) {
-            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: resizeWindow <width> <height>");
-            return;
+            // get current display size and apply it as the args
+            int displayIndex = SDL_GetWindowDisplayIndex(window);
+            if (displayIndex < 0) {
+                print("SDL_GetWindowDisplayIndex failed: %s", SDL_GetError());
+            } else {
+                SDL_DisplayMode mode;
+                if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
+                    int displayWidth = mode.w;
+                    int displayHeight = mode.h;
+                    print("Display size: %dx%d", displayWidth, displayHeight);
+                    args.push_back(std::to_string(displayWidth));
+                    args.push_back(std::to_string(displayHeight));
+                } else {
+                    print("SDL_GetCurrentDisplayMode failed: %s", SDL_GetError());
+                }
+            }
         }
         if (args.size() < 2) {
             TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: resizeWindow <width> <height>");
