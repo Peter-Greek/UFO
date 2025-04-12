@@ -1,18 +1,9 @@
 {
     "curPlayer": -1,
-    "loads": 1505,
+    "loads": 1510,
     "player": {
         "ATCount": 0,
         "TotalAT": 0,
-        "date": 1744242406,
-        "loads": 1,
-        "name": "Bob",
-        "settings": {
-            "curRoomIndex": 0,
-            "debugMode": 0,
-            "unlimitedFrames": false
-        },
-        "time": 15562,
         "upgrades": {
             "at_cannon": 0,
             "invisibility": 0,
@@ -23,17 +14,17 @@
     },
     "saves": [
         {
-            "ATCount": 743,
-            "TotalAT": 828,
+            "ATCount": 750,
+            "TotalAT": 835,
             "date": 1744095919,
-            "loads": 51,
+            "loads": 52,
             "name": "Peter Greek",
             "settings": {
                 "curRoomIndex": 0,
                 "debugMode": 0,
                 "unlimitedFrames": false
             },
-            "time": 542596,
+            "time": 548831,
             "upgrades": {
                 "at_cannon": 1,
                 "invisibility": 3,

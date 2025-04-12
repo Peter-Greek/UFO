@@ -81,6 +81,20 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
             drawRect(templateBox.x + pad, templateBox.y, templateBox.w, templateBox.h);
         }
 
+        if (pagnation > 0) {
+            print("Displaying left arrow");
+            // display left arrow
+            int pad = (padding * 1);
+            drawRect(templateBox.x + pad, templateBox.y + templateBox.h/2, templateBox.w/8, templateBox.h/8);
+        }
+
+        // if all three current slots are taken show a right arrow
+        if (pagnation + max_display < saveData.size()) {
+            print("Displaying right arrow");
+            int pad = (padding * 2) + ((padding + templateBox.w) * 3);
+            drawRect(templateBox.x + pad, templateBox.y + templateBox.h/2, templateBox.w/8, templateBox.h/8);
+        }
+
         for (auto& texture : textures) {
             SDL_SetTextureColorMod(texture.first, 255, 255, 255);
             SDL_RenderCopy(renderer, texture.first, nullptr, &texture.second);
