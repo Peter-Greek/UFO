@@ -49,7 +49,9 @@ private:
     int fontSize = 24;
 
     int max_display = 3;
-    int pagnation = 0;
+    int pagination = 0;
+
+    bool isMouseDown = false;
 
     SDL_Rect templateBox = {
             0,
@@ -60,6 +62,18 @@ private:
     int padding = ((SCREEN_WIDTH / 4) / 6);
 
     std::list<std::pair<SDL_Texture*, SDL_Rect>> textures;
+
+    SDL_Rect leftArrow = {
+            templateBox.x + padding - templateBox.w/8,
+            templateBox.y + templateBox.h/2 - templateBox.h/16,
+            templateBox.w/8, templateBox.h/8
+    };
+
+    SDL_Rect rightArrow = {
+            templateBox.x + (padding * 2) + ((padding + templateBox.w) * 3),
+            templateBox.y + templateBox.h/2 - templateBox.h/16,
+            templateBox.w/8, templateBox.h/8
+    };
 public:
     SaveSelector(passFunc_t p1, json saveData): xProcess(true, p1), saveData(std::move(saveData)) {}
     ~SaveSelector() override = default;
