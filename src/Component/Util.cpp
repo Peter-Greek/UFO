@@ -284,3 +284,10 @@ float getScaledPixelWidth(float num) {
 float getScaledPixelHeight(float num) {
     return num * (SCREEN_HEIGHT / BASE_SCREEN_HEIGHT);
 }
+
+vector2 getScaledCoords(const vector2& coords) {
+    return vector2(
+        getScaledPixelWidth(coords.x),
+        getScaledPixelHeight(coords.y)
+    );
+}

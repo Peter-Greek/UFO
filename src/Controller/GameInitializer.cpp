@@ -163,13 +163,39 @@ void GameInitializer::Init() {
             beatBoss = true;
         }
 
+        int thisEnding = 0;
+        if (beatBoss) thisEnding += 2; // the good ending
+        if (isDead) thisEnding -= 1; // make it a bad ending if we are dead
+
         print("Ending Game Loop, AT Count: ", atcount);
+        int curEnding = 0;
+        if ((*gameStorage)["player"]["Ending"] != nullptr) {
+            curEnding = (*gameStorage)["player"]["Ending"].get<int>();
+        }
+
+        (*gameStorage)["player"]["Ending"] = std::max(curEnding, thisEnding); // which ever ending is better save
         (*gameStorage)["player"]["ATCount"] = (*gameStorage)["player"]["ATCount"].get<int>() + atcount;
         (*gameStorage)["player"]["TotalAT"] = (*gameStorage)["player"]["TotalAT"].get<int>() + atcount;
         (*gameStorage)["player"]["time"] = (*gameStorage)["player"]["time"].get<int>() + int (sch->getGameTime() - gameStartTime);
         (*gameStorage).SavePlayer();
+        print("Saved Player Data!");
 
-        End();
+        GAME_RESULT res = GAME_RESULT::NONE;
+        if (beatBoss) {
+            if (isDead) {
+                res = GAME_RESULT::WIN_NO_ESCAPE;
+            } else {
+                res = GAME_RESULT::WIN_ESCAPE;
+            }
+        }else {
+            if (isDead) {
+                res = GAME_RESULT::LOSE;
+            } else {
+                res = GAME_RESULT::ESCAPE;
+            }
+        }
+
+        End(res);
     });
 
     // Only triggered when main menu is open / settings menu
@@ -305,7 +331,8 @@ void GameInitializer::Start(){
     print("Game Environment Created");
 }
 
-void GameInitializer::End() {
+void GameInitializer::End(GAME_RESULT result) {
+    gameResult = result;
     TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
 
     gameManager->abort();
@@ -316,9 +343,7 @@ void GameInitializer::End() {
 
     //TODO: Add in some game result screen
 
-    uMenu = attachProcess<UpgradeMenu>();
-    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-    uMenu->showUpgradeMenu();
+    CreateUpgradeMenu();
 }
 
 void GameInitializer::Debug() {
@@ -424,9 +449,13 @@ void GameInitializer::ShutdownSaveSelector() {
 void GameInitializer::CreateUpgradeMenu() {
     ShutdownMainMenu();
     ShutdownSaveSelector();
-    uMenu = attachProcess<UpgradeMenu>();
+    auto dTxd = attachMappedProcess<TxdLoader>("DEATH_SCREEN::TEXTURE", "../resource/deathScreen.png");
+    auto eTxd = attachMappedProcess<TxdLoader>("ESCAPE_SCREEN::TEXTURE", "../resource/escapeScreen.png");
+    auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/escapeScreenWin2.png");
+    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd);
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
     uMenu->showUpgradeMenu();
+    gameResult = GAME_RESULT::NONE;
 }
 
 void GameInitializer::ShutdownUpgradeMenu() {

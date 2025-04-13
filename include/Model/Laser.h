@@ -59,7 +59,7 @@ public:
             float duration,
             int damage,
             int speed
-    ) : entity(func, entity::LASER, damage, position, length, width),
+    ) : entity(func, entity::LASER, damage, position, getScaledPixelWidth(length), getScaledPixelHeight(width)),
         dir(h),
         interval(interval),
         duration(duration),

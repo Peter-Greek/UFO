@@ -59,6 +59,25 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
 
         if (renderer == nullptr) {return;}
 
+        if (displayingResult) {
+            sh_ptr<TxdLoader> menuTxd;
+            if (gameResult == GAME_RESULT::LOSE) {
+                menuTxd = deathTxd;
+            }else if (gameResult == GAME_RESULT::WIN_ESCAPE) {
+                menuTxd = winTxd;
+            }else if (gameResult == GAME_RESULT::ESCAPE) {
+                menuTxd = escapeTxd;
+            }else {
+                displayingResult = false;
+            }
+
+            if (menuTxd != nullptr && menuTxd->state() == xProcess::RUNNING) {
+                menuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+            }
+            return;
+        }
+
+
         //Drawing menu background
         SDL_SetRenderDrawColor(renderer, 0, 0, 75, 255);
         SDL_RenderFillRect(renderer, &cbox);
@@ -150,7 +169,11 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
         }else {
             if (eventType == SDL_KEYDOWN) {
                 if (key == SDLK_ESCAPE) {
-                    closeUpgradeMenu();
+                    if (displayingResult) {
+                        displayingResult = false;
+                    }else {
+                        closeUpgradeMenu();
+                    }
                 }
             } else if (eventType == SDL_MOUSEBUTTONDOWN) { //call appropriate action for each button clicked
                 SDL_GetMouseState(&x, &y);

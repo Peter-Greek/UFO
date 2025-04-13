@@ -49,6 +49,16 @@
 #include "UserInput.h"
 
 class GameInitializer : public xProcess {
+public:
+    // replicate changes in upgrade menu
+    enum GAME_RESULT {
+        NONE,
+        LOSE,
+        ESCAPE,
+        WIN_NO_ESCAPE,
+        WIN_ESCAPE,
+        WIN_ESCAPE_TOP_SCORE
+    };
 private:
     sh_ptr<MainMenu> mMenu;
     sh_ptr<UpgradeMenu> uMenu;
@@ -68,6 +78,7 @@ private:
 
     sh_ptr<UserInput> userInputBox; // used for user input
 
+    GAME_RESULT gameResult = NONE;
 public:
     GameInitializer(passFunc_t p1,
         sh_ptr<ProcessManager> pM,
@@ -160,7 +171,7 @@ public:
 
     void Init();
     void Start();
-    void End();
+    void End(GAME_RESULT result);
     void Debug();
 
     void LoadTextures();

@@ -1,18 +1,19 @@
 {
     "curPlayer": -1,
-    "loads": 1610,
+    "loads": 1622,
     "player": {
         "ATCount": 0,
+        "Ending": 2,
         "TotalAT": 0,
         "date": 1744095919,
-        "loads": 84,
+        "loads": 93,
         "name": "Peter Greek",
         "settings": {
             "curRoomIndex": 0,
             "debugMode": 0,
             "unlimitedFrames": false
         },
-        "time": 1063174,
+        "time": 1263899,
         "upgrades": {
             "at_cannon": 0,
             "invisibility": 0,
@@ -23,17 +24,18 @@
     },
     "saves": [
         {
-            "ATCount": 1427,
-            "TotalAT": 1547,
+            "ATCount": 1465,
+            "Ending": 2,
+            "TotalAT": 1585,
             "date": 1744095919,
-            "loads": 84,
+            "loads": 93,
             "name": "Peter Greek",
             "settings": {
                 "curRoomIndex": 0,
                 "debugMode": 0,
                 "unlimitedFrames": false
             },
-            "time": 1063174,
+            "time": 1263899,
             "upgrades": {
                 "at_cannon": 2,
                 "invisibility": 3,
@@ -84,16 +86,17 @@
         },
         {
             "ATCount": 33,
+            "Ending": 0,
             "TotalAT": 33,
             "date": 1744493134,
-            "loads": 2,
+            "loads": 3,
             "name": "Alice",
             "settings": {
                 "curRoomIndex": 0,
                 "debugMode": 0,
                 "unlimitedFrames": false
             },
-            "time": 16093,
+            "time": 27551,
             "upgrades": {
                 "at_cannon": 0,
                 "invisibility": 0,

@@ -125,5 +125,6 @@ int getScaledPixelWidth(int num);
 int getScaledPixelHeight(int num);
 float getScaledPixelWidth(float num);
 float getScaledPixelHeight(float num);
+vector2 getScaledCoords(const vector2& coords);
 
 #endif //CSCI437_UTIL_H
