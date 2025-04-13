@@ -116,21 +116,21 @@ int main(int argc, char* argv[])
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1 ms to allow the view process to initialize fully
     SDL_Window* window = viewProcess->getWindow();
-    float deltaMs = 0;
+
     while (scheduler->isRunning()) {
-        deltaMs = scheduler->elapsedTime();
-        deltaMs *= scheduler->getTimeFactor();
-        deltaMs = deltaMs <= 0 ? 1 : deltaMs;
-        if (! (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) { // dont update any of the logic or view when the window is minimized
+        float deltaMs = scheduler->run();
+
+        if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) {
             processManager->updateProcessList(deltaMs, window);
         }
-        viewProcess->update(deltaMs); // Update the view process last as all the logic gets updated before this
 
-        if (!unlimitedFrames) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        viewProcess->update(deltaMs);
 
         if (viewProcess->isDone()) {
             scheduler->shutdown();
         }
+
+        scheduler->wait();
     }
 
     processManager->abortAllProcess();

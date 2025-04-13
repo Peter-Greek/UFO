@@ -35,9 +35,24 @@
 #define CSCI437_SCHEDULER_H
 
 #include "Util.h"
+#include <SDL.h>
 #include <chrono>
 #include <thread>
 #include <mutex>
+#include <cmath>
+
+
+/*
+ * Based on techniques and explanations from:
+ * "How to Make Your Game Run at 60fps"
+ * Author: Tyler Glaiel
+ * Source: https://medium.com/@tglaiel/how-to-make-your-game-run-at-60fps-24c61210fe75
+ * Used for the run and wait methods.
+ * This scheduler implementation borrows concepts like delta time averaging,
+ * VSync snap correction, and spiral-of-death protection from the article above.
+ */
+
+
 
 using high_res_time_point_t = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
@@ -48,7 +63,43 @@ private:
     float gameTime = 0;
     high_res_time_point_t startTime = std::chrono::high_resolution_clock::now();
     std::mutex m;
+
+    // Timing config
+    double updateRate = static_cast<double>(targetFPS);
+    double fixedDelta = 1.0 / updateRate;
+    bool unlockFramerate = false;
+
+    // SDL timing
+    Uint64 clocksPerSecond = SDL_GetPerformanceFrequency();
+    Uint64 desiredFrameTime = clocksPerSecond / updateRate;
+    Uint64 vsyncMaxError = clocksPerSecond * 0.0002;
+    Uint64 snapFrequencies[8] = {};
+
+    // Averaging
+    const int timeHistoryCount = 4;
+    Uint64 timeAverager[4];
+    Uint64 averagerResidual = 0;
+
+    // Frame timing
+    Uint64 prevFrameTime = SDL_GetPerformanceCounter();
+    Uint64 frameAccumulator = 0;
+    bool resync = true;
+    Uint64 frameStartTime = 0;
+
 public:
+    Scheduler() {
+        SDL_DisplayMode mode;
+        int displayHz = (SDL_GetCurrentDisplayMode(0, &mode) == 0 && mode.refresh_rate > 0) ? mode.refresh_rate : 60;
+
+        for (int i = 0; i < 8; ++i) {
+            snapFrequencies[i] = (clocksPerSecond / displayHz) * (i + 1);
+        }
+
+        for (int i = 0; i < timeHistoryCount; ++i) {
+            timeAverager[i] = desiredFrameTime;
+        }
+    }
+
     float elapsedTime() {
         auto curTime = std::chrono::high_resolution_clock::now();
         float diff = std::chrono::duration<float, std::chrono::milliseconds::period>(curTime - startTime).count();
@@ -65,20 +116,79 @@ public:
         return startTime;
     }
 
-    void shutdown() {
-        running = false;
+    float run() {
+        updateRate = static_cast<double>(targetFPS);
+        fixedDelta = 1.0 / updateRate;
+        desiredFrameTime = clocksPerSecond / updateRate;
+
+        unlockFramerate = unlimitedFrames;
+        elapsedTime();
+        frameStartTime = SDL_GetPerformanceCounter();
+        Uint64 deltaClocks = frameStartTime - prevFrameTime;
+        prevFrameTime = frameStartTime;
+
+        if (deltaClocks > desiredFrameTime * 8) deltaClocks = desiredFrameTime;
+        if (deltaClocks < 0) deltaClocks = 0;
+
+        for (Uint64 snap : snapFrequencies) {
+            if ((deltaClocks > snap ? deltaClocks - snap : snap - deltaClocks) < vsyncMaxError) {
+                deltaClocks = snap;
+                break;
+            }
+        }
+
+        for (int i = 0; i < timeHistoryCount - 1; ++i) {
+            timeAverager[i] = timeAverager[i + 1];
+        }
+        timeAverager[timeHistoryCount - 1] = deltaClocks;
+
+        Uint64 sum = 0;
+        for (int i = 0; i < timeHistoryCount; ++i) sum += timeAverager[i];
+        deltaClocks = sum / timeHistoryCount;
+        averagerResidual += sum % timeHistoryCount;
+        deltaClocks += averagerResidual / timeHistoryCount;
+        averagerResidual %= timeHistoryCount;
+
+        frameAccumulator += deltaClocks;
+        if (frameAccumulator > desiredFrameTime * 8) resync = true;
+
+        if (resync) {
+            frameAccumulator = 0;
+            deltaClocks = desiredFrameTime;
+            resync = false;
+        }
+
+        float deltaMs = static_cast<float>(deltaClocks) * 1000.0f / clocksPerSecond;
+        deltaMs *= timeFactor;
+        return std::max(0.001f, deltaMs);
     }
 
-    [[nodiscard]] bool isRunning() const {
-        return running;
+    void wait() const {
+        if (unlockFramerate) return;
+
+        Uint64 frameEndTime = SDL_GetPerformanceCounter();
+        Uint64 elapsed = frameEndTime - frameStartTime;
+        float frameMs = static_cast<float>(elapsed) * 1000.0f / clocksPerSecond;
+
+        float waitTime = (1000.0f / updateRate) - frameMs;
+        if (waitTime > 1.0f) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(waitTime - 1.0f)));
+        }
+
+        while (SDL_GetPerformanceCounter() - frameStartTime < desiredFrameTime) {}
     }
 
-    void setTimeFactor(float factor) {
-        timeFactor = factor;
-    }
+    void shutdown() { running = false; }
+    bool isRunning() const { return running; }
 
-    [[nodiscard]] float getTimeFactor() const {
-        return timeFactor;
+    void setTimeFactor(float factor) { timeFactor = factor; }
+    float getTimeFactor() const { return timeFactor; }
+
+    void setUnlockFramerate(bool v) { unlockFramerate = v; }
+    void setTargetFPS(int fps) {
+        updateRate = static_cast<double>(fps);
+        fixedDelta = 1.0 / updateRate;
+        desiredFrameTime = clocksPerSecond / updateRate;
     }
 
     void setTimeout(int delay, std::function<void()> function) {

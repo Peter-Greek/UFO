@@ -38,6 +38,7 @@
 extern bool unlimitedFrames;
 extern int debugMode;
 extern int curRoomIndex;
+extern int targetFPS;
 
 extern int BASE_SCREEN_WIDTH;
 extern int BASE_SCREEN_HEIGHT;

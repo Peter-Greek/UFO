@@ -48,6 +48,10 @@ int GameStorage::apply() {
         curRoomIndex = gameStorage["settings"]["curRoomIndex"].get<int>();
     }
 
+    if (gameStorage["settings"]["targetFPS"] != nullptr) {
+        targetFPS = gameStorage["settings"]["targetFPS"].get<int>();
+    }
+
     updateSettings(); // Update non stored settings based on the new changes
     return 0;
 }

@@ -339,6 +339,11 @@ void view::update(float deltaMs) {
                 if ( e.key.keysym.sym == SDLK_b ) {
                     TriggerEvent("UFO::ChangeConfigValue", "debugMode");
                 }
+
+                if ( e.key.keysym.sym == SDLK_f ) {
+                    TriggerEvent("UFO::ChangeConfigValue", "unlimitedFrames");
+                }
+
             }else {
                 const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
                 // if control q is pressed then quit
