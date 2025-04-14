@@ -1,0 +1,143 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2025 Peter Greek
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * Proper permission is grated by the copyright holder.
+ *
+ * Credit is attributed to the copyright holder in some form in the product.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
+
+//
+// Created by xerxe on 4/14/2025.
+//
+
+#ifndef CSCI437_SETTINGSMENU_H
+#define CSCI437_SETTINGSMENU_H
+
+#include "xProcess.h"
+#include "GameStorage.h"
+#include <SDL_ttf.h>
+#include <list>
+#include <string>
+#include <variant>
+
+class SettingsMenu : public xProcess {
+
+private:
+    using setting_resolution_t = std::pair<int, int>;
+    using resolution_map_t = std::map<std::string, setting_resolution_t>;
+
+
+    using setting_t  = std::pair<std::string, bool>;
+    using setting_int_t = std::pair<std::string, int>;
+    using setting_f_t = std::pair<std::string, int>;
+    using settings_t = std::list<setting_t>;
+
+    using dropdown_t = std::pair<std::string, settings_t>;
+    using toggle_t  = std::pair<std::string, setting_t>;
+    struct slider_t {
+        std::string name;
+        setting_f_t setting;
+        float min;
+        float max;
+        bool includeMin;
+        bool includeMax;
+    };
+
+    using setting_variant_t = std::variant<dropdown_t, toggle_t, slider_t>;
+
+
+
+
+    // define a map of resolution settings
+
+
+    /*
+     *
+     *  int SCREEN_WIDTH = 1920; // 1024 | 1920 | 2400 | 3840
+     *  int SCREEN_HEIGHT = 1080; // 768 | 1080 | 1600 | 2160
+     */
+    resolution_map_t resolution_map = {
+            {"3840x2160", {3840, 2160}},
+            {"2400x1600", {2400, 1600}},
+            {"1920x1080", {1920, 1080}},
+            {"1024x768", {1024, 768}}
+    };
+
+
+
+    std::list<setting_variant_t> settings = {
+            setting_variant_t{std::in_place_type<dropdown_t>, "Resolution", settings_t{
+                    {"3840x2160", false},
+                    {"2400x1600", false},
+                    {"1920x1080", false},
+                    {"1024x768", true}
+            }},
+            //toggle_t for fullscreen
+            setting_variant_t{std::in_place_type<toggle_t>, "Fullscreen", setting_t{"fs", true}},
+//            setting_variant_t{std::in_place_type<dropdown_t>, "VSync", settings_t{
+//                    {"On", false},
+//                    {"Off", true}
+//            }},
+            setting_variant_t{std::in_place_type<dropdown_t>, "Audio", settings_t{
+                    {"On", true},
+                    {"Off", false}
+            }},
+
+            setting_variant_t{std::in_place_type<slider_t>, slider_t{"Volume", {"Volume", 50.0f}, 0.0f, 100.0f, true, true}},
+
+
+            setting_variant_t{std::in_place_type<dropdown_t>, "Language", settings_t{
+                    {"English", true},
+                    {"Spanish", false}
+            }},
+    };
+
+
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    TTF_Font* font;
+
+    json saveData;
+    bool running = false;
+    int fontSize = 24;
+
+    bool isMouseDown = false;
+
+    std::list<std::pair<SDL_Texture*, SDL_Rect>> textures;
+
+    sh_ptr<GameStorage> gS;
+public:
+    SettingsMenu(passFunc_t p1, sh_ptr<GameStorage> gS_p): xProcess(true, p1), gS(gS_p) {}
+    ~SettingsMenu() override = default;
+
+    int initialize_SDL_process(SDL_Window* passed_window) override;
+    void update(float deltaMs) override;
+    bool isDone() override { return !running; };
+    void postSuccess() override {};
+    void postFail() override {};
+    void postAbort() override {};
+};
+
+
+#endif //CSCI437_SETTINGSMENU_H
