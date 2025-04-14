@@ -260,3 +260,34 @@ uint32_t jenkinsOneAtATimeHash(const std::string& key) {
 int mapHashToRange(uint32_t hash, int min, int max) {
     return (hash % (max - min + 1)) + min;
 }
+
+float pHeight(float num) {
+    return SCREEN_HEIGHT * (num / 100);
+}
+
+float pWidth(float num) {
+    return SCREEN_WIDTH * (num / 100);
+}
+
+int getScaledPixelWidth(int num) {
+    return static_cast<int>(num * (SCREEN_WIDTH / BASE_SCREEN_WIDTH));
+}
+
+int getScaledPixelHeight(int num) {
+    return static_cast<int>(num * (SCREEN_HEIGHT / BASE_SCREEN_HEIGHT));
+}
+
+float getScaledPixelWidth(float num) {
+    return num * (SCREEN_WIDTH / BASE_SCREEN_WIDTH);
+}
+
+float getScaledPixelHeight(float num) {
+    return num * (SCREEN_HEIGHT / BASE_SCREEN_HEIGHT);
+}
+
+vector2 getScaledCoords(const vector2& coords) {
+    return vector2(
+        getScaledPixelWidth(coords.x),
+        getScaledPixelHeight(coords.y)
+    );
+}

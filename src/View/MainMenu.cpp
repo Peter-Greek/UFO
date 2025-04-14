@@ -49,6 +49,22 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
             static_cast<int>(84 * (SCREEN_HEIGHT / 768.0f))
     };
 
+    // Set the button coords
+    SettingsBox = {
+        static_cast<int>(406 * (SCREEN_WIDTH / 1024.0f)),
+        static_cast<int>(582 * (SCREEN_HEIGHT / 768.0f)),
+        static_cast<int>(216 * (SCREEN_WIDTH / 1024.0f)),
+        static_cast<int>(70 * (SCREEN_HEIGHT / 768.0f))
+    };
+
+    // Set the button coords
+    LeaderboardBox = {
+        static_cast<int>(360 * (SCREEN_WIDTH / 1024.0f)),
+        static_cast<int>(674 * (SCREEN_HEIGHT / 768.0f)),
+        static_cast<int>(308 * (SCREEN_WIDTH / 1024.0f)),
+        static_cast<int>(68 * (SCREEN_HEIGHT / 768.0f))
+    };
+
 
     running = true;
     isHidden = false;
@@ -77,6 +93,12 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
             SDL_GetMouseState(&x, &y);
             if(x > StartBox.x && y > StartBox.y && x < StartBox.x + StartBox.w && y < StartBox.y + StartBox.h) {
                 TriggerEvent("UFO::StartGame");
+            }
+            else if(x > SettingsBox.x && y > SettingsBox.y && x < SettingsBox.x + SettingsBox.w && y < SettingsBox.y + SettingsBox.h) {
+                TriggerEvent("UFO::OpenSettings");
+            }
+            else if(x > LeaderboardBox.x && y > LeaderboardBox.y && x < LeaderboardBox.x + LeaderboardBox.w && y < LeaderboardBox.y + LeaderboardBox.h) {
+                TriggerEvent("UFO::OpenLeaderboard");
             }
         }
     });

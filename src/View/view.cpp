@@ -43,7 +43,7 @@
 // Process Functions
 int view::initialize() {
     #ifdef _WIN32
-        // Force DPI Awareness at runtime (best cross-version compatibility)
+        // Force DPI Awareness at runtime
         typedef HRESULT(WINAPI *SetProcessDpiAwarenessFunc)(int);
         typedef BOOL(WINAPI *SetProcessDPIAwareFunc)(void);
 
@@ -103,6 +103,52 @@ int view::initialize() {
     // Scale all rendering to logical screen resolution (1920x1080)
     SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+
+    // Favicon
+
+    // Load the full image
+//    SDL_Surface* fullImage = IMG_Load("../resource/MainMenuV2.png");
+//    if (!fullImage) {
+//        error("Failed to load image for icon: ", IMG_GetError());
+//    }
+//    // Define the subregion you want (x, y, width, height)
+//    SDL_Rect iconRect = { 265, 22, 765 - 265, 427-22 };
+
+    SDL_Surface* fullImage = IMG_Load("../resource/FSS.png");
+    if (!fullImage) {
+        error("Failed to load image for icon: ", IMG_GetError());
+    }
+    // Define the subregion you want (x, y, width, height)
+    SDL_Rect iconRect = { 0, 8, 32, 32 };  // cropped from y = 4, height = 28
+
+
+
+
+    // Create a surface to hold the icon
+    SDL_Surface* iconSurface = SDL_CreateRGBSurface(0, iconRect.w, iconRect.h,
+                                                    fullImage->format->BitsPerPixel,
+                                                    fullImage->format->Rmask,
+                                                    fullImage->format->Gmask,
+                                                    fullImage->format->Bmask,
+                                                    fullImage->format->Amask);
+
+    if (!iconSurface) {
+        SDL_FreeSurface(fullImage);
+        error("Failed to create surface for icon: ", SDL_GetError());
+    }
+
+    // Blit (copy) the region from full image into icon surface
+    SDL_BlitSurface(fullImage, &iconRect, iconSurface, nullptr);
+
+    // Set the window icon
+    SDL_SetWindowIcon(window, iconSurface);
+
+    // Clean up
+    SDL_FreeSurface(iconSurface);
+    SDL_FreeSurface(fullImage);
+
+
 
     // Only needed on Windows/Linux for visual debug background
     #ifndef __APPLE__
@@ -198,8 +244,22 @@ int view::initialize() {
 
     RegisterCommand("resizeWindow", [this](std::string command, sList_t args, std::string message) {
         if (args.empty()) {
-            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: resizeWindow <width> <height>");
-            return;
+            // get current display size and apply it as the args
+            int displayIndex = SDL_GetWindowDisplayIndex(window);
+            if (displayIndex < 0) {
+                print("SDL_GetWindowDisplayIndex failed: %s", SDL_GetError());
+            } else {
+                SDL_DisplayMode mode;
+                if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
+                    int displayWidth = mode.w;
+                    int displayHeight = mode.h;
+                    print("Display size: %dx%d", displayWidth, displayHeight);
+                    args.push_back(std::to_string(displayWidth));
+                    args.push_back(std::to_string(displayHeight));
+                } else {
+                    print("SDL_GetCurrentDisplayMode failed: %s", SDL_GetError());
+                }
+            }
         }
         if (args.size() < 2) {
             TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: resizeWindow <width> <height>");
@@ -211,6 +271,12 @@ int view::initialize() {
         TriggerEvent("UFO::Chat::AddMessage", "Resizing Window to: " + std::to_string(width) + "x" + std::to_string(height));
         resizeWindow(width, height, true);
         TriggerEvent("UFO::Chat::AddMessage", "Window Resized: " + std::to_string(width) + "x" + std::to_string(height));
+    });
+
+    AddEventHandler("UFO::SaveSelector::Create", [this]() {
+        if (chatBox != nullptr) {
+            chatBox->hideChatBox(); // hide chatbox when creating a new user
+        }
     });
 
     return 1;
@@ -273,6 +339,11 @@ void view::update(float deltaMs) {
                 if ( e.key.keysym.sym == SDLK_b ) {
                     TriggerEvent("UFO::ChangeConfigValue", "debugMode");
                 }
+
+                if ( e.key.keysym.sym == SDLK_f ) {
+                    TriggerEvent("UFO::ChangeConfigValue", "unlimitedFrames");
+                }
+
             }else {
                 const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
                 // if control q is pressed then quit

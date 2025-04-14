@@ -81,27 +81,73 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
             drawRect(templateBox.x + pad, templateBox.y, templateBox.w, templateBox.h);
         }
 
+        if (pagination > 0) {
+            drawRect(leftArrow.x, leftArrow.y, leftArrow.w, leftArrow.h);
+        }
+
+        if (pagination + max_display <= saveData.size()) {
+            drawRect(rightArrow.x, rightArrow.y, rightArrow.w, rightArrow.h);
+        }
+
         for (auto& texture : textures) {
             SDL_SetTextureColorMod(texture.first, 255, 255, 255);
             SDL_RenderCopy(renderer, texture.first, nullptr, &texture.second);
         }
-
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         if (!running) return;
         if (renderer == nullptr) { return; }
-        // if click within a save box then trigger UFO::SaveSelector::Select
+
         if (eventType == SDL_MOUSEBUTTONDOWN) {
+            isMouseDown = true;
+            return;
+        }
+
+        if (eventType == SDL_MOUSEBUTTONUP && isMouseDown) {
+            isMouseDown = false;
             int x, y;
             SDL_GetMouseState(&x, &y);
+
+            // if click within a save box then trigger UFO::SaveSelector::Select
             for (int i = 0; i < max_display; i++) {
                 int pad = (padding * 2) + ((padding + templateBox.w) * i);
                 if (x >= templateBox.x + pad && x <= templateBox.x + pad + templateBox.w &&
                     y >= templateBox.y && y <= templateBox.y + templateBox.h) {
-                    TriggerEvent("UFO::SaveSelector::Select", i + pagnation);
+                    if (i + pagination >= saveData.size()) {
+                        // if we are at the end of the list then create a new save
+                        TriggerEvent("UFO::SaveSelector::Create");
+                        return;
+                    }else {
+                        TriggerEvent("UFO::SaveSelector::Select", i + pagination);
+                        return;
+                    }
                 }
             }
+
+            print("Checking for arrows");
+            if (x >= leftArrow.x && x <= leftArrow.x + leftArrow.w &&
+                y >= leftArrow.y && y <= leftArrow.y + leftArrow.h) {
+                print("Clicking left arrow");
+                // if we are at the start of the list then go back
+                if (pagination > 0) {
+                    print("Going back");
+                    pagination -= max_display;
+                    reloadTextures();
+                }
+                return;
+            }else if (x >= rightArrow.x && x <= rightArrow.x + rightArrow.w &&
+                      y >= rightArrow.y && y <= rightArrow.y + rightArrow.h) {
+                print("Clicking right arrow");
+                // if we are at the end of the list then go forward
+                if (pagination + max_display <= saveData.size()) {
+                    print("Going forward");
+                    pagination += max_display;
+                    reloadTextures();
+                }
+                return;
+            }
+
         }
     });
 
@@ -124,9 +170,9 @@ void SaveSelector::reloadTextures() {
 
     auto tot_saves = saveData.size();
     for (int i = 0; i < max_display; i++) {
-        if (i + pagnation >= tot_saves) break;
+        if (i + pagination >= tot_saves) break;
 
-        auto save = saveData[i + pagnation];
+        auto save = saveData[i + pagination];
         auto name = save["name"].get<std::string>();
         auto atCount = save["ATCount"].get<int>();
         auto time = save["time"].get<float>();
@@ -187,28 +233,28 @@ void SaveSelector::reloadTextures() {
     }
 
     // get remaining empty, so if we have 5 that means 1 empty of % 3
-    int rem = (pagnation + tot_saves) % max_display;
-    if (rem > 0) {
-        for (int i = rem; i < max_display; i++) {
-            SDL_Surface* textSurface = TTF_RenderText_Solid(font, "New Save", {255, 255, 255});
-            SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-            SDL_FreeSurface(textSurface);
+    for (int i = 0; i < max_display; i++) {
+        print("Checking for empty slots", i+pagination, "of", tot_saves);
+        if (i + pagination < tot_saves) { continue; }
 
-            int textWidth, textHeight;
-            SDL_QueryTexture(textTexture, nullptr, nullptr, &textWidth, &textHeight);
+        SDL_Surface* textSurface = TTF_RenderText_Solid(font, "New Save", {255, 255, 255});
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+        SDL_FreeSurface(textSurface);
 
-            int pad = (padding * 2) + ((padding + templateBox.w) * i);
+        int textWidth, textHeight;
+        SDL_QueryTexture(textTexture, nullptr, nullptr, &textWidth, &textHeight);
 
-            SDL_Rect rec = {
-                    static_cast<int>(templateBox.x + pad + pW(50) - textWidth / 2),
-                    static_cast<int>(templateBox.y + pH(10) +  pH(2) + (textHeight)),
-                    textWidth,
-                    textHeight
-            };
+        int pad = (padding * 2) + ((padding + templateBox.w) * i);
 
-            std::pair <SDL_Texture*, SDL_Rect> textureList = {textTexture, rec};
-            textures.push_back(textureList);
-        }
+        SDL_Rect rec = {
+                static_cast<int>(templateBox.x + pad + pW(50) - textWidth / 2),
+                static_cast<int>(templateBox.y + pH(10) +  pH(2) + (textHeight)),
+                textWidth,
+                textHeight
+        };
+
+        std::pair <SDL_Texture*, SDL_Rect> textureList = {textTexture, rec};
+        textures.push_back(textureList);
     }
 }
 

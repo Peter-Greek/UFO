@@ -10,6 +10,7 @@
 #include "ProcessManager.h"
 #include "MainMenu.h"
 #include <memory>
+#include <SDL_image.h>
 
 class view : public xProcess {
 private:
@@ -23,7 +24,7 @@ private:
     void drawRect(int x, int y, int w, int h);
 
     std::shared_ptr<ProcessManager> pM;
-    passFunc_t& passFunc;
+    passFunc_t passFunc;
 
     std::shared_ptr<ChatBox> chatBox = nullptr;
 

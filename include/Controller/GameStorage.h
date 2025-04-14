@@ -54,6 +54,8 @@ public:
     void SavePlayer();
 
     void ResetPlayer();
+
+    void CreatePlayer(const std::string &name);
 };
 
 

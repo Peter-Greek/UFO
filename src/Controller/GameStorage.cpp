@@ -48,6 +48,10 @@ int GameStorage::apply() {
         curRoomIndex = gameStorage["settings"]["curRoomIndex"].get<int>();
     }
 
+    if (gameStorage["settings"]["targetFPS"] != nullptr) {
+        targetFPS = gameStorage["settings"]["targetFPS"].get<int>();
+    }
+
     updateSettings(); // Update non stored settings based on the new changes
     return 0;
 }
@@ -113,6 +117,31 @@ void GameStorage::ResetPlayer() {
     gameStorage["player"]["upgrades"]["speed"] = 0;
     gameStorage["player"]["upgrades"]["invisibility"] = 0;
     gameStorage["player"]["upgrades"]["at_cannon"] = 0;
+
+    gameStorage.save();
+}
+
+void GameStorage::CreatePlayer(const std::string& name) {
+    print("Creating Player: ", name);
+    gameStorage["saves"].push_back(json::object());
+    gameStorage["saves"].back()["name"] = name;
+    gameStorage["saves"].back()["ATCount"] = 0;
+    gameStorage["saves"].back()["TotalAT"] = 0;
+    gameStorage["saves"].back()["loads"] = 0;
+    gameStorage["saves"].back()["time"] = 0; // play time
+    gameStorage["saves"].back()["date"] = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+    gameStorage["saves"].back()["upgrades"] = json::object();
+    gameStorage["saves"].back()["upgrades"]["oxygen"] = 0;
+    gameStorage["saves"].back()["upgrades"]["shield"] = 0;
+    gameStorage["saves"].back()["upgrades"]["speed"] = 0;
+    gameStorage["saves"].back()["upgrades"]["invisibility"] = 0;
+    gameStorage["saves"].back()["upgrades"]["at_cannon"] = 0;
+
+    gameStorage["saves"].back()["settings"] = json::object();
+    gameStorage["saves"].back()["settings"]["unlimitedFrames"] = false;
+    gameStorage["saves"].back()["settings"]["debugMode"] = 0;
+    gameStorage["saves"].back()["settings"]["curRoomIndex"] = 0;
 
     gameStorage.save();
 }

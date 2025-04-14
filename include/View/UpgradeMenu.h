@@ -3,8 +3,19 @@
 
 #include "xProcess.h"
 #include <SDL_ttf.h>
+#include "TxdLoader.h"
+
 class UpgradeMenu : public xProcess {
 private:
+    enum GAME_RESULT {
+        NONE,
+        LOSE,
+        ESCAPE,
+        WIN_NO_ESCAPE,
+        WIN_ESCAPE,
+        WIN_ESCAPE_TOP_SCORE
+    };
+
     SDL_Event e;
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -77,8 +88,28 @@ private:
     UpgradeTracker OxygenTracker = {3*(SCREEN_HEIGHT/10)};
 
     int fontSize = 50;
+    sh_ptr<TxdLoader> deathTxd;
+    sh_ptr<TxdLoader> escapeTxd;
+    sh_ptr<TxdLoader> winTxd;
+
+    int gameResult = GAME_RESULT::NONE;
+    bool displayingResult = false;
+
+    SDL_Rect srcRect = {0, 0, 1024, 1024}; // load the entire texture, 1 pixel in since there is white line
+    SDL_Rect destRect = {
+            static_cast<int>(0),
+            static_cast<int>(0),
+            static_cast<int>(SCREEN_WIDTH),
+            static_cast<int>(SCREEN_HEIGHT) // down scale the texture
+    };
+
 public:
-    explicit UpgradeMenu(passFunc_t& func) : xProcess(true, func){
+    explicit UpgradeMenu(passFunc_t& func, int res,  sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3)
+        : xProcess(true, func), gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3)
+    {
+        if (res != GAME_RESULT::NONE) {
+            displayingResult = true;
+        }
         setFontColor(255, 255, 255, 255);
     }
     ~UpgradeMenu() override = default;

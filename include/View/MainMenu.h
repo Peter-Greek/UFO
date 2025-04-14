@@ -41,6 +41,8 @@ private:
     };
     //
     SDL_Rect StartBox = {414, 475, 195, 84};
+    SDL_Rect SettingsBox = {406, 582, 216, 70};
+    SDL_Rect LeaderboardBox = {360, 674, 308, 68};
     SDL_Rect StartBoxText = {StartBox.x+30, StartBox.y+30, StartBox.w-60, StartBox.h-60};
     UpgradeText StartText = {nullptr, StartBoxText, "START"};
     int fontSize = 50;

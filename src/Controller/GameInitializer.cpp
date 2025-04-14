@@ -75,6 +75,16 @@ void GameInitializer::Init() {
         CreateSaveSelector();
     });
 
+    // Main Menu Press Settings
+    AddEventHandler("UFO::OpenSettings", [this]() {
+        print("TODO: Open Settings");
+    });
+
+    // Main Menu Press Leaderboard
+    AddEventHandler("UFO::OpenLeaderboard", [this]() {
+        print("TODO: Open Leaderboard");
+    });
+
     AddEventHandler("UFO::SaveSelector::Select", [this](int slotIndex) {
         print("Selected Slot: ", slotIndex);
         if ((*gameStorage)["saves"].size() <= slotIndex) {
@@ -153,15 +163,42 @@ void GameInitializer::Init() {
             beatBoss = true;
         }
 
+        int thisEnding = 0;
+        if (beatBoss) thisEnding += 2; // the good ending
+        if (isDead) thisEnding -= 1; // make it a bad ending if we are dead
+
         print("Ending Game Loop, AT Count: ", atcount);
+        int curEnding = 0;
+        if ((*gameStorage)["player"]["Ending"] != nullptr) {
+            curEnding = (*gameStorage)["player"]["Ending"].get<int>();
+        }
+
+        (*gameStorage)["player"]["Ending"] = std::max(curEnding, thisEnding); // which ever ending is better save
         (*gameStorage)["player"]["ATCount"] = (*gameStorage)["player"]["ATCount"].get<int>() + atcount;
         (*gameStorage)["player"]["TotalAT"] = (*gameStorage)["player"]["TotalAT"].get<int>() + atcount;
         (*gameStorage)["player"]["time"] = (*gameStorage)["player"]["time"].get<int>() + int (sch->getGameTime() - gameStartTime);
         (*gameStorage).SavePlayer();
+        print("Saved Player Data!");
 
-        End();
+        GAME_RESULT res = GAME_RESULT::NONE;
+        if (beatBoss) {
+            if (isDead) {
+                res = GAME_RESULT::WIN_NO_ESCAPE;
+            } else {
+                res = GAME_RESULT::WIN_ESCAPE;
+            }
+        }else {
+            if (isDead) {
+                res = GAME_RESULT::LOSE;
+            } else {
+                res = GAME_RESULT::ESCAPE;
+            }
+        }
+
+        End(res);
     });
 
+    // Only triggered when main menu is open / settings menu
     AddEventHandler("UFO::View::UpdateWindowSize", [this](int w, int h) {
         print("Game Initializer: Window Size Resetting main menu: ", mMenu, sMenu, uMenu, SCREEN_WIDTH, "x", SCREEN_HEIGHT);
         sch->setTimeout(100, [=]() {
@@ -170,6 +207,53 @@ void GameInitializer::Init() {
                 CreateMainMenu();
             }
         });
+    });
+
+    // Triggered when a new user is trying to be made
+    AddEventHandler("UFO::SaveSelector::Create", [this]() {
+        print("Creating New User Attempt");
+        initializeUserInputBox();
+    });
+
+    // Triggered whenever a message is sent in any userinput including chatbox
+    AddEventHandler("UFO::UserInput::NewInput", [this](UUID_t from, std::string message) {
+        if (!userInputBox) {
+            return;
+        }
+
+        if (userInputBox->getId() != from) {
+            return;
+        }
+
+        if (message.empty()) {
+            userInputBox->addMessage("Please enter a valid name!");
+            return;
+        }
+
+        if (message.length() > 20) {
+            userInputBox->addMessage("Name too long! Max length is 20 characters.");
+            return;
+        }
+
+        if (message.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_") != std::string::npos) {
+            userInputBox->addMessage("Invalid characters! Only letters, numbers, and underscores are allowed.");
+            return;
+        }
+
+        // Check if the name already exists
+        for (const auto& save : (*gameStorage)["saves"]) {
+            if (save["name"].get<std::string>() == message) {
+                userInputBox->addMessage("Name already exists! Please choose a different name.");
+                return;
+            }
+        }
+
+        // Create new save
+        (*gameStorage).CreatePlayer(message);
+        ShutdownUserInputBox();
+        ShutdownSaveSelector();
+        (*gameStorage).SelectPlayer((int) (*gameStorage)["saves"].size() - 1);
+        CreateUpgradeMenu();
     });
 
     // Display the MainMenu and Debug text
@@ -247,7 +331,8 @@ void GameInitializer::Start(){
     print("Game Environment Created");
 }
 
-void GameInitializer::End() {
+void GameInitializer::End(GAME_RESULT result) {
+    gameResult = result;
     TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
 
     gameManager->abort();
@@ -258,9 +343,7 @@ void GameInitializer::End() {
 
     //TODO: Add in some game result screen
 
-    uMenu = attachProcess<UpgradeMenu>();
-    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-    uMenu->showUpgradeMenu();
+    CreateUpgradeMenu();
 }
 
 void GameInitializer::Debug() {
@@ -366,9 +449,13 @@ void GameInitializer::ShutdownSaveSelector() {
 void GameInitializer::CreateUpgradeMenu() {
     ShutdownMainMenu();
     ShutdownSaveSelector();
-    uMenu = attachProcess<UpgradeMenu>();
+    auto dTxd = attachMappedProcess<TxdLoader>("DEATH_SCREEN::TEXTURE", "../resource/deathScreen.png");
+    auto eTxd = attachMappedProcess<TxdLoader>("ESCAPE_SCREEN::TEXTURE", "../resource/escapeScreen.png");
+    auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/escapeScreenWin2.png");
+    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd);
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
     uMenu->showUpgradeMenu();
+    gameResult = GAME_RESULT::NONE;
 }
 
 void GameInitializer::ShutdownUpgradeMenu() {
@@ -475,4 +562,19 @@ void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
                 break;
         }
     }
+}
+
+void GameInitializer::ShutdownUserInputBox() {
+    if (userInputBox != nullptr) {
+        userInputBox->abort();
+        userInputBox = nullptr;
+    }
+}
+
+void GameInitializer::initializeUserInputBox() {
+    ShutdownUserInputBox();
+
+    userInputBox = attachProcess<UserInput>();
+    userInputBox->addMessage("Enter a name for your new save slot:");
+    userInputBox->showChatBox();
 }

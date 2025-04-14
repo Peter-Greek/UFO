@@ -118,4 +118,13 @@ sList_t split(const std::string& str, const std::string& delimiter);
 uint32_t jenkinsOneAtATimeHash(const std::string& key);
 int mapHashToRange(uint32_t hash, int min, int max);
 
+float pHeight(float num);
+float pWidth(float num);
+
+int getScaledPixelWidth(int num);
+int getScaledPixelHeight(int num);
+float getScaledPixelWidth(float num);
+float getScaledPixelHeight(float num);
+vector2 getScaledCoords(const vector2& coords);
+
 #endif //CSCI437_UTIL_H

@@ -46,31 +46,44 @@
 #include "MainMenu.h"
 #include "SaveSelector.h"
 #include "UpgradeMenu.h"
+#include "UserInput.h"
 
 class GameInitializer : public xProcess {
+public:
+    // replicate changes in upgrade menu
+    enum GAME_RESULT {
+        NONE,
+        LOSE,
+        ESCAPE,
+        WIN_NO_ESCAPE,
+        WIN_ESCAPE,
+        WIN_ESCAPE_TOP_SCORE
+    };
 private:
-    std::shared_ptr<MainMenu> mMenu;
-    std::shared_ptr<UpgradeMenu> uMenu;
-    std::shared_ptr<SaveSelector> sMenu;
+    sh_ptr<MainMenu> mMenu;
+    sh_ptr<UpgradeMenu> uMenu;
+    sh_ptr<SaveSelector> sMenu;
 
 
     passFunc_t passFunc;
-    std::shared_ptr<ProcessManager> processManager;
-    std::shared_ptr<GameStorage> gameStorage;
-    std::shared_ptr<Scheduler> sch;
-    std::shared_ptr<GameManager> gameManager;
+    sh_ptr<ProcessManager> processManager;
+    sh_ptr<GameStorage> gameStorage;
+    sh_ptr<Scheduler> sch;
+    sh_ptr<GameManager> gameManager;
 
     std::list<sh_ptr<text>> debugTexts;
-
     std::list<sh_ptr<TxdLoader>> txdLoaders;
 
-    float gameStartTime = 0.0f;
+    float gameStartTime = 0.0f; // used for save data
 
+    sh_ptr<UserInput> userInputBox; // used for user input
+
+    GAME_RESULT gameResult = NONE;
 public:
     GameInitializer(passFunc_t p1,
-        std::shared_ptr<ProcessManager> pM,
-        std::shared_ptr<GameStorage> loader,
-        std::shared_ptr<Scheduler> sch_p)
+        sh_ptr<ProcessManager> pM,
+        sh_ptr<GameStorage> loader,
+        sh_ptr<Scheduler> sch_p)
     : xProcess(false, p1),
       passFunc(p1),
       processManager(std::move(pM)),
@@ -158,7 +171,7 @@ public:
 
     void Init();
     void Start();
-    void End();
+    void End(GAME_RESULT result);
     void Debug();
 
     void LoadTextures();
@@ -180,6 +193,10 @@ public:
     void CreateSaveSelector();
 
     void ShutdownSaveSelector();
+
+    void initializeUserInputBox();
+
+    void ShutdownUserInputBox();
 };
 
 

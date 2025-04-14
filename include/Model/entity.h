@@ -87,7 +87,9 @@ public:
     explicit entity(
             passFunc_t& func,
             int eTypeIndex, int hearts, vector2 position
-    ) : xProcess(false, func),hearts(hearts), maxHearts(hearts), coords(position) {
+    ) : xProcess(false, func),hearts(hearts), maxHearts(hearts) {
+        position = getScaledCoords(position);
+        coords = position;
         type = static_cast<eType>(eTypeIndex);
         spawnCoords = {position.x, position.y};
         lastCoords = {position.x, position.y};
@@ -98,7 +100,9 @@ public:
             passFunc_t& func,
             int eTypeIndex, int hearts, vector2 position,
             int length, int width
-    ) : xProcess(false, func), length(length), width(width), hearts(hearts), maxHearts(hearts), coords(position) {
+    ) : xProcess(false, func), length(length), width(width), hearts(hearts), maxHearts(hearts) {
+        position = getScaledCoords(position);
+        coords = position;
         appliedLength = length;
         appliedWidth = width;
         type = static_cast<eType>(eTypeIndex);
@@ -111,7 +115,9 @@ public:
             passFunc_t& func,
             int eTypeIndex, int hearts, vector2 position,
             vector2 dimensions
-    ) : xProcess(false, func), length(dimensions.x), width(dimensions.y), hearts(hearts), maxHearts(hearts), coords(position) {
+    ) : xProcess(false, func), length(dimensions.x), width(dimensions.y), hearts(hearts), maxHearts(hearts){
+        position = getScaledCoords(position);
+        coords = position;
         print("Entity: ", eTypeIndex, " Length: ", length, " Width: ", width);
         appliedLength = length;
         appliedWidth = width;
@@ -139,19 +145,21 @@ public:
         // this is staying in h file as its basically a config
         switch (type) {
             case PLAYER:
-                return {64, 48};
+                return {getScaledPixelWidth(64.0f), getScaledPixelHeight(48.0f)};
             case ENEMY:
-                return {32, 32};
+                return {getScaledPixelWidth(32.0f), getScaledPixelHeight(32.0f)};
             case ITEM_PICKUP:
                 switch (getPickupType()) {
                     case HEART:
-                        return {16, 16};
+                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
                     case OXY_TANK:
-                        return {16, 16};
+                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
                     case KEY_CARD:
-                        return {16, 16};
+                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
                     case AT:
-                        return {32, 32};
+                        return {getScaledPixelWidth(32.0f), getScaledPixelHeight(32.0f)};
+                    case ESCAPE_POD:
+                        return {getScaledPixelWidth(10.0f), getScaledPixelHeight(10.0f)};
                     default:
                         return {static_cast<float>(appliedLength), static_cast<float>(appliedWidth)};
                 }
