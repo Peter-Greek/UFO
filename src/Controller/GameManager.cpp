@@ -233,16 +233,17 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
 
     // Update Hearts
     if (p->getMaxHearts() < 10) {
+        vector2 heartDim = getScaledCoords({32, 32});
         int currentHearts = p->getHearts();
         int sheildCount = p->getShieldCount() - 1;
         int x = 0;
         int y = 0;
         for (int i = 0; i < currentHearts; i++) {
             if (i != 0) {
-                x += 32;
+                x += heartDim.x;
             }
             bool isBlue = sheildCount >= 0 && i <= sheildCount;
-            renderHeart(vector2(x, y), vector2(32, 32), isBlue);
+            renderHeart(vector2(x, y), heartDim, isBlue);
         }
     }
 
