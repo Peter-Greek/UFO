@@ -65,6 +65,8 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
         }
     }
 
+    fontSize = (int) getScaledCoords({12, 12}).length(); // base is 24
+
     // Load font
     font = TTF_OpenFont("../resource/Arial.ttf", fontSize);
     if (font == nullptr) {
