@@ -277,7 +277,7 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
             getScaledPixelHeight(64), // 64 px
     };
     if (p->isInvisible()) {
-        asepriteMap["FSS"]->setTextureAlpha(80);
+        asepriteMap["FSS"]->setTextureAlpha(160);
     }
     asepriteMap["FSS"]->renderFrame(currentFrame, destRect, flip, angle);
     asepriteMap["FSS"]->resetTextureAlpha();
