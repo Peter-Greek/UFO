@@ -76,8 +76,14 @@ void GameInitializer::Init() {
     });
 
     // Main Menu Press Settings
-    AddEventHandler("UFO::OpenSettings", [this]() {
+    AddEventHandler("UFO::SetSettingsState", [this](bool state) {
         print("TODO: Open Settings");
+        if (state) {
+            CreateSettingsMenu();
+        }else {
+            ShutdownSettingsMenu();
+            CreateMainMenu();
+        }
     });
 
     // Main Menu Press Leaderboard
@@ -303,30 +309,32 @@ void GameInitializer::Start(){
     }
 
 
+    auto sc = getScaledCoords; // scale the coords of placed entities by resolution factor
+    using v2 = vector2;
     // Create Laser
-    auto laser = attachGameProcess<Laser>(vector2 {-700.0f, 0.0f}, Heading (360 - 45 * 6), 500, 20, 10, 200000, 1, 1);
+    auto laser = attachGameProcess<Laser>(sc(v2{-700.0f, 0.0f}), Heading (360 - 45 * 6), 500, 20, 10, 200000, 1, 1);
     laser->setSpin(true);
 
-    auto laser2 = attachGameProcess<Laser>(vector2 {50.0f, 0.0f}, Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
+    auto laser2 = attachGameProcess<Laser>(sc(v2 {50.0f, 0.0f}), Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
 
     // Create NPC
-    auto npc = attachGameProcess<entity>(entity::ENEMY, 3, vector2{350.0f, 0.0f});
+    auto npc = attachGameProcess<entity>(entity::ENEMY, 3, sc(v2{350.0f, 0.0f}));
 
     // Create Boss
-    auto boss = attachGameProcess<Boss>(vector2{0.0f, -550.0f});
+    auto boss = attachGameProcess<Boss>(sc(v2{0.0f, -550.0f}));
 
     // Create Heart Pickup
 
-    auto heart = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::HEART, vector2{-50.0f, 0.0f});
+    auto heart = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::HEART, sc(v2{-50.0f, 0.0f}));
 
     // Create Oxy Pickup
-    auto oxy = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::OXY_TANK, vector2{0.0f, 50.0f});
+    auto oxy = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::OXY_TANK, sc(v2{0.0f, 50.0f}));
 
     // Create Key Card Pickup
-    auto key = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::KEY_CARD, vector2{0.0f, 250.0f});
+    auto key = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::KEY_CARD, sc(v2{0.0f, 250.0f}));
 
     // Create Escape Pod "Pickup"
-    auto escape = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::ESCAPE_POD, vector2{0.0f, 550.0f});
+    auto escape = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::ESCAPE_POD, sc(v2{0.0f, 550.0f}));
 
     print("Game Environment Created");
 }
@@ -417,52 +425,6 @@ void GameInitializer::GameDebug() {
 
     auto rHeading = attachGameMappedProcess<text>("RelHeading", "Heading: 0", 35);
     rHeading->setTextRelativePosition(0.0f, -0.7f);
-}
-
-void GameInitializer::CreateMainMenu() {
-    ShutdownSaveSelector();
-    ShutdownUpgradeMenu();
-    (*gameStorage).ResetPlayer();
-    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
-    mMenu = attachProcess<MainMenu>(menuTxd);
-}
-
-void GameInitializer::ShutdownMainMenu() {
-    if (mMenu != nullptr) {
-        mMenu->abort();
-        mMenu = nullptr;
-    }
-}
-
-void GameInitializer::CreateSaveSelector() {
-    ShutdownMainMenu();
-    sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"]);
-}
-
-void GameInitializer::ShutdownSaveSelector() {
-    if (sMenu != nullptr) {
-        sMenu->abort();
-        sMenu = nullptr;
-    }
-}
-
-void GameInitializer::CreateUpgradeMenu() {
-    ShutdownMainMenu();
-    ShutdownSaveSelector();
-    auto dTxd = attachMappedProcess<TxdLoader>("DEATH_SCREEN::TEXTURE", "../resource/deathScreen.png");
-    auto eTxd = attachMappedProcess<TxdLoader>("ESCAPE_SCREEN::TEXTURE", "../resource/escapeScreen.png");
-    auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/escapeScreenWin2.png");
-    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd);
-    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
-    uMenu->showUpgradeMenu();
-    gameResult = GAME_RESULT::NONE;
-}
-
-void GameInitializer::ShutdownUpgradeMenu() {
-    if (uMenu != nullptr) {
-        uMenu->abort();
-        uMenu = nullptr;
-    }
 }
 
 void GameInitializer::LoadTextures() {
@@ -564,10 +526,51 @@ void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
     }
 }
 
-void GameInitializer::ShutdownUserInputBox() {
-    if (userInputBox != nullptr) {
-        userInputBox->abort();
-        userInputBox = nullptr;
+
+
+void GameInitializer::CreateMainMenu() {
+    ShutdownSaveSelector();
+    ShutdownUpgradeMenu();
+    (*gameStorage).ResetPlayer();
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
+    mMenu = attachProcess<MainMenu>(menuTxd);
+}
+
+void GameInitializer::ShutdownMainMenu() {
+    if (mMenu != nullptr) {
+        mMenu->abort();
+        mMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateSaveSelector() {
+    ShutdownMainMenu();
+    sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"]);
+}
+
+void GameInitializer::ShutdownSaveSelector() {
+    if (sMenu != nullptr) {
+        sMenu->abort();
+        sMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateUpgradeMenu() {
+    ShutdownMainMenu();
+    ShutdownSaveSelector();
+    auto dTxd = attachMappedProcess<TxdLoader>("DEATH_SCREEN::TEXTURE", "../resource/deathScreen.png");
+    auto eTxd = attachMappedProcess<TxdLoader>("ESCAPE_SCREEN::TEXTURE", "../resource/escapeScreen.png");
+    auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/escapeScreenWin2.png");
+    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd);
+    uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    uMenu->showUpgradeMenu();
+    gameResult = GAME_RESULT::NONE;
+}
+
+void GameInitializer::ShutdownUpgradeMenu() {
+    if (uMenu != nullptr) {
+        uMenu->abort();
+        uMenu = nullptr;
     }
 }
 
@@ -578,3 +581,25 @@ void GameInitializer::initializeUserInputBox() {
     userInputBox->addMessage("Enter a name for your new save slot:");
     userInputBox->showChatBox();
 }
+
+void GameInitializer::ShutdownUserInputBox() {
+    if (userInputBox != nullptr) {
+        userInputBox->abort();
+        userInputBox = nullptr;
+    }
+}
+
+void GameInitializer::CreateSettingsMenu() {
+    ShutdownMainMenu();
+    ShutdownSaveSelector();
+    setMenu = attachProcess<SettingsMenu>(gameStorage);
+}
+
+void GameInitializer::ShutdownSettingsMenu() {
+    if (setMenu != nullptr) {
+        setMenu->abort();
+        setMenu = nullptr;
+    }
+}
+
+

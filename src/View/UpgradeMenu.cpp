@@ -174,6 +174,10 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
                     }else {
                         closeUpgradeMenu();
                     }
+                }else if (key == SDLK_e) {
+                    if (displayingResult) {
+                        displayingResult = false;
+                    }
                 }
             } else if (eventType == SDL_MOUSEBUTTONDOWN) { //call appropriate action for each button clicked
                 SDL_GetMouseState(&x, &y);

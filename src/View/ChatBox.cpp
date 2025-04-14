@@ -55,7 +55,7 @@ void ChatBox::Init() {
     });
 
     AddEventHandler("__internal_chat_register_command", [this](std::string command) {
-        print("Registering command: ", command);
+        print("Registered command: ", command);
         commands.push_back(command);
     });
 

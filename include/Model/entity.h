@@ -88,7 +88,6 @@ public:
             passFunc_t& func,
             int eTypeIndex, int hearts, vector2 position
     ) : xProcess(false, func),hearts(hearts), maxHearts(hearts) {
-        position = getScaledCoords(position);
         coords = position;
         type = static_cast<eType>(eTypeIndex);
         spawnCoords = {position.x, position.y};
@@ -101,7 +100,6 @@ public:
             int eTypeIndex, int hearts, vector2 position,
             int length, int width
     ) : xProcess(false, func), length(length), width(width), hearts(hearts), maxHearts(hearts) {
-        position = getScaledCoords(position);
         coords = position;
         appliedLength = length;
         appliedWidth = width;
@@ -116,7 +114,6 @@ public:
             int eTypeIndex, int hearts, vector2 position,
             vector2 dimensions
     ) : xProcess(false, func), length(dimensions.x), width(dimensions.y), hearts(hearts), maxHearts(hearts){
-        position = getScaledCoords(position);
         coords = position;
         print("Entity: ", eTypeIndex, " Length: ", length, " Width: ", width);
         appliedLength = length;

@@ -38,7 +38,7 @@
 using upgradeList_t = std::array<int, 5>;
 class Player : public entity {
 private:
-    bool initalized = false;
+    bool inited = false;
 
     upgradeList_t upgradeLevels = {0, 0, 0, 0, 0}; // upgrade levels for each upgrade
 
@@ -47,7 +47,8 @@ private:
     float OXYGEN_LEVEL = 3 * 60 * 1000; // current time left; max is MAX_OXYGEN_TIME during a run
 
     int SHIELD_COUNT = 0; // count of how many shields the player has
-    float PLAYER_SPEED = 0.2; // base speed of the player
+    vector2 BASE_PLAYER_SPEED = {0.2, 0.2}; // base speed of the player
+    vector2 PLAYER_SPEED = getScaledCoords(BASE_PLAYER_SPEED); // speed of the player
     int INVISIBILITY_DURATION = 2; // duration of invisibility
     int AT_CANNON_DAMAGE = 1; // damage of the AT cannon
 
@@ -105,7 +106,7 @@ public:
     bool doesPlayerHaveShield();
     void removeShield();
     void hitShield();
-    float getPlayerSpeed();
+    vector2 getPlayerSpeed();
 
     // Oxygen functions
     float getOxygenLevel();
