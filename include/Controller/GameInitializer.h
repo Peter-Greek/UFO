@@ -47,6 +47,7 @@
 #include "SaveSelector.h"
 #include "UpgradeMenu.h"
 #include "UserInput.h"
+#include "SettingsMenu.h"
 
 class GameInitializer : public xProcess {
 public:
@@ -63,6 +64,7 @@ private:
     sh_ptr<MainMenu> mMenu;
     sh_ptr<UpgradeMenu> uMenu;
     sh_ptr<SaveSelector> sMenu;
+    sh_ptr<SettingsMenu> setMenu;
 
 
     passFunc_t passFunc;
@@ -197,6 +199,10 @@ public:
     void initializeUserInputBox();
 
     void ShutdownUserInputBox();
+
+    void CreateSettingsMenu();
+
+    void ShutdownSettingsMenu();
 };
 
 

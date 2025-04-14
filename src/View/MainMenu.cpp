@@ -95,10 +95,10 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 TriggerEvent("UFO::StartGame");
             }
             else if(x > SettingsBox.x && y > SettingsBox.y && x < SettingsBox.x + SettingsBox.w && y < SettingsBox.y + SettingsBox.h) {
-                TriggerEvent("UFO::OpenSettings");
+                TriggerEvent("UFO::SetSettingsState", true);
             }
             else if(x > LeaderboardBox.x && y > LeaderboardBox.y && x < LeaderboardBox.x + LeaderboardBox.w && y < LeaderboardBox.y + LeaderboardBox.h) {
-                TriggerEvent("UFO::OpenLeaderboard");
+                TriggerEvent("UFO::OpenLeaderboard", true);
             }
         }
     });

@@ -40,14 +40,17 @@
 class Projectile : public entity {
 private:
     std::weak_ptr<entity> owner;
-    float range = 1000;
+    float range = getScaledCoords(vector2(500, 500)).length();
 
     vector2 getProjectileDimensions(std::shared_ptr<entity> parent, int damage) {
         print("Parent: ", parent->getEntityType(), " Damage: ", damage);
         if (parent->isEntityAPlayer()) {
-            return {static_cast<float>(40 * damage), static_cast<float>(40 * damage)};
+            return {
+                getScaledPixelWidth(static_cast<float>(20 * damage)),
+                getScaledPixelHeight(static_cast<float>(20 * damage))
+            };
         }else {
-            return {20.0f, 20.0f};
+            return {getScaledPixelWidth(20.0f), getScaledPixelHeight(20.0f)};
         }
     }
 

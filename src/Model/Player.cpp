@@ -48,12 +48,12 @@ int Player::localInit() {
         setHearts(hearts);
     });
 
-    initalized = true;
+    inited = true;
     return 1;
 }
 
 void Player::update(float deltaMs) {
-    if (!initalized) {localInit();}
+    if (!inited) {localInit();}
     updateInvincibility(deltaMs);
     updateInvisibility(deltaMs);
     updateOxygen(deltaMs);
@@ -126,21 +126,21 @@ void Player::update(float deltaMs) {
 
     if (changeY) {
         if (upPressed) {
-            if (curVel.y <= -PLAYER_SPEED) {
-                newVel.y = -PLAYER_SPEED;
+            if (curVel.y <= -PLAYER_SPEED.y) {
+                newVel.y = -PLAYER_SPEED.y;
             } else {
                 newVel.y = (curVel.y < -0.1f ? curVel.y : -0.1f) * 3;
-                if (newVel.y < -PLAYER_SPEED) {
-                    newVel.y = -PLAYER_SPEED;
+                if (newVel.y < -PLAYER_SPEED.y) {
+                    newVel.y = -PLAYER_SPEED.y;
                 }
             }
         } else {
-            if (curVel.y >= PLAYER_SPEED) {
-                newVel.y = PLAYER_SPEED;
+            if (curVel.y >= PLAYER_SPEED.y) {
+                newVel.y = PLAYER_SPEED.y;
             } else {
                 newVel.y = (curVel.y > 0.1f ? curVel.y : 0.1f) * 3;
-                if (newVel.y > PLAYER_SPEED) {
-                    newVel.y = PLAYER_SPEED;
+                if (newVel.y > PLAYER_SPEED.y) {
+                    newVel.y = PLAYER_SPEED.y;
                 }
             }
         }
@@ -156,22 +156,22 @@ void Player::update(float deltaMs) {
     if (changeX) {
         if (leftPressed) {
             facingLeft = true;
-            if (curVel.x <= -PLAYER_SPEED) {
-                newVel.x = -PLAYER_SPEED;
+            if (curVel.x <= -PLAYER_SPEED.x) {
+                newVel.x = -PLAYER_SPEED.x;
             } else {
                 newVel.x = (curVel.x < -0.1f ? curVel.x : -0.1f) * 3;
-                if (newVel.x < -PLAYER_SPEED) {
-                    newVel.x = -PLAYER_SPEED;
+                if (newVel.x < -PLAYER_SPEED.x) {
+                    newVel.x = -PLAYER_SPEED.x;
                 }
             }
         } else {
             facingLeft = false;
-            if (curVel.x >= PLAYER_SPEED) {
-                newVel.x = PLAYER_SPEED;
+            if (curVel.x >= PLAYER_SPEED.x) {
+                newVel.x = PLAYER_SPEED.x;
             } else {
                 newVel.x = (curVel.x > 0.1f ? curVel.x : 0.1f) * 3;
-                if (newVel.x > PLAYER_SPEED) {
-                    newVel.x = PLAYER_SPEED;
+                if (newVel.x > PLAYER_SPEED.x) {
+                    newVel.x = PLAYER_SPEED.x;
                 }
             }
         }
@@ -192,6 +192,7 @@ void Player::update(float deltaMs) {
         setKnockedBack(false, 0.0f);
     }
 
+    print("Player Vel: ", newVel.x, newVel.y);
     setVelocity(newVel);
 }
 
@@ -216,7 +217,7 @@ void Player::applyUpgrade(Player::UPGRADES upgrade, int level) {
         SHIELD_COUNT = 0 + level;
     } else if (upgrade == Player::UPGRADES::SPEED) {
         // increase speed
-        PLAYER_SPEED += (level * 0.05f);
+        PLAYER_SPEED = getScaledCoords(BASE_PLAYER_SPEED + vector2(level * 0.05f, level * 0.05f));
     } else if (upgrade == Player::UPGRADES::INVISIBILITY) {
         // increase invisibility duration
         INVISIBILITY_DURATION += level;
@@ -254,7 +255,7 @@ void Player::removeShield() {
 }
 
 // Player Speed functions
-float Player::getPlayerSpeed() {
+vector2 Player::getPlayerSpeed() {
     return PLAYER_SPEED;
 }
 

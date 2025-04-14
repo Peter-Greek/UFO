@@ -433,7 +433,7 @@ void GameManager::renderProjectile(vector2 screenCoords, vector2 dim, const sh_p
         // a bunch of AT combined into a ball
         int damage = pw->getDamage();
         int sprites = damage*4;
-        vector2 dim2 = {32, 32};
+        vector2 dim2 = dim / (sprites/3);
         for (int i = 0; i < sprites; i++) {
             Heading h = Heading(i * (360 / sprites));
             vector2 dir = angleToVector2(h);
@@ -1237,6 +1237,7 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
             Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
             vector2 pVel = angleToVector2(h) * 0.35f;
+            pVel = getScaledCoords(pVel); // scale the velocity to be aligned with the resolution
 
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
             auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, e);
@@ -1263,6 +1264,9 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
     vector2 newVel = vector2(0.0f, 0.0f);
     bool isClose = false;
     bool inKnockback = e->isKnockedBack();
+    vector2 ENEMY_SPEED = getScaledCoords({0.19f/2, 0.19f/2});
+
+
 
     for (auto& e2 : entityList) {
         if (e2->isEntityAPlayer()) {
@@ -1273,7 +1277,7 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
             }
             vector2 playerCoords = e2->getPosition();
             if ((currentCoords - playerCoords).length() < (SCREEN_WIDTH / 4)) {
-                newVel = (playerCoords - currentCoords).normalize() * 0.05f;
+                newVel = (playerCoords - currentCoords).normalize() * ENEMY_SPEED.len();
                 isClose = true;
             }
             continue;
@@ -1339,6 +1343,7 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
         }
     }
 
+    print("Enemy Vel: ", newVel.x, newVel.y);
     e->setVelocity(newVel);
 }
 
@@ -1381,7 +1386,8 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
                 if (b->canSpawnProjectile()) {
                     Heading h = getHeadingFromVectors(currentCoords, playerCoords);
                     vector2 pVel = angleToVector2(h) * 0.35f;
-                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + 10.0f));
+                    pVel = getScaledCoords(pVel); // scale the velocity to be aligned with the resolution
+                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + getScaledCoords({5.0, 5.0}).length()));
                     sh_ptr_e proj = b->spawnProjectile(spawnCoords);
                     pM->attachProcess(proj);
                     attachEntity(proj);
