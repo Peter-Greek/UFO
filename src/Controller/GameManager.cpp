@@ -1227,10 +1227,9 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
         // set the vel of it to be 3x npc speed or player base speed
 
         if (p->getATCount() > 0 && !p->isProjectileCreated()) {
-            print("Creating Projectile for AT Cannon fire");
             int damage = p->getATCannonDamage();
+            print("Creating Projectile for AT Cannon fire: ", damage);
             p->removeATCount(damage); //TODO: might want to change this later on and set it to always be 1
-            print("Removing AT Count FOR SHOOT: ", damage);
             textMap["ATScore"]->setText("AT: " + std::to_string(p->getATCount()));
             vector2 playerCoords = p->getPosition();
             int x, y; SDL_GetMouseState(&x, &y);
@@ -1343,7 +1342,6 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
         }
     }
 
-    print("Enemy Vel: ", newVel.x, newVel.y);
     e->setVelocity(newVel);
 }
 
@@ -1514,10 +1512,8 @@ void GameManager::bounceEntities(sh_ptr_e e1, sh_ptr_e e2) {
     vector2 e1Pos = e1->getPosition();
     vector2 e2Pos = e2->getPosition();
     Heading h = getHeadingFromVectors(e1Pos, e2Pos);
-    print("Bounce Heading: ", h.get());
     vector2 newVel = angleToVector2(h) * 0.5f;
     h.set(h.get() + 180);
-    print("Rebounce Heading: ", h.get());
     vector2 otherVel = angleToVector2(h) * 0.5f;
     e1->setVelocity(otherVel);
     e2->setVelocity(newVel);

@@ -60,6 +60,7 @@ private:
         setting_f_t setting;
         float min;
         float max;
+        float step;
         bool includeMin;
         bool includeMax;
     };
@@ -104,7 +105,7 @@ private:
                     {"Off", false}
             }},
 
-            setting_variant_t{std::in_place_type<slider_t>, slider_t{"Volume", {"Volume", 50.0f}, 0.0f, 100.0f, true, true}},
+            setting_variant_t{std::in_place_type<slider_t>, slider_t{"Volume", {"Volume", 50.0f}, 0.0f, 100.0f, 1.0f, true, true}},
 
 
             setting_variant_t{std::in_place_type<dropdown_t>, "Language", settings_t{

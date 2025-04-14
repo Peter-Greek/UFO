@@ -192,7 +192,6 @@ void Player::update(float deltaMs) {
         setKnockedBack(false, 0.0f);
     }
 
-    print("Player Vel: ", newVel.x, newVel.y);
     setVelocity(newVel);
 }
 
