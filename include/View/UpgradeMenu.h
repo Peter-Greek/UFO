@@ -27,6 +27,8 @@ private:
     vector2 position = {0, 0};
     vector2 upgradeMenuSize = {static_cast<float>(SCREEN_WIDTH), static_cast<float>(SCREEN_HEIGHT)};
     int AT = 0;
+    int speed = 0;
+    int oxygen =0;
 
     bool running = false;
     bool isHidden = true;
@@ -125,7 +127,11 @@ public:
     void setUpgradeMenuSize(float x, float y);
     void updateUpgradeMenuPositioning();
     void displayATCount(int ATCount);
+    void displayOxygenCount(int oxygen);
+    void displaySpeedCount(int speed);
     void setATCount(int ATCount);
+    void setOxygenCount(int oxygen);
+    void setSpeedCount(int speed);
     void setFontColor(int r, int g, int b, int a);
 };
 #endif //CSCI437_UPGRADEMENU_H

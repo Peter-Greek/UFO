@@ -145,17 +145,10 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             SDL_RenderCopy(renderer, CannonText.texture, nullptr, &CannonText.dst);
         }   
 
-        //Draw Speed Tracker Bar
-        for (int i = 0; i < 5; i++) {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white (or any other color)
-            SDL_RenderDrawRect(renderer, &SpeedTracker.rects[i]);
-        }
-
-        //Draw Oxygen Tracker Bar
-        for (int i = 0; i < 5; i++) {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white (or any other color)
-            SDL_RenderDrawRect(renderer, &OxygenTracker.rects[i]);
-        }
+        //Draw Oxygen tracker
+        displayOxygenCount(oxygen);
+        //Draw Speed tracker
+        displaySpeedCount(speed);
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
@@ -197,8 +190,10 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             }
         }
 });
-    AddEventHandler("UFO::UpgradeMenu::DisplayATCount", [this](int ATCount) {
+    AddEventHandler("UFO::UpgradeMenu::DisplayATCount", [this](int ATCount, int oxygenCount, int speedCount) {
         displayATCount(ATCount);
+        displayOxygenCount(oxygenCount);
+        displaySpeedCount(speedCount);
     });
 
     displayATCount(AT);
@@ -216,8 +211,10 @@ void UpgradeMenu::update(float deltaMs) {
 void UpgradeMenu::showUpgradeMenu() {
     isHidden = false;
     if (!running) return;
-    TriggerEvent("UFO::UpgradeMenu::State", true);
     displayATCount(AT);
+    displayOxygenCount(oxygen);
+    displaySpeedCount(speed);
+    TriggerEvent("UFO::UpgradeMenu::State", true);
 }
 
 void UpgradeMenu::displayATCount(int ATCount){
@@ -230,8 +227,40 @@ void UpgradeMenu::displayATCount(int ATCount){
     SDL_FreeSurface(textSurface);
 }
 
+void UpgradeMenu::displayOxygenCount(int oxygenCount){            
+        for (int i = 0; i < 5; i++) {
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white (or any other color)
+            SDL_RenderDrawRect(renderer, &OxygenTracker.rects[i]); 
+
+            if (i<oxygenCount){
+                SDL_SetRenderDrawColor(renderer, 255, 255, 100, 100); // Set color to white (or any other color)
+                SDL_RenderFillRect(renderer, &OxygenTracker.rects[i]);
+            }
+        }
+}
+
+void UpgradeMenu::displaySpeedCount(int speedCount){
+        for (int i = 0; i < 5; i++) {
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white (or any other color)
+            SDL_RenderDrawRect(renderer, &SpeedTracker.rects[i]); 
+
+            if (i<speedCount){
+                SDL_SetRenderDrawColor(renderer, 255, 255, 100, 100); // Set color to white (or any other color)
+                SDL_RenderFillRect(renderer, &SpeedTracker.rects[i]);
+            }
+        }
+}
+
 void UpgradeMenu::setATCount(int ATCount){
     AT = ATCount;
+}
+
+void UpgradeMenu::setOxygenCount(int oxygenCount){
+    oxygen = oxygenCount;
+}
+
+void UpgradeMenu::setSpeedCount(int speedCount){
+    speed = speedCount;
 }
 
 void UpgradeMenu::closeUpgradeMenu() {
