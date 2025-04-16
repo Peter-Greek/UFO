@@ -75,7 +75,6 @@ int text::initialize_SDL_process(SDL_Window* passed_window) {
 
 
     // render text
-    color = { 255, 255, 255 };
     sText = TTF_RenderText_Solid( font, textInput, color );
     if ( sText == nullptr ) {
         error("Unable to render text! ", TTF_GetError());
@@ -100,7 +99,7 @@ int text::initialize_SDL_process(SDL_Window* passed_window) {
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         // While application is running
         if (!running) return;
-        SDL_SetTextureColorMod(texture, red * 255, green * 255, blue * 255);
+        if (isHidden) {return;}
         SDL_RenderCopyEx(renderer, texture, nullptr, &dst, angle, &rot, SDL_FLIP_NONE);
     });
 
@@ -150,8 +149,6 @@ void text::postAbort() {
     SDL_DestroyTexture( texture );
     sText = nullptr;
 }
-
-
 
 void text::setTextPosition(int x, int y) {
     resetRelativePosition();
@@ -240,6 +237,27 @@ void text::setFontSize(int toFontSize) {
     setText(textContent);
 }
 
+void text::setTextColor(int r, int g, int b, int a) {
+    color = {static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b), static_cast<Uint8>(a)};
+    if (sText != nullptr) {
+        SDL_FreeSurface( sText );
+        SDL_DestroyTexture(texture);
+        sText = nullptr;
+    }
+    setText(textContent);
+}
+
+void text::setTextColor(SDL_Color new_color) {
+    color = new_color;
+    if (!running) return;
+    if (sText != nullptr) {
+        SDL_FreeSurface( sText );
+        SDL_DestroyTexture(texture);
+        sText = nullptr;
+    }
+    setText(textContent);
+}
+
 
 void text::setText(std::string basicString) {
     textContent = std::move(basicString);
@@ -258,7 +276,6 @@ void text::setText(std::string basicString) {
     const char* textInput = textContent.c_str();
 
     // render text
-    color = { 255, 255, 255 };
     sText = TTF_RenderText_Solid( font, textInput, color );
     if ( sText == nullptr ) {
         error("Unable to render text! ", TTF_GetError());
