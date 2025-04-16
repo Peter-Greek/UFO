@@ -279,6 +279,32 @@ int view::initialize() {
         }
     });
 
+    AddEventHandler("UFO::View::ResizeWindow", [this](int width, int height) {
+        if (width == 0 && height == 0) {
+            // get current display size and apply it as the args
+            int displayIndex = SDL_GetWindowDisplayIndex(window);
+            if (displayIndex < 0) {
+                print("SDL_GetWindowDisplayIndex failed: %s", SDL_GetError());
+                return;
+            } else {
+                SDL_DisplayMode mode;
+                if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
+                    int displayWidth = mode.w;
+                    int displayHeight = mode.h;
+                    print("Display size: %dx%d", displayWidth, displayHeight);
+                    width = displayWidth;
+                    height = displayHeight;
+                } else {
+                    print("SDL_GetCurrentDisplayMode failed: %s", SDL_GetError());
+                    return;
+                }
+            }
+        }
+
+
+        resizeWindow(width, height, true);
+    });
+
     return 1;
 }
 

@@ -40,6 +40,7 @@
 #include <list>
 #include <string>
 #include <variant>
+#include <set>
 
 class SettingsMenu : public xProcess {
 
@@ -85,25 +86,48 @@ private:
             {"1024x768", {1024, 768}}
     };
 
+    std::vector<std::tuple<SDL_Rect, std::string, std::string>> dropdownHitboxes;
+    std::set<std::string> openDropdowns;
+
+    static bool isResolutionActive(const std::string& resolution) {
+        int height = SCREEN_HEIGHT;
+        int width = SCREEN_WIDTH;
+        sList_t args = split(resolution, "x");
+        return std::stoi(args[0]) == width && std::stoi(args[1]) == height;
+    }
+
+    std::pair <int, int> getScreenResolution(const std::string& resolution) {
+        // get current display size and apply it as the args
+        int displayIndex = SDL_GetWindowDisplayIndex(window);
+        if (displayIndex < 0) {
+            print("SDL_GetWindowDisplayIndex failed2: %s", SDL_GetError());
+            return {0, 0};
+        } else {
+            SDL_DisplayMode mode;
+            if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
+                int displayWidth = mode.w;
+                int displayHeight = mode.h;
+                print("Display size2: %dx%d", displayWidth, displayHeight);
+                return {displayWidth, displayHeight};
+            } else {
+                print("SDL_GetCurrentDisplayMode failed2: %s", SDL_GetError());
+                return {0, 0};
+            }
+        }
+    }
 
 
     std::list<setting_variant_t> settings = {
-            setting_variant_t{std::in_place_type<dropdown_t>, "Resolution", settings_t{
-                    {"3840x2160", false},
-                    {"2400x1600", false},
-                    {"1920x1080", false},
-                    {"1024x768", true}
+            setting_variant_t{std::in_place_type<dropdown_t>, "Windowed Resolution", settings_t{
+                    {"3840x2160", isResolutionActive("3840x2160")},
+                    {"2400x1600", isResolutionActive("2400x1600")},
+                    {"1920x1080", isResolutionActive("1920x1080")},
+                    {"1024x768", isResolutionActive("1024x768")}
             }},
             //toggle_t for fullscreen
-            setting_variant_t{std::in_place_type<toggle_t>, "Fullscreen", setting_t{"fs", true}},
-//            setting_variant_t{std::in_place_type<dropdown_t>, "VSync", settings_t{
-//                    {"On", false},
-//                    {"Off", true}
-//            }},
-            setting_variant_t{std::in_place_type<dropdown_t>, "Audio", settings_t{
-                    {"On", true},
-                    {"Off", false}
-            }},
+            setting_variant_t{std::in_place_type<toggle_t>, "Fullscreen", setting_t{"fs", false}},
+            setting_variant_t{std::in_place_type<toggle_t>, "VSync", setting_t{"vsync", false}},
+            setting_variant_t{std::in_place_type<toggle_t>, "Audio", setting_t{"sound", true}},
 
             setting_variant_t{std::in_place_type<slider_t>, slider_t{"Volume", {"Volume", 50.0f}, 0.0f, 100.0f, 1.0f, true, true}},
 
@@ -118,6 +142,7 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_Font* font;
+    TTF_Font* font_extra;
 
     json saveData;
     bool running = false;
