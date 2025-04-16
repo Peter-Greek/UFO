@@ -137,7 +137,10 @@ void GameInitializer::Init() {
             (*gameStorage)["player"]["upgrades"][upgrade] = up + 1;
             (*gameStorage).SavePlayer();
 
-            TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>());
+            uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+            uMenu->setOxygenCount((*gameStorage)["player"]["upgrades"]["oxygen"].get<int>());
+            uMenu->setSpeedCount((*gameStorage)["player"]["upgrades"]["speed"].get<int>());  
+            TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>(), (*gameStorage)["player"]["upgrades"]["oxygen"].get<int>(), (*gameStorage)["player"]["upgrades"]["speed"].get<int>());
             print("Upgrade purchased: ", upgrade, " AT Count: ", atCount);
             TriggerEvent("UFO::Chat::AddMessage", "Upgrade purchased: " + upgrade + " AT Count: " + std::to_string(atCount));
         } else {
@@ -352,6 +355,7 @@ void GameInitializer::End(GAME_RESULT result) {
     //TODO: Add in some game result screen
 
     CreateUpgradeMenu();
+
 }
 
 void GameInitializer::Debug() {
@@ -426,6 +430,15 @@ void GameInitializer::GameDebug() {
     auto rHeading = attachGameMappedProcess<text>("RelHeading", "Heading: 0", 35);
     rHeading->setTextRelativePosition(0.0f, -0.7f);
 }
+
+void GameInitializer::CreateMainMenu() {
+    ShutdownSaveSelector();
+    ShutdownUpgradeMenu();
+    (*gameStorage).ResetPlayer();
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
+    mMenu = attachProcess<MainMenu>(menuTxd);
+}
+
 
 void GameInitializer::LoadTextures() {
     print("Loading Textures");
@@ -526,16 +539,6 @@ void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
     }
 }
 
-
-
-void GameInitializer::CreateMainMenu() {
-    ShutdownSaveSelector();
-    ShutdownUpgradeMenu();
-    (*gameStorage).ResetPlayer();
-    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
-    mMenu = attachProcess<MainMenu>(menuTxd);
-}
-
 void GameInitializer::ShutdownMainMenu() {
     if (mMenu != nullptr) {
         mMenu->abort();
@@ -563,6 +566,8 @@ void GameInitializer::CreateUpgradeMenu() {
     auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/escapeScreenWin2.png");
     uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd);
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
+    uMenu->setOxygenCount((*gameStorage)["player"]["upgrades"]["oxygen"].get<int>());
+    uMenu->setSpeedCount((*gameStorage)["player"]["upgrades"]["speed"].get<int>()); 
     uMenu->showUpgradeMenu();
     gameResult = GAME_RESULT::NONE;
 }
