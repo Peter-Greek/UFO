@@ -78,11 +78,11 @@ private:
     struct UpgradeTracker {
         int height;
         SDL_Rect rects[5] = {
-            {SCREEN_WIDTH/3 +10, height, 100, 150},  // one
-            {SCREEN_WIDTH/3+110, height, 100, 150}, // two
-            {SCREEN_WIDTH/3+210, height, 100, 150}, // three
-            {SCREEN_WIDTH/3+310, height, 100, 150}, // four
-            {SCREEN_WIDTH/3+410, height, 100, 150}  // five
+            {SCREEN_WIDTH/3, height, SCREEN_WIDTH/17, SCREEN_HEIGHT/7},  // one
+            {SCREEN_WIDTH/3+SCREEN_WIDTH/17, height, SCREEN_WIDTH/17, SCREEN_HEIGHT/7}, // two
+            {SCREEN_WIDTH/3+2*SCREEN_WIDTH/17, height, SCREEN_WIDTH/17, SCREEN_HEIGHT/7}, // three
+            {SCREEN_WIDTH/3+3*SCREEN_WIDTH/17, height, SCREEN_WIDTH/17, SCREEN_HEIGHT/7}, // four
+            {SCREEN_WIDTH/3+4*SCREEN_WIDTH/17, height, SCREEN_WIDTH/17, SCREEN_HEIGHT/7}  // five
         };
     };
 
@@ -93,6 +93,9 @@ private:
     sh_ptr<TxdLoader> deathTxd;
     sh_ptr<TxdLoader> escapeTxd;
     sh_ptr<TxdLoader> winTxd;
+    sh_ptr<TxdLoader> uMenuTxd;
+    sh_ptr<TxdLoader> rocketTxd;
+
 
     int gameResult = GAME_RESULT::NONE;
     bool displayingResult = false;
@@ -104,10 +107,16 @@ private:
             static_cast<int>(SCREEN_WIDTH),
             static_cast<int>(SCREEN_HEIGHT) // down scale the texture
     };
+    SDL_Rect destRect2 = {
+            7*(SCREEN_WIDTH/10),
+            SCREEN_HEIGHT/5,
+            SCREEN_WIDTH/4,
+            SCREEN_HEIGHT/2 // down scale the texture
+    };
 
 public:
-    explicit UpgradeMenu(passFunc_t& func, int res,  sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3)
-        : xProcess(true, func), gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3)
+    explicit UpgradeMenu(passFunc_t& func, int res,  sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3, sh_ptr<TxdLoader> txd4, sh_ptr<TxdLoader> txd5)
+        : xProcess(true, func), gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3), uMenuTxd(std::move(txd4)), rocketTxd(std::move(txd5))
     {
         if (res != GAME_RESULT::NONE) {
             displayingResult = true;
