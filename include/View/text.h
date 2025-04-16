@@ -71,6 +71,7 @@ public:
     void showText(std::string new_text);
 
     SDL_Rect getTextRect() const {return dst;};
+    [[nodiscard]] int getFontSize() const {return fontSize;};
 private:
     SDL_Event e;
     SDL_Window* window;

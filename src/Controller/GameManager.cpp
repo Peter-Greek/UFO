@@ -997,7 +997,38 @@ void GameManager::renderPickupInteraction(const sh_ptr_ply& ply, const sh_ptr_e&
 
 // Update Controller Functions
 void GameManager::update(float deltaMs) {
-    if (!gameRunning) {return;}
+    if (!gameRunning) {
+        int baseFontSize = (int) getScaledCoords({25, 25}).length(); // base is 50
+        auto gameOverText = textMap["GameOver"];
+        if (!gameOverText) {
+            gameOverText = std::make_shared<text>(passFunc, "YOU DIED", baseFontSize);
+            pM->attachProcess(gameOverText);
+            gameOverText->setTextRelativePosition(0.001, 0.001);
+            gameOverText->setCurrentPositionBasedOnRelativePosition();
+            textMap["GameOver"] = gameOverText;
+
+        }
+
+        if (gameOverText->state() != text::RUNNING) {
+            return;
+        }
+
+
+
+        int curFontSize = gameOverText->getFontSize();
+        float curTime = sch->getGameTime();
+        int elapsedTime = curTime - gameOverTimeStamp;
+
+        int toFontSize = map_range(elapsedTime, 0, 10000, baseFontSize, baseFontSize*3);
+        gameOverText->setFontSize(toFontSize);
+        if (toFontSize >= baseFontSize*3) {
+            TriggerEvent("UFO::EndGame");
+            TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
+        }
+
+
+        return;
+    }
 
     std::list<sh_ptr_e> removalList;
     for (auto& e : entityList) {
@@ -1007,8 +1038,8 @@ void GameManager::update(float deltaMs) {
 
             if (e->isEntityAPlayer()) {
                 if (!gameRunning) {return;}
-                TriggerEvent("UFO::EndGame");
-                TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
+                gameOverTimeStamp = sch->getGameTime();
+                gameRunning = false;
                 return;
             }
 
@@ -1216,11 +1247,6 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
         p->removeHearts(1);
         textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
         p->setOxygenLevel(0.0f);
-    }
-
-    if (p->getHearts() <= 0) {
-        TriggerEvent("UFO::EndGame");
-        TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
     }
 
     if (p->isATCannonFire()) {
@@ -1434,6 +1460,10 @@ void GameManager::setProcessManager(sh_ptr<ProcessManager> pm) {
     pM = std::move(pm);
 }
 
+void GameManager::setScheduler(sh_ptr<Scheduler> sch_p) {
+    sch = sch_p;
+}
+
 void GameManager::setCamera(sh_ptr<camera> c) {
     cam = std::move(c);
 }
@@ -1521,3 +1551,5 @@ void GameManager::bounceEntities(sh_ptr_e e1, sh_ptr_e e2) {
     e1->setKnockedBack(true, 250.0f);
     e2->setKnockedBack(true, 250.0f);
 }
+
+

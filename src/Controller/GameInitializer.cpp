@@ -275,6 +275,7 @@ void GameInitializer::Start(){
     gameStartTime = sch->getGameTime();
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
+    gM->setScheduler(sch);
     gameManager = gM;
 
     gM->AddEventHandler("UFO::CHECK::UUID", [this](UUID_t id) {
