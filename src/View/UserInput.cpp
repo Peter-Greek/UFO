@@ -143,13 +143,42 @@ void UserInput::update(float deltaMs) {
             addMessage(message);
             createInputMessage("> ");
         }
-    } else if (keyboard_state_array[SDL_SCANCODE_BACKSPACE]) {
-        // Backspace
-        if (inputMessage.text != "> ") {
-            inputMessage.text.pop_back();
-            createInputMessage();
-        }
     }
+
+    bool backspaceDown = keyboard_state_array[SDL_SCANCODE_BACKSPACE];
+
+    if (backspaceDown) {
+        backspaceHeldTime += deltaMs;
+
+        if (!backspaceHeld) {
+            backspaceHeld = true;
+            backspaceHeldTime = 0.0f;
+            backspaceRepeatTimer = 0.0f;
+
+            // First delete immediately
+            if (inputMessage.text != "> ") {
+                inputMessage.text.pop_back();
+                createInputMessage();
+            }
+        } else {
+            if (backspaceHeldTime >= 400.0f) {
+                backspaceRepeatTimer += deltaMs;
+                if (backspaceRepeatTimer >= 40.0f) {
+                    backspaceRepeatTimer = 0.0f;
+
+                    if (inputMessage.text != "> ") {
+                        inputMessage.text.pop_back();
+                        createInputMessage();
+                    }
+                }
+            }
+        }
+    } else {
+        backspaceHeld = false;
+        backspaceHeldTime = 0.0f;
+        backspaceRepeatTimer = 0.0f;
+    }
+
 }
 
 void UserInput::addMessage(const std::string& message) {
