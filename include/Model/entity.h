@@ -150,9 +150,9 @@ public:
                     case HEART:
                         return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
                     case OXY_TANK:
-                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
+                        return {getScaledPixelWidth(32.0f), getScaledPixelHeight(64.0f)};
                     case KEY_CARD:
-                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
+                        return {getScaledPixelWidth(32.0f), getScaledPixelHeight(32.0f)};
                     case AT:
                         return {getScaledPixelWidth(32.0f), getScaledPixelHeight(32.0f)};
                     case ESCAPE_POD:

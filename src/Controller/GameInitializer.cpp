@@ -471,6 +471,13 @@ void GameInitializer::LoadTextures() {
     // Create Heart Texture
     auto HeartTxd = attachGameMappedProcess<TxdLoader>("HEART::TEXTURE", "../resource/HeartSS.png");
 
+    // Create Oxy Texture
+    auto OxyTxd = attachGameMappedProcess<TxdLoader>("OXY_TANK::TEXTURE", "../resource/OxygenUpgradeIcon.png");
+
+    // Create Key Card Textures
+    auto keyTxd =  attachGameMappedProcess<TxdLoader>("KEY_CARD1::TEXTURE", "../resource/Keycard1.png");
+    auto key2Txd = attachGameMappedProcess<TxdLoader>("KEY_CARD2::TEXTURE", "../resource/Keycard2.png");
+
 }
 
 void GameInitializer::LoadAudio() {

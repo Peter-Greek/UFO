@@ -139,6 +139,10 @@ public:
 
 
     void renderAT(vector2 screenCoords, vector2 dim);
+
+    void renderOxyTank(vector2 screenCoords, vector2 dim);
+
+    void renderKeyCard(vector2 screenCoords, vector2 dim, int keyCardType);
 };
 
 

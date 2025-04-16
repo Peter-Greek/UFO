@@ -78,13 +78,9 @@ int GameManager::initialize() {
                     renderHeart(screenCoords, dim, e);
                 }else if (e->getPickupType() == entity::OXY_TANK) {
                     //TODO: Render Oxy Tank Like Hearts and AT
-                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                    TriggerEvent("SDL::Render::ResetDrawColor");
+                    renderOxyTank(screenCoords, dim);
                 }else if (e->getPickupType() == entity::KEY_CARD) {
-                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                    TriggerEvent("SDL::Render::ResetDrawColor");
+                    renderKeyCard(screenCoords, dim, 1);
                 }else if (e->getPickupType() == entity::ESCAPE_POD) {
                     TriggerEvent("SDL::Render::SetDrawColor", 255, 215, 0, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
@@ -120,6 +116,7 @@ int GameManager::initialize() {
         }
     });
 
+    // Commands
     RegisterCommand("setRoomIndex", [this](std::string command, sList_t args, std::string message) {
         if (args.empty()) {
             TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: setRoomIndex <index>");
@@ -142,7 +139,6 @@ int GameManager::initialize() {
         TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
         TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
     });
-
 
     RegisterCommand("escape", [this](std::string command, sList_t args, std::string message) {
         if (!args.empty()) {
@@ -576,6 +572,57 @@ void GameManager::renderHeart(vector2 screenCoords, vector2 dim, bool isBlue) {
     }
 
 
+}
+
+void GameManager::renderOxyTank(vector2 screenCoords, vector2 dim) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("OXY_TANK::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, 300, 600}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    if (isDebug()) {
+        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+    }
+
+    txdMap["OXY_TANK::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+}
+
+void GameManager::renderKeyCard(vector2 screenCoords, vector2 dim, int keyCardType) {
+    // Check if the texture exists in txdMap
+    std::string textureName = "KEY_CARD"+std::to_string(keyCardType)+"::TEXTURE";
+    auto it = txdMap.find(textureName);
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, 100, 100}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    if (isDebug()) {
+        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+    }
+
+    txdMap[textureName]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 }
 
 void GameManager::handleDebugWorldCreator(float deltaMs) {
