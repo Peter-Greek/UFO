@@ -103,6 +103,12 @@ void GameInitializer::Init() {
         CreateUpgradeMenu();
     });
 
+    AddEventHandler("UFO::SaveSelector::Close", [this]() {
+        print("Closing Save Selector");
+        ShutdownSaveSelector();
+        CreateMainMenu();
+    });
+
     // Upgrade Menu Press Play
     AddEventHandler("UFO::UpgradeMenu::StartGameLoop", [this]() {
         ShutdownUpgradeMenu();
@@ -432,15 +438,6 @@ void GameInitializer::GameDebug() {
     rHeading->setTextRelativePosition(0.0f, -0.7f);
 }
 
-void GameInitializer::CreateMainMenu() {
-    ShutdownSaveSelector();
-    ShutdownUpgradeMenu();
-    (*gameStorage).ResetPlayer();
-    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
-    mMenu = attachProcess<MainMenu>(menuTxd);
-}
-
-
 void GameInitializer::LoadTextures() {
     print("Loading Textures");
     // [[Asperite Textures]]
@@ -540,6 +537,15 @@ void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
     }
 }
 
+
+void GameInitializer::CreateMainMenu() {
+    ShutdownSaveSelector();
+    ShutdownUpgradeMenu();
+    (*gameStorage).ResetPlayer();
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
+    mMenu = attachProcess<MainMenu>(menuTxd);
+}
+
 void GameInitializer::ShutdownMainMenu() {
     if (mMenu != nullptr) {
         mMenu->abort();
@@ -549,7 +555,8 @@ void GameInitializer::ShutdownMainMenu() {
 
 void GameInitializer::CreateSaveSelector() {
     ShutdownMainMenu();
-    sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"]);
+    auto menuTxd = attachMappedProcess<TxdLoader>("SAVE_MENU::TEXTURE", "../resource/SpaceBackground.png");
+    sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"], menuTxd);
 }
 
 void GameInitializer::ShutdownSaveSelector() {

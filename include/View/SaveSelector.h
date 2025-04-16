@@ -36,6 +36,7 @@
 
 
 #include "xProcess.h"
+#include "TxdLoader.h"
 #include <SDL_ttf.h>
 
 class SaveSelector : public xProcess {
@@ -74,8 +75,17 @@ private:
             templateBox.y + templateBox.h/2 - templateBox.h/16,
             templateBox.w/8, templateBox.h/8
     };
+
+    sh_ptr<TxdLoader> menuTxd;
+    SDL_Rect srcRect = {1, 1, 1024, 768}; // load the entire texture, 1 pixel in since there is white line
+    SDL_Rect destRect = {
+            static_cast<int>(0),
+            static_cast<int>(0),
+            static_cast<int>(SCREEN_WIDTH),
+            static_cast<int>(SCREEN_HEIGHT) // down scale the texture
+    };
 public:
-    SaveSelector(passFunc_t p1, json saveData): xProcess(true, p1), saveData(std::move(saveData)) {}
+    SaveSelector(passFunc_t p1, json saveData, sh_ptr<TxdLoader> menuTxd_p): xProcess(true, p1), saveData(std::move(saveData)), menuTxd(menuTxd_p) {}
     ~SaveSelector() override = default;
 
     int initialize_SDL_process(SDL_Window* passed_window) override;
