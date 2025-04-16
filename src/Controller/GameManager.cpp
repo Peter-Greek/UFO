@@ -1005,8 +1005,8 @@ void GameManager::update(float deltaMs) {
             pM->attachProcess(gameOverText);
             gameOverText->setTextRelativePosition(0.001, 0.001);
             gameOverText->setCurrentPositionBasedOnRelativePosition();
+            gameOverText->setTextColor({255, 0, 0, 200});
             textMap["GameOver"] = gameOverText;
-
         }
 
         if (gameOverText->state() != text::RUNNING) {
@@ -1019,7 +1019,7 @@ void GameManager::update(float deltaMs) {
         float curTime = sch->getGameTime();
         int elapsedTime = curTime - gameOverTimeStamp;
 
-        int toFontSize = map_range(elapsedTime, 0, 10000, baseFontSize, baseFontSize*3);
+        int toFontSize = map_range(elapsedTime, 0, 6000, baseFontSize, baseFontSize*3);
         gameOverText->setFontSize(toFontSize);
         if (toFontSize >= baseFontSize*3) {
             TriggerEvent("UFO::EndGame");
