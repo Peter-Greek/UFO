@@ -579,7 +579,9 @@ void GameInitializer::CreateUpgradeMenu() {
     auto dTxd = attachMappedProcess<TxdLoader>("DEATH_SCREEN::TEXTURE", "../resource/deathScreen.png");
     auto eTxd = attachMappedProcess<TxdLoader>("ESCAPE_SCREEN::TEXTURE", "../resource/escapeScreen.png");
     auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/escapeScreenWin2.png");
-    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd);
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/SpaceBackground.png");
+    auto rocketTxd = attachMappedProcess<TxdLoader>("ROCKET::TEXTURE", "../resource/StartRocketIcon.png");
+    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd, menuTxd, rocketTxd);
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
     uMenu->setOxygenCount((*gameStorage)["player"]["upgrades"]["oxygen"].get<int>());
     uMenu->setSpeedCount((*gameStorage)["player"]["upgrades"]["speed"].get<int>()); 
