@@ -115,7 +115,6 @@ public:
             vector2 dimensions
     ) : xProcess(false, func), length(dimensions.x), width(dimensions.y), hearts(hearts), maxHearts(hearts){
         coords = position;
-        print("Entity: ", eTypeIndex, " Length: ", length, " Width: ", width);
         appliedLength = length;
         appliedWidth = width;
         type = static_cast<eType>(eTypeIndex);

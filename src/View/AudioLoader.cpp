@@ -215,9 +215,7 @@ void AudioLoader::attachTrack(const std::string& path) {
 }
 
 void AudioLoader::enableTrack(int index) {
-    print("[AudioLoader] Enabling track:", index, layeredTracks.size());
     if (index >= layeredTracks.size()) return;
-    print("[AudioLoader] Enabled track:", index);
     auto& track = layeredTracks[index];
     track.enabled = true;
     if (track.channel != -1) {

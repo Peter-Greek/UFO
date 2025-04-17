@@ -199,6 +199,7 @@ void GameInitializer::Init() {
         (*gameStorage)["player"]["ATCount"] = (*gameStorage)["player"]["ATCount"].get<int>() + atcount;
         (*gameStorage)["player"]["TotalAT"] = (*gameStorage)["player"]["TotalAT"].get<int>() + atcount;
         (*gameStorage)["player"]["time"] = (*gameStorage)["player"]["time"].get<int>() + int (sch->getGameTime() - gameStartTime);
+
         (*gameStorage).SavePlayer();
         print("Saved Player Data!");
 
@@ -286,6 +287,7 @@ void GameInitializer::Init() {
 void GameInitializer::Start(){
     print("Game Start Called");
     gameStartTime = sch->getGameTime();
+    gameState = GAME_LOOP;
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
     gM->setScheduler(sch);
@@ -354,6 +356,38 @@ void GameInitializer::Start(){
     auto escape = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::ESCAPE_POD, sc(v2{0.0f, 550.0f}));
 
     print("Game Environment Created");
+}
+
+void GameInitializer::update(float deltaMs) {
+    if (gameState == GAME_LOOP) {
+        auto player = gameManager->getPlayer();
+        float maxOxy = player->getMaxOxygenTime();
+        float oxy = player->getOxygenLevel();
+        float oxyPercent = oxy / maxOxy;
+        int intensityLevel = -1;
+
+        if (oxyPercent < 0.10f) {
+            intensityLevel = 3;
+        } else if (oxyPercent < 0.20f) {
+            intensityLevel = 2;
+        } else if (oxyPercent < 0.40f) {
+            intensityLevel = 1;
+        } else if (oxyPercent < 0.75f) {
+            intensityLevel = 0;
+        }
+
+        if (intensityLevel != lastIntensityLevel) {
+            for (int i = 0; i < 4; ++i) {
+                if (i == intensityLevel) {
+                    gameLoopMusic->enableTrack(i);
+                } else {
+                    gameLoopMusic->disableTrack(i);
+                }
+            }
+        }
+    }else {
+        lastIntensityLevel = -1;
+    }
 }
 
 void GameInitializer::End(GAME_RESULT result) {
@@ -578,8 +612,11 @@ void GameInitializer::CreateGameLoopBackgroundMusic() {
     gameLoopMusic->attachTrack("../resource/audio/Drum4.wav"); // index: 3
 //    gameLoopMusic->enableTrack(0);
 //    gameLoopMusic->enableTrack(1);
-    gameLoopMusic->enableTrack(2);
+//    gameLoopMusic->enableTrack(2);
     gameLoopMusic->setTrackVolume(0, VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->setTrackVolume(1, VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->setTrackVolume(2, VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->setTrackVolume(3, VOLUME_MUSIC / 100.0f);
 
 
     gameLoopMusic->setVolume(VOLUME_MUSIC / 100.0f);
@@ -598,6 +635,7 @@ void GameInitializer::ShutdownGameLoopBackgroundMusic() {
 void GameInitializer::CreateMainMenu() {
     ShutdownSaveSelector();
     ShutdownUpgradeMenu();
+    gameState = MAIN_MENU;
     (*gameStorage).ResetPlayer();
     auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/GFX/screens/MainMenuV2.png");
     mMenu = attachProcess<MainMenu>(menuTxd);
@@ -612,6 +650,7 @@ void GameInitializer::ShutdownMainMenu() {
 
 void GameInitializer::CreateSaveSelector() {
     ShutdownMainMenu();
+    gameState = SAVE_SELECTOR;
     auto menuTxd = attachMappedProcess<TxdLoader>("SAVE_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
     sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"], menuTxd);
 }
@@ -626,6 +665,7 @@ void GameInitializer::ShutdownSaveSelector() {
 void GameInitializer::CreateUpgradeMenu() {
     ShutdownMainMenu();
     ShutdownSaveSelector();
+    gameState = UPGRADE_MENU;
     auto dTxd = attachMappedProcess<TxdLoader>("DEATH_SCREEN::TEXTURE", "../resource/GFX/screens/deathScreen.png");
     auto eTxd = attachMappedProcess<TxdLoader>("ESCAPE_SCREEN::TEXTURE", "../resource/GFX/screens/escapeScreen.png");
     auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/GFX/screens/escapeScreenWin2.png");
@@ -664,6 +704,7 @@ void GameInitializer::ShutdownUserInputBox() {
 void GameInitializer::CreateSettingsMenu() {
     ShutdownMainMenu();
     ShutdownSaveSelector();
+    gameState = SETTING_MENU;
     setMenu = attachProcess<SettingsMenu>(gameStorage);
 }
 

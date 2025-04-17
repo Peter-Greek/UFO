@@ -80,10 +80,19 @@ private:
     std::list<sh_ptr<TxdLoader>> txdLoaders;
 
     float gameStartTime = 0.0f; // used for save data
+    enum GameState {
+        MAIN_MENU,
+        SETTING_MENU,
+        LEADERBOARD_MENU,
+        SAVE_SELECTOR,
+        UPGRADE_MENU,
+        GAME_LOOP,
+    } gameState = MAIN_MENU;
 
     sh_ptr<UserInput> userInputBox; // used for user input
 
     GAME_RESULT gameResult = NONE;
+    int lastIntensityLevel = -1;
 public:
     GameInitializer(passFunc_t p1,
         sh_ptr<ProcessManager> pM,
@@ -171,7 +180,7 @@ public:
 
 
 
-    void update(float deltaMs) override {};
+    void update(float deltaMs) override;
     bool isDone() override { return false; };
 
     void Init();

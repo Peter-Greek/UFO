@@ -1,25 +1,15 @@
 {
-    "curPlayer": 0,
-    "loads": 1751,
+    "curPlayer": -1,
+    "loads": 1758,
     "player": {
-        "ATCount": 2179,
-        "Ending": 2,
-        "TotalAT": 2309,
-        "date": 1744095919,
-        "loads": 180,
-        "name": "Peter Greek",
-        "settings": {
-            "curRoomIndex": 0,
-            "debugMode": 0,
-            "unlimitedFrames": false
-        },
-        "time": 2253040,
+        "ATCount": 0,
+        "TotalAT": 0,
         "upgrades": {
-            "at_cannon": 2,
-            "invisibility": 3,
-            "oxygen": 5,
-            "shield": 3,
-            "speed": 5
+            "at_cannon": 0,
+            "invisibility": 0,
+            "oxygen": 0,
+            "shield": 0,
+            "speed": 0
         }
     },
     "saves": [
@@ -28,7 +18,7 @@
             "Ending": 2,
             "TotalAT": 2309,
             "date": 1744095919,
-            "loads": 180,
+            "loads": 185,
             "name": "Peter Greek",
             "settings": {
                 "curRoomIndex": 0,
@@ -49,7 +39,7 @@
             "Ending": 0,
             "TotalAT": 0,
             "date": 1744242334,
-            "loads": 6,
+            "loads": 8,
             "name": "Jog",
             "settings": {
                 "curRoomIndex": 0,
@@ -90,14 +80,14 @@
             "Ending": 0,
             "TotalAT": 33,
             "date": 1744493134,
-            "loads": 3,
+            "loads": 4,
             "name": "Alice",
             "settings": {
                 "curRoomIndex": 0,
                 "debugMode": 0,
                 "unlimitedFrames": false
             },
-            "time": 27551,
+            "time": 222831,
             "upgrades": {
                 "at_cannon": 0,
                 "invisibility": 0,
