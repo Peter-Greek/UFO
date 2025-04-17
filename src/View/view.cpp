@@ -40,6 +40,36 @@
 #include <windows.h>
 #endif
 
+std::pair<int, int> getPrimaryDisplayResolution() {
+    SDL_DisplayMode mode;
+    if (SDL_GetCurrentDisplayMode(0, &mode) == 0) {
+        return {mode.w, mode.h};
+    } else {
+        print("SDL_GetCurrentDisplayMode failed: %s", SDL_GetError());
+        return {0, 0};
+    }
+}
+
+std::pair <int, int> view::getScreenResolution() {
+    // get current display size and apply it as the args
+    int displayIndex = SDL_GetWindowDisplayIndex(window);
+    if (displayIndex < 0) {
+        print("SDL_GetWindowDisplayIndex failed2: %s", SDL_GetError());
+        return {0, 0};
+    } else {
+        SDL_DisplayMode mode;
+        if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
+            int displayWidth = mode.w;
+            int displayHeight = mode.h;
+            print("Display size2: %dx%d", displayWidth, displayHeight);
+            return {displayWidth, displayHeight};
+        } else {
+            print("SDL_GetCurrentDisplayMode failed2: %s", SDL_GetError());
+            return {0, 0};
+        }
+    }
+}
+
 // Process Functions
 int view::initialize() {
     #ifdef _WIN32
@@ -71,6 +101,19 @@ int view::initialize() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         error("SDL could not initialize!", SDL_GetError());
         return 0;
+    }
+
+
+    if (FULL_SCREEN_ENABLED) {
+        auto wh = getPrimaryDisplayResolution();
+        print("Display size: %dx%d", wh.first, wh.second);
+        SCREEN_WIDTH = wh.first;
+        SCREEN_HEIGHT = wh.second;
+    }else {
+        if (SCREEN_RESOLUTION.first != 0 && SCREEN_RESOLUTION.second != 0) {
+            SCREEN_WIDTH = SCREEN_RESOLUTION.first;
+            SCREEN_HEIGHT = SCREEN_RESOLUTION.second;
+        }
     }
 
     // Create window with High DPI awareness
@@ -115,15 +158,19 @@ int view::initialize() {
 //    // Define the subregion you want (x, y, width, height)
 //    SDL_Rect iconRect = { 265, 22, 765 - 265, 427-22 };
 
+//    SDL_Surface* fullImage = IMG_Load("../resource/GFX/screens/pixil-frame-0.png");
+//    if (!fullImage) {
+//        error("Failed to load image for icon: ", IMG_GetError());
+//    }
+//    // Define the subregion you want (x, y, width, height)
+//    SDL_Rect iconRect = { 0, 0, 2000, 2000 };  // cropped from y = 4, height = 28
+
     SDL_Surface* fullImage = IMG_Load("../resource/GFX/sprites/FSS.png");
     if (!fullImage) {
         error("Failed to load image for icon: ", IMG_GetError());
     }
     // Define the subregion you want (x, y, width, height)
     SDL_Rect iconRect = { 0, 8, 32, 32 };  // cropped from y = 4, height = 28
-
-
-
 
     // Create a surface to hold the icon
     SDL_Surface* iconSurface = SDL_CreateRGBSurface(0, iconRect.w, iconRect.h,
@@ -300,6 +347,8 @@ int view::initialize() {
                 }
             }
         }
+
+
 
 
         resizeWindow(width, height, true);

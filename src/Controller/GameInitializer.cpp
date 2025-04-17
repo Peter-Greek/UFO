@@ -55,6 +55,15 @@ void GameInitializer::Init() {
         }else if (configName == "curRoomIndex") {
             (*gameStorage)["settings"]["curRoomIndex"] = curRoomIndex;
             gameStorage->save();
+        }else if (configName == "AUDIO_ENABLED") {
+            (*gameStorage)["settings"]["AUDIO_ENABLED"] = AUDIO_ENABLED;
+            gameStorage->save();
+        }else if (configName == "FULL_SCREEN_ENABLED") {
+            (*gameStorage)["settings"]["FULL_SCREEN_ENABLED"] = FULL_SCREEN_ENABLED;
+            gameStorage->save();
+        }else if (configName == "SCREEN_RESOLUTION") {
+            (*gameStorage)["settings"]["SCREEN_RESOLUTION"] = SCREEN_RESOLUTION;
+            gameStorage->save();
         }
     });
 
@@ -610,15 +619,10 @@ void GameInitializer::CreateGameLoopBackgroundMusic() {
     gameLoopMusic->attachTrack("../resource/audio/Drum2.wav"); // index: 1
     gameLoopMusic->attachTrack("../resource/audio/Drum3.wav"); // index: 2
     gameLoopMusic->attachTrack("../resource/audio/Drum4.wav"); // index: 3
-//    gameLoopMusic->enableTrack(0);
-//    gameLoopMusic->enableTrack(1);
-//    gameLoopMusic->enableTrack(2);
     gameLoopMusic->setTrackVolume(0, VOLUME_MUSIC / 100.0f);
     gameLoopMusic->setTrackVolume(1, VOLUME_MUSIC / 100.0f);
     gameLoopMusic->setTrackVolume(2, VOLUME_MUSIC / 100.0f);
     gameLoopMusic->setTrackVolume(3, VOLUME_MUSIC / 100.0f);
-
-
     gameLoopMusic->setVolume(VOLUME_MUSIC / 100.0f);
     gameLoopMusic->play();
 }
@@ -705,7 +709,8 @@ void GameInitializer::CreateSettingsMenu() {
     ShutdownMainMenu();
     ShutdownSaveSelector();
     gameState = SETTING_MENU;
-    setMenu = attachProcess<SettingsMenu>(gameStorage);
+    auto menuTxd = attachMappedProcess<TxdLoader>("SETTINGS_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
+    setMenu = attachProcess<SettingsMenu>(gameStorage, menuTxd);
 }
 
 void GameInitializer::ShutdownSettingsMenu() {

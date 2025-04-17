@@ -1,6 +1,6 @@
 {
     "curPlayer": -1,
-    "loads": 1758,
+    "loads": 1787,
     "player": {
         "ATCount": 0,
         "TotalAT": 0,
@@ -178,6 +178,14 @@
         }
     ],
     "settings": {
+        "AUDIO_ENABLED": false,
+        "FULL_SCREEN_ENABLED": false,
+        "SCREEN_RESOLUTION": [
+            2400,
+            1600
+        ],
+        "VOLUME_MUSIC": null,
+        "VOLUME_SFX": null,
         "curRoomIndex": 1,
         "debugMode": 0,
         "targetFPS": 90,

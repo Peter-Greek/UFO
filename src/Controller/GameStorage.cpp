@@ -52,6 +52,28 @@ int GameStorage::apply() {
         targetFPS = gameStorage["settings"]["targetFPS"].get<int>();
     }
 
+    if (gameStorage["settings"]["AUDIO_ENABLED"] != nullptr) {
+        AUDIO_ENABLED = gameStorage["settings"]["AUDIO_ENABLED"].get<bool>();
+    }
+
+    if (gameStorage["settings"]["VOLUME_MUSIC"] != nullptr) {
+        VOLUME_MUSIC = gameStorage["settings"]["VOLUME_MUSIC"].get<float>();
+    }
+
+    if (gameStorage["settings"]["VOLUME_SFX"] != nullptr) {
+        VOLUME_SFX = gameStorage["settings"]["VOLUME_SFX"].get<float>();
+    }
+
+    if (gameStorage["settings"]["FULL_SCREEN_ENABLED"] != nullptr) {
+        FULL_SCREEN_ENABLED = gameStorage["settings"]["FULL_SCREEN_ENABLED"].get<bool>();
+    }
+
+    if (gameStorage["settings"]["SCREEN_RESOLUTION"] != nullptr) {
+        SCREEN_RESOLUTION = gameStorage["settings"]["SCREEN_RESOLUTION"].get<std::pair<int, int>>();
+    }
+
+
+
     updateSettings(); // Update non stored settings based on the new changes
     return 0;
 }

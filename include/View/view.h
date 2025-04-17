@@ -44,6 +44,8 @@ public:
     void postAbort() override;
 
     void resizeWindow(int width, int height, bool center);
+
+    std::pair<int, int> getScreenResolution();
 };
 
 #endif //CSCI437_VIEW_H

@@ -36,6 +36,7 @@
 
 #include "xProcess.h"
 #include "GameStorage.h"
+#include "TxdLoader.h"
 #include <SDL_ttf.h>
 #include <list>
 #include <string>
@@ -96,7 +97,7 @@ private:
         return std::stoi(args[0]) == width && std::stoi(args[1]) == height;
     }
 
-    std::pair <int, int> getScreenResolution(const std::string& resolution) {
+    std::pair <int, int> getScreenResolution() {
         // get current display size and apply it as the args
         int displayIndex = SDL_GetWindowDisplayIndex(window);
         if (displayIndex < 0) {
@@ -125,9 +126,9 @@ private:
                     {"1024x768", isResolutionActive("1024x768")}
             }},
             //toggle_t for fullscreen
-            setting_variant_t{std::in_place_type<toggle_t>, "Fullscreen", setting_t{"fs", false}},
+            setting_variant_t{std::in_place_type<toggle_t>, "Fullscreen", setting_t{"fs", FULL_SCREEN_ENABLED}},
             setting_variant_t{std::in_place_type<toggle_t>, "VSync", setting_t{"vsync", false}},
-            setting_variant_t{std::in_place_type<toggle_t>, "Audio", setting_t{"sound", true}},
+            setting_variant_t{std::in_place_type<toggle_t>, "Audio", setting_t{"sound", AUDIO_ENABLED}},
 
             setting_variant_t{std::in_place_type<slider_t>, slider_t{"Volume", {"Volume", 50.0f}, 0.0f, 100.0f, 1.0f, true, true}},
 
@@ -153,8 +154,11 @@ private:
     std::list<std::pair<SDL_Texture*, SDL_Rect>> textures;
 
     sh_ptr<GameStorage> gS;
+    sh_ptr<TxdLoader> menuTxd;
+    SDL_Rect srcRect = {1, 1, 1024, 768}; // load the entire texture, 1 pixel in since there is white line
 public:
-    SettingsMenu(passFunc_t p1, sh_ptr<GameStorage> gS_p): xProcess(true, p1), gS(gS_p) {}
+    SettingsMenu(passFunc_t p1, sh_ptr<GameStorage> gS_p, sh_ptr<TxdLoader> mTxd)
+        : xProcess(true, p1), gS(gS_p), menuTxd(mTxd)  {}
     ~SettingsMenu() override = default;
 
     int initialize_SDL_process(SDL_Window* passed_window) override;

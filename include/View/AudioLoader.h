@@ -87,6 +87,10 @@ public:
     void disableTrack(int index);
     void setTrackVolume(int index, float vol);
     void stopAllTracks();
+
+    void setVolume(int vol);
+
+    void refreshVolume();
 };
 
 

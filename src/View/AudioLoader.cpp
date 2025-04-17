@@ -84,6 +84,12 @@ int AudioLoader::initialize_SDL_process(SDL_Window* window) {
         play();
     }
 
+    AddEventHandler("UFO::OnConfigUpdate", [this](const std::string configName) {
+        if (configName == "AUDIO_ENABLED") {
+            refreshVolume();
+        }
+    });
+
     return 1;
 }
 
@@ -109,9 +115,10 @@ void AudioLoader::play() {
 
     print("[AudioLoader] Playing audio:", audioPath);
 
+    refreshVolume();
+
     // Play main music or sound effect
     if (isMusic && music) {
-        Mix_VolumeMusic(volume);
         if (Mix_FadeInMusic(music, -1, 1000) == -1) {
             error("Mix_FadeInMusic failed:", Mix_GetError());
         } else {
@@ -119,7 +126,6 @@ void AudioLoader::play() {
             print("  - Music Playing:", Mix_PlayingMusic() ? "Yes" : "No");
         }
     } else if (chunk) {
-        Mix_VolumeChunk(chunk, volume);
         channel = Mix_PlayChannel(-1, chunk, 0);
         if (channel == -1) {
             error("Mix_PlayChannel failed:", Mix_GetError());
@@ -139,6 +145,11 @@ void AudioLoader::play() {
         }
 
         int volToApply = track.enabled ? track.volume : 0;
+        if (!AUDIO_ENABLED) {
+            volToApply = 0; // Mute if audio is disabled
+        }
+
+
         Mix_Volume(track.channel, volToApply);
 
         print("[Layered Track] ", track.path);
@@ -175,14 +186,46 @@ void AudioLoader::setVolume(float vol) {
     vol = std::clamp(vol, 0.0f, 1.0f); // Ensure volume is between 0 and 1
     int sdlVolume = static_cast<int>(vol * MIX_MAX_VOLUME);
     volume = sdlVolume;
+    refreshVolume();
+}
+
+void AudioLoader::setVolume(int vol) {
+    vol = std::clamp(vol, 0, MIX_MAX_VOLUME); // Ensure volume is between 0 and 1
+    volume = vol;
+    refreshVolume();
+}
+
+void AudioLoader::refreshVolume() {
+    if (!AUDIO_ENABLED) {
+        Mix_VolumeMusic(0);
+        Mix_VolumeChunk(chunk, 0);
+        for (auto& track : layeredTracks) {
+            if (!track.chunk) continue;
+            if (track.channel != -1) {
+                Mix_Volume(track.channel, 0);
+            }
+        }
+        return;
+    }
+
     if (isPlaying) {
         if (isMusic && music) {
             Mix_VolumeMusic(volume);
         } else if (chunk) {
             Mix_VolumeChunk(chunk, volume);
         }
+
+        for (auto& track : layeredTracks) {
+            if (!track.chunk) continue;
+            if (track.channel != -1) {
+                Mix_Volume(track.channel, track.enabled ? track.volume : 0);
+            }
+        }
     }
 }
+
+
+
 
 double AudioLoader::getPlaybackTime() {
     if (isMusic && music) {
@@ -219,6 +262,7 @@ void AudioLoader::enableTrack(int index) {
     auto& track = layeredTracks[index];
     track.enabled = true;
     if (track.channel != -1) {
+        if (!AUDIO_ENABLED) {Mix_Volume(track.channel, 0); return;};
         Mix_Volume(track.channel, track.volume);
     }
 }
@@ -238,6 +282,7 @@ void AudioLoader::setTrackVolume(int index, float vol) {
     int volInt = static_cast<int>(std::clamp(vol, 0.0f, 1.0f) * MIX_MAX_VOLUME);
     layeredTracks[index].volume = volInt;
     if (layeredTracks[index].channel != -1) {
+        if (!AUDIO_ENABLED) {volInt = 0;};
         Mix_Volume(layeredTracks[index].channel, volInt);
     }
 }

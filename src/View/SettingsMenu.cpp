@@ -48,6 +48,17 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
         textures.clear();
         dropdownHitboxes.clear();
 
+        if (menuTxd != nullptr && menuTxd->state() == xProcess::RUNNING) {
+            // this needs to be created each call as the window size changes from user input
+            SDL_Rect destRect = {
+                    static_cast<int>(0),
+                    static_cast<int>(0),
+                    static_cast<int>(SCREEN_WIDTH),
+                    static_cast<int>(SCREEN_HEIGHT) // down scale the texture
+            };
+            menuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+        }
+
         for (const auto& setting : settings) {
             std::visit([&](auto&& s) {
                 using T = std::decay_t<decltype(s)>;
@@ -152,6 +163,8 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
 
                                 print(realName + " toggled to " + std::to_string(toggle->second.second));
                                 if (realName == "Fullscreen") {
+                                    FULL_SCREEN_ENABLED = toggle->second.second;
+                                    TriggerEvent("UFO::ChangeConfigValue", "FULL_SCREEN_ENABLED");
                                     if (toggle->second.second) {
                                         TriggerEvent("UFO::View::ResizeWindow", 0, 0);
                                     }else {
@@ -173,7 +186,8 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                                 } else if (realName == "VSync") {
                                     TriggerEvent("UFO::View::ToggleVSync", toggle->second.second);
                                 } else if (realName == "Audio") {
-                                    TriggerEvent("UFO::View::ToggleAudio", toggle->second.second);
+                                    AUDIO_ENABLED = toggle->second.second;
+                                    TriggerEvent("UFO::ChangeConfigValue", "AUDIO_ENABLED");
                                 }
 
 
@@ -197,12 +211,16 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
 
                             if (settingName == "Windowed Resolution") {
                                 auto [w, h] = resolution_map[optionName];
+                                SCREEN_RESOLUTION = {w, h};
+                                TriggerEvent("UFO::ChangeConfigValue", "SCREEN_RESOLUTION");
                                 TriggerEvent("UFO::View::ResizeWindow", w, h);
 
                                 // set fullscreen toggle to false
                                 for (auto& setting : settings) {
                                     if (auto* toggle = std::get_if<toggle_t>(&setting); toggle && toggle->first == "Fullscreen") {
                                         toggle->second.second = false;
+                                        FULL_SCREEN_ENABLED = false;
+                                        TriggerEvent("UFO::ChangeConfigValue", "FULL_SCREEN_ENABLED");
                                         break;
                                     }
                                 }
