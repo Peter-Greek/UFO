@@ -103,16 +103,42 @@ int view::initialize() {
         return 0;
     }
 
-
+    auto wh = getPrimaryDisplayResolution();
     if (FULL_SCREEN_ENABLED) {
-        auto wh = getPrimaryDisplayResolution();
-        print("Display size: %dx%d", wh.first, wh.second);
+        print("Fullscreen enabled");
+        // Get the current display size and apply it
+        print("Display size: ", wh.first, wh.second);
         SCREEN_WIDTH = wh.first;
         SCREEN_HEIGHT = wh.second;
     }else {
+        // Get the current display size and ensure set resolution is not larger
         if (SCREEN_RESOLUTION.first != 0 && SCREEN_RESOLUTION.second != 0) {
+            print("Set resolution found: ", SCREEN_RESOLUTION.first, SCREEN_RESOLUTION.second);
+            if (SCREEN_RESOLUTION.first > wh.first) {
+                SCREEN_RESOLUTION.first = wh.first;
+            }
+            if (SCREEN_RESOLUTION.second > wh.second) {
+                SCREEN_RESOLUTION.second = wh.second;
+            }
             SCREEN_WIDTH = SCREEN_RESOLUTION.first;
             SCREEN_HEIGHT = SCREEN_RESOLUTION.second;
+        }else {
+            print("No set resolution found, using default");
+            // if the set screen size does not exist then lets just go 1024x768 or fullscreen
+            if (wh.first < 1024) {
+                SCREEN_WIDTH = wh.first;
+            }else {
+                SCREEN_WIDTH = 1024;
+            }
+            if (wh.second < 768) {
+                SCREEN_HEIGHT = wh.second;
+            }else {
+                SCREEN_HEIGHT = 768;
+            }
+
+            SCREEN_RESOLUTION.first = SCREEN_WIDTH;
+            SCREEN_RESOLUTION.second = SCREEN_HEIGHT;
+            TriggerEvent("UFO::ChangeConfigValue", "SCREEN_RESOLUTION"); // refresh settings fix
         }
     }
 
