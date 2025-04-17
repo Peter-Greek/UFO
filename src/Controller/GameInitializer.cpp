@@ -39,6 +39,9 @@
 void GameInitializer::Init() {
     print("Game Init");
 
+    // Create And Play Main Menu Music (Stays until the main game loop is started)
+    CreateBackgroundMusic();
+
     // Config Changes
     AddEventHandler("UFO::OnConfigUpdate", [this](const std::string configName) {
         updateSettings(); // Update settings based on global variables
@@ -100,6 +103,7 @@ void GameInitializer::Init() {
 
         ShutdownSaveSelector();
         (*gameStorage).SelectPlayer(slotIndex);
+        ShutdownBackgroundMusic();
         CreateUpgradeMenu();
     });
 
@@ -112,6 +116,8 @@ void GameInitializer::Init() {
     // Upgrade Menu Press Play
     AddEventHandler("UFO::UpgradeMenu::StartGameLoop", [this]() {
         ShutdownUpgradeMenu();
+        ShutdownBackgroundMusic();
+        CreateGameLoopBackgroundMusic();
         Start();
         GameDebug();
     });
@@ -120,6 +126,7 @@ void GameInitializer::Init() {
     AddEventHandler("UFO::UpgradeMenu::State", [this](bool state) {
         if (state == false && uMenu != nullptr) {
             ShutdownUpgradeMenu();
+            CreateBackgroundMusic();
             CreateMainMenu();
         }
     });
@@ -361,8 +368,8 @@ void GameInitializer::End(GAME_RESULT result) {
 
     //TODO: Add in some game result screen
 
+    ShutdownGameLoopBackgroundMusic();
     CreateUpgradeMenu();
-
 }
 
 void GameInitializer::Debug() {
@@ -444,7 +451,7 @@ void GameInitializer::LoadTextures() {
 
 
     // Create Player Anim
-    auto fAnim = attachGameMappedProcess<AsepriteLoader>("FSS", "../resource/GFX/icons/FSS.png", "../resource/json/FSS.json");
+    auto fAnim = attachGameMappedProcess<AsepriteLoader>("FSS", "../resource/GFX/sprites/FSS.png", "../resource/json/FSS.json");
         // [[Animations]]
         auto fAnimIdle = attachGameMappedNonProcess<Animation>("FSS_IDLE", fAnim->getJSONData(), "Ferret Sprite Sheet (Idle)");
         auto fAnimMove = attachGameMappedNonProcess<Animation>("FSS_MOVE", fAnim->getJSONData(), "Ferret Sprite Sheet (Movement)");
@@ -483,7 +490,7 @@ void GameInitializer::LoadTextures() {
 void GameInitializer::LoadAudio() {
     print("Loading Audio");
     // [[Audio]]
-    auto aHitMarker = attachGameMappedProcess<AudioLoader>("hitmarker", "../resource/audio/hitmarker.wav");
+    auto aHitMarker = attachGameMappedProcess<AudioLoader>("hitmarker", "../resource/audio/hitmarker.wav", false);
 }
 
 void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
@@ -544,12 +551,55 @@ void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
     }
 }
 
+void GameInitializer::CreateBackgroundMusic() {
+    ShutdownBackgroundMusic();
+    ShutdownGameLoopBackgroundMusic();
+    mainMenuMusic = attachProcess<AudioLoader>("../resource/audio/MenuThemePreSynthLoopReady.wav", true);
+    mainMenuMusic->setVolume(VOLUME_MUSIC / 100.0f);
+    mainMenuMusic->play();
+}
+
+void GameInitializer::ShutdownBackgroundMusic() {
+    if (mainMenuMusic != nullptr) {
+        mainMenuMusic->stop();
+        mainMenuMusic->abort();
+        mainMenuMusic = nullptr;
+    }
+}
+
+void GameInitializer::CreateGameLoopBackgroundMusic() {
+    print("[GameInit] Creating Game Loop Music");
+    ShutdownBackgroundMusic();
+    ShutdownGameLoopBackgroundMusic();
+    gameLoopMusic = attachProcess<AudioLoader>("../resource/audio/TestBase.wav", true);
+    gameLoopMusic->attachTrack("../resource/audio/Drum1.wav"); // index: 0
+    gameLoopMusic->attachTrack("../resource/audio/Drum2.wav"); // index: 1
+    gameLoopMusic->attachTrack("../resource/audio/Drum3.wav"); // index: 2
+    gameLoopMusic->attachTrack("../resource/audio/Drum4.wav"); // index: 3
+//    gameLoopMusic->enableTrack(0);
+//    gameLoopMusic->enableTrack(1);
+    gameLoopMusic->enableTrack(2);
+    gameLoopMusic->setTrackVolume(0, VOLUME_MUSIC / 100.0f);
+
+
+    gameLoopMusic->setVolume(VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->play();
+}
+
+void GameInitializer::ShutdownGameLoopBackgroundMusic() {
+    print("[GameInit] Shutting Down Game Loop Music");
+    if (gameLoopMusic != nullptr) {
+        gameLoopMusic->stop();
+        gameLoopMusic->abort();
+        gameLoopMusic = nullptr;
+    }
+}
 
 void GameInitializer::CreateMainMenu() {
     ShutdownSaveSelector();
     ShutdownUpgradeMenu();
     (*gameStorage).ResetPlayer();
-    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/GFX/screens/MainMenuV2.png");
     mMenu = attachProcess<MainMenu>(menuTxd);
 }
 
@@ -562,7 +612,7 @@ void GameInitializer::ShutdownMainMenu() {
 
 void GameInitializer::CreateSaveSelector() {
     ShutdownMainMenu();
-    auto menuTxd = attachMappedProcess<TxdLoader>("SAVE_MENU::TEXTURE", "../resource/SpaceBackground.png");
+    auto menuTxd = attachMappedProcess<TxdLoader>("SAVE_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
     sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"], menuTxd);
 }
 

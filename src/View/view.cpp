@@ -115,7 +115,7 @@ int view::initialize() {
 //    // Define the subregion you want (x, y, width, height)
 //    SDL_Rect iconRect = { 265, 22, 765 - 265, 427-22 };
 
-    SDL_Surface* fullImage = IMG_Load("../resource/GFX/icons/FSS.png");
+    SDL_Surface* fullImage = IMG_Load("../resource/GFX/sprites/FSS.png");
     if (!fullImage) {
         error("Failed to load image for icon: ", IMG_GetError());
     }

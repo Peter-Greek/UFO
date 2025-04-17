@@ -61,6 +61,9 @@ public:
         WIN_ESCAPE_TOP_SCORE
     };
 private:
+    sh_ptr<AudioLoader> mainMenuMusic;
+    sh_ptr<AudioLoader> gameLoopMusic;
+
     sh_ptr<MainMenu> mMenu;
     sh_ptr<UpgradeMenu> uMenu;
     sh_ptr<SaveSelector> sMenu;
@@ -203,6 +206,14 @@ public:
     void CreateSettingsMenu();
 
     void ShutdownSettingsMenu();
+
+    void CreateBackgroundMusic();
+
+    void ShutdownBackgroundMusic();
+
+    void CreateGameLoopBackgroundMusic();
+
+    void ShutdownGameLoopBackgroundMusic();
 };
 
 

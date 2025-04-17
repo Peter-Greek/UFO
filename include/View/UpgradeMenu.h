@@ -100,7 +100,7 @@ private:
     int gameResult = GAME_RESULT::NONE;
     bool displayingResult = false;
 
-    SDL_Rect srcRect = {0, 0, 1024, 1024}; // load the entire texture, 1 pixel in since there is white line
+    SDL_Rect srcRect = {1, 1, 1024, 1024}; // load the entire texture, 1 pixel in since there is white line
     SDL_Rect destRect = {
             static_cast<int>(0),
             static_cast<int>(0),
