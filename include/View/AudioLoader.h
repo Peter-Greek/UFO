@@ -41,18 +41,52 @@
 #include <unordered_map>
 #include <utility>
 #include "xProcess.h"
+#include <vector>
 
 class AudioLoader : public xProcess {
 private:
     std::string audioPath;
     Mix_Chunk* chunk = nullptr;
+    Mix_Music* music = nullptr;
+
+    int volume = static_cast<int>(0.5 * MIX_MAX_VOLUME); // Default volume
+    int channel = -1;
+
+    bool isMusic = false;
     bool running = false;
+    bool isPlaying = false;
+
+    struct AudioTrack {
+        std::string path;
+        Mix_Chunk* chunk = nullptr;
+        int channel = -1;
+        int volume = MIX_MAX_VOLUME;
+        bool enabled = false;
+    };
+
+    std::vector<AudioTrack> layeredTracks;
+    std::vector<std::string> pendingTrackPaths;
+
 public:
-    explicit AudioLoader(passFunc_t passFunc, std::string  path): xProcess(true, std::move(passFunc)), audioPath(std::move(path)) {}
+    explicit AudioLoader(passFunc_t passFunc, std::string path, bool isMusic_p = false)
+            : xProcess(true, std::move(passFunc)), audioPath(std::move(path)), isMusic(isMusic_p) {}
+    ~AudioLoader() override;
+
     int initialize_SDL_process(SDL_Window* window) override;
     void update(float deltaMs) override;
     bool isDone() override;
-    void play(float volume = 1.0f);
+
+    void play(float volume);
+    void play();
+    void stop();
+    void setVolume(float vol);
+    double getPlaybackTime();
+
+    void attachTrack(const std::string& path);
+    void enableTrack(int index);
+    void disableTrack(int index);
+    void setTrackVolume(int index, float vol);
+    void stopAllTracks();
 };
 
 
