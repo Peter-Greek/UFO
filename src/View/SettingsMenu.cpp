@@ -27,13 +27,13 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
         }
     }
 
-    font = TTF_OpenFont("../resource/Arial.ttf", fontSize);
+    font = TTF_OpenFont("../resource/font/Arial.ttf", fontSize);
     if (font == nullptr) {
         error("Unable to open font! ", SDL_GetError());
         return 0;
     }
 
-    font_extra = TTF_OpenFont("../resource/symbol.ttf", fontSize);
+    font_extra = TTF_OpenFont("../resource/font/symbol.ttf", fontSize);
     if (font_extra == nullptr) {
         error("Unable to open font! ", SDL_GetError());
         return 0;

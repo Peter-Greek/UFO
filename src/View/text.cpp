@@ -64,7 +64,7 @@ int text::initialize_SDL_process(SDL_Window* passed_window) {
     }
 
     // Load font
-    font = TTF_OpenFont("../resource/Arial.ttf", fontSize);
+    font = TTF_OpenFont("../resource/font/Arial.ttf", fontSize);
     if (font == nullptr) {
         error("Unable to open font! ", SDL_GetError());
         return 0;
@@ -230,7 +230,7 @@ void text::showText(std::string new_text) {
 
 void text::setFontSize(int toFontSize) {
     fontSize = toFontSize;
-    font = TTF_OpenFont("../resource/Arial.ttf", fontSize);
+    font = TTF_OpenFont("../resource/font/Arial.ttf", fontSize);
     if (font == nullptr) {
         error("Unable to open font! ", SDL_GetError());
     }

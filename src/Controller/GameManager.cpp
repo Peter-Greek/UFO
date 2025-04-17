@@ -266,7 +266,7 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
         currentFrame = animMap["FSS_IDLE"]->getCurrentFrame(deltaMs);
     }
 
-    // Need to change the position based on the direction the player is moving so the sprite stays within the hit box
+    // Need to change the position based on the direction the player is moving so the sprites stays within the hit box
     SDL_Rect destRect = {
             static_cast<int>(screenCoords.x - dim.x/2),
             static_cast<int>(screenCoords.y - dim.y),

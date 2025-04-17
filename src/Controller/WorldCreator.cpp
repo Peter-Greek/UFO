@@ -177,7 +177,7 @@ int WorldCreator::loadFromPng(std::string fileName) {
     json roomJson = generateRoomJson("Generated Room", "generated_room", walls);
 
     // Save to temp.json
-    std::string outputPath = "temp.json";
+    std::string outputPath = "../resource/json/temp.json";
     std::ofstream out(outputPath);
     out << std::setw(4) << roomJson << std::endl;
     out.close();

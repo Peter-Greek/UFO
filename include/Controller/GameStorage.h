@@ -40,7 +40,7 @@ class GameStorage {
 private:
     jLoader gameStorage;
 public:
-    GameStorage() : gameStorage("../resource/storage.json") {};
+    GameStorage() : gameStorage("../resource/json/storage.json") {};
     int load();
     int apply();
     jLoader& getStorage();

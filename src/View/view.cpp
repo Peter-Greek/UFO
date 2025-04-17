@@ -108,14 +108,14 @@ int view::initialize() {
     // Favicon
 
     // Load the full image
-//    SDL_Surface* fullImage = IMG_Load("../resource/MainMenuV2.png");
+//    SDL_Surface* fullImage = IMG_Load("../resource/GFX/screens/MainMenuV2.png");
 //    if (!fullImage) {
 //        error("Failed to load image for icon: ", IMG_GetError());
 //    }
 //    // Define the subregion you want (x, y, width, height)
 //    SDL_Rect iconRect = { 265, 22, 765 - 265, 427-22 };
 
-    SDL_Surface* fullImage = IMG_Load("../resource/FSS.png");
+    SDL_Surface* fullImage = IMG_Load("../resource/GFX/icons/FSS.png");
     if (!fullImage) {
         error("Failed to load image for icon: ", IMG_GetError());
     }

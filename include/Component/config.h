@@ -46,6 +46,9 @@ extern int BASE_SCREEN_HEIGHT;
 extern int SCREEN_WIDTH;
 extern int SCREEN_HEIGHT;
 
+extern float VOLUME_MUSIC;
+extern float VOLUME_SFX;
+
 extern vector2 WORLD_MIN;
 extern vector2 WORLD_MAX;
 extern float WORLD_MIN_X;

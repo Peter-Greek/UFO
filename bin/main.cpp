@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
     // Auto room from PNG
     scheduler->setTimeout(2000, [gameInitializer]() {
         print("Creating Room from PNG");
-        std::string message = "createRoomFromPng testwalls_720.png";
+        std::string message = "createRoomFromPng GFX/icons/testwalls_720.png";
         sList_t args = split(message, " ");
         args.erase(args.begin());
         gameInitializer->TriggerEvent("__internal_command_createRoomFromPng", "chat", args, message);

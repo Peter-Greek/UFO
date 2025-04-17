@@ -44,7 +44,7 @@ private:
     json pickUsedSpecialRoom(const json& templates);
 public:
     explicit world(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {
-        worldData = jsonLoader("../resource/world.json");
+        worldData = jsonLoader("../resource/json/world.json");
     }
 
     int initialize() override;

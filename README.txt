@@ -77,7 +77,7 @@ color with 'r', 'g', and 'b', and rotate it with 'z' and 'x'.
 
 ***text***
 
-Loads a font (resource/Arial.ttf).  Same keys are 'bitmap'.
+Loads a font (resource/font/Arial.ttf).  Same keys are 'bitmap'.
 
 ***geom***
 
