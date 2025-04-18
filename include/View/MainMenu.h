@@ -8,6 +8,7 @@
 
 #include <utility>
 #include "TxdLoader.h"
+#include "AudioLoader.h"
 
 class MainMenu : public xProcess {
 private:
@@ -57,6 +58,7 @@ private:
             static_cast<int>(SCREEN_HEIGHT) // down scale the texture
     };
 
+    sh_ptr<AudioLoader> mainMenuMusic;
 
 public:
     explicit MainMenu(passFunc_t& func, sh_ptr<TxdLoader> menuTxd_p) : xProcess(true, func), menuTxd(std::move(menuTxd_p)) {

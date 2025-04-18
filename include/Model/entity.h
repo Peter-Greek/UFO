@@ -115,7 +115,6 @@ public:
             vector2 dimensions
     ) : xProcess(false, func), length(dimensions.x), width(dimensions.y), hearts(hearts), maxHearts(hearts){
         coords = position;
-        print("Entity: ", eTypeIndex, " Length: ", length, " Width: ", width);
         appliedLength = length;
         appliedWidth = width;
         type = static_cast<eType>(eTypeIndex);
@@ -150,9 +149,9 @@ public:
                     case HEART:
                         return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
                     case OXY_TANK:
-                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
+                        return {getScaledPixelWidth(32.0f), getScaledPixelHeight(64.0f)};
                     case KEY_CARD:
-                        return {getScaledPixelWidth(16.0f), getScaledPixelHeight(16.0f)};
+                        return {getScaledPixelWidth(32.0f), getScaledPixelHeight(32.0f)};
                     case AT:
                         return {getScaledPixelWidth(32.0f), getScaledPixelHeight(32.0f)};
                     case ESCAPE_POD:

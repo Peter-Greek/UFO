@@ -68,20 +68,25 @@ int main(int argc, char* argv[])
         processManager->triggerEventInAll(eventName, eventData);
     };
 
-    // Create a Game Storage
+    // Create a Game Storage, has to load first to get the global variables from the json file
     auto gameStorage = std::make_shared<GameStorage>();
     gameStorage->load();
-
-    // Create a Game Initializer
-    auto gameInitializer = std::make_shared<GameInitializer>(passFunc, processManager, gameStorage, scheduler);
-    gameInitializer->Init();
-    processManager->attachProcess(gameInitializer);
-
 
     // Create a View process; this is the compliment to the gameInitializer; this will load chatbox and main menus
     auto viewProcess = std::make_shared<view>(passFunc, processManager);
     processManager->attachProcess(viewProcess);
 
+    if (!viewProcess->initialize()) {
+        error("View Process failed to initialize");
+        processManager->abortAllProcess();
+        return 0;
+    }
+    viewProcess->initialize_manual(); // Initialize the view process and set it to manual update mode
+
+    // Create a Game Initializer
+    auto gameInitializer = std::make_shared<GameInitializer>(passFunc, processManager, gameStorage, scheduler);
+    gameInitializer->Init();
+    processManager->attachProcess(gameInitializer);
 
     // Seed the random number generator
     if (debugMode == 1) {
@@ -98,23 +103,16 @@ int main(int argc, char* argv[])
     });
 
     // Auto room from PNG
-    scheduler->setTimeout(2000, [gameInitializer]() {
-        print("Creating Room from PNG");
-        std::string message = "createRoomFromPng testwalls_720.png";
-        sList_t args = split(message, " ");
-        args.erase(args.begin());
-        gameInitializer->TriggerEvent("__internal_command_createRoomFromPng", "chat", args, message);
-    });
+//    scheduler->setTimeout(2000, [gameInitializer]() {
+//        print("Creating Room from PNG");
+//        std::string message = "createRoomFromPng GFX/world/testwalls_720.png";
+//        sList_t args = split(message, " ");
+//        args.erase(args.begin());
+//        gameInitializer->TriggerEvent("__internal_command_createRoomFromPng", "chat", args, message);
+//    });
 
 
-    if (!viewProcess->initialize()) {
-        error("View Process failed to initialize");
-        processManager->abortAllProcess();
-        return 0;
-    }
-    viewProcess->initialize_manual(); // Initialize the view process and set it to manual update mode
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1 ms to allow the view process to initialize fully
+    std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Sleep for 1 ms to allow the view process to initialize fully
     SDL_Window* window = viewProcess->getWindow();
 
     while (scheduler->isRunning()) {

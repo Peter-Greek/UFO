@@ -35,10 +35,41 @@
 
 #include "view.h"
 #include "../Controller/WorldCreator.h"
+#include "Cursor.h"
 
 #ifdef __WIN32__
 #include <windows.h>
 #endif
+
+std::pair<int, int> getPrimaryDisplayResolution() {
+    SDL_DisplayMode mode;
+    if (SDL_GetCurrentDisplayMode(0, &mode) == 0) {
+        return {mode.w, mode.h};
+    } else {
+        print("SDL_GetCurrentDisplayMode failed: %s", SDL_GetError());
+        return {0, 0};
+    }
+}
+
+std::pair <int, int> view::getScreenResolution() {
+    // get current display size and apply it as the args
+    int displayIndex = SDL_GetWindowDisplayIndex(window);
+    if (displayIndex < 0) {
+        print("SDL_GetWindowDisplayIndex failed2: %s", SDL_GetError());
+        return {0, 0};
+    } else {
+        SDL_DisplayMode mode;
+        if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
+            int displayWidth = mode.w;
+            int displayHeight = mode.h;
+            print("Display size2: %dx%d", displayWidth, displayHeight);
+            return {displayWidth, displayHeight};
+        } else {
+            print("SDL_GetCurrentDisplayMode failed2: %s", SDL_GetError());
+            return {0, 0};
+        }
+    }
+}
 
 // Process Functions
 int view::initialize() {
@@ -71,6 +102,45 @@ int view::initialize() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         error("SDL could not initialize!", SDL_GetError());
         return 0;
+    }
+
+    auto wh = getPrimaryDisplayResolution();
+    if (FULL_SCREEN_ENABLED) {
+        print("Fullscreen enabled");
+        // Get the current display size and apply it
+        print("Display size: ", wh.first, wh.second);
+        SCREEN_WIDTH = wh.first;
+        SCREEN_HEIGHT = wh.second;
+    }else {
+        // Get the current display size and ensure set resolution is not larger
+        if (SCREEN_RESOLUTION.first != 0 && SCREEN_RESOLUTION.second != 0) {
+            print("Set resolution found: ", SCREEN_RESOLUTION.first, SCREEN_RESOLUTION.second);
+            if (SCREEN_RESOLUTION.first > wh.first) {
+                SCREEN_RESOLUTION.first = wh.first;
+            }
+            if (SCREEN_RESOLUTION.second > wh.second) {
+                SCREEN_RESOLUTION.second = wh.second;
+            }
+            SCREEN_WIDTH = SCREEN_RESOLUTION.first;
+            SCREEN_HEIGHT = SCREEN_RESOLUTION.second;
+        }else {
+            print("No set resolution found, using default");
+            // if the set screen size does not exist then lets just go 1024x768 or fullscreen
+            if (wh.first < 1024) {
+                SCREEN_WIDTH = wh.first;
+            }else {
+                SCREEN_WIDTH = 1024;
+            }
+            if (wh.second < 768) {
+                SCREEN_HEIGHT = wh.second;
+            }else {
+                SCREEN_HEIGHT = 768;
+            }
+
+            SCREEN_RESOLUTION.first = SCREEN_WIDTH;
+            SCREEN_RESOLUTION.second = SCREEN_HEIGHT;
+            TriggerEvent("UFO::ChangeConfigValue", "SCREEN_RESOLUTION"); // refresh settings fix
+        }
     }
 
     // Create window with High DPI awareness
@@ -108,22 +178,26 @@ int view::initialize() {
     // Favicon
 
     // Load the full image
-//    SDL_Surface* fullImage = IMG_Load("../resource/MainMenuV2.png");
+//    SDL_Surface* fullImage = IMG_Load("../resource/GFX/screens/MainMenuV2.png");
 //    if (!fullImage) {
 //        error("Failed to load image for icon: ", IMG_GetError());
 //    }
 //    // Define the subregion you want (x, y, width, height)
 //    SDL_Rect iconRect = { 265, 22, 765 - 265, 427-22 };
 
-    SDL_Surface* fullImage = IMG_Load("../resource/FSS.png");
+//    SDL_Surface* fullImage = IMG_Load("../resource/GFX/screens/pixil-frame-0.png");
+//    if (!fullImage) {
+//        error("Failed to load image for icon: ", IMG_GetError());
+//    }
+//    // Define the subregion you want (x, y, width, height)
+//    SDL_Rect iconRect = { 0, 0, 2000, 2000 };  // cropped from y = 4, height = 28
+
+    SDL_Surface* fullImage = IMG_Load("../resource/GFX/sprites/FSS.png");
     if (!fullImage) {
         error("Failed to load image for icon: ", IMG_GetError());
     }
     // Define the subregion you want (x, y, width, height)
     SDL_Rect iconRect = { 0, 8, 32, 32 };  // cropped from y = 4, height = 28
-
-
-
 
     // Create a surface to hold the icon
     SDL_Surface* iconSurface = SDL_CreateRGBSurface(0, iconRect.w, iconRect.h,
@@ -229,6 +303,9 @@ int view::initialize() {
     pM->attachProcess(WC);
     chatBox->addMessage("World Creator Attached");
 
+    auto* cursor = new Cursor(passFunc);
+    pM->attachProcess(cursor);
+
     // Debug print sizes
     int w, h;
     SDL_GetWindowSize(window, &w, &h);
@@ -277,6 +354,34 @@ int view::initialize() {
         if (chatBox != nullptr) {
             chatBox->hideChatBox(); // hide chatbox when creating a new user
         }
+    });
+
+    AddEventHandler("UFO::View::ResizeWindow", [this](int width, int height) {
+        if (width == 0 && height == 0) {
+            // get current display size and apply it as the args
+            int displayIndex = SDL_GetWindowDisplayIndex(window);
+            if (displayIndex < 0) {
+                print("SDL_GetWindowDisplayIndex failed: %s", SDL_GetError());
+                return;
+            } else {
+                SDL_DisplayMode mode;
+                if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
+                    int displayWidth = mode.w;
+                    int displayHeight = mode.h;
+                    print("Display size: %dx%d", displayWidth, displayHeight);
+                    width = displayWidth;
+                    height = displayHeight;
+                } else {
+                    print("SDL_GetCurrentDisplayMode failed: %s", SDL_GetError());
+                    return;
+                }
+            }
+        }
+
+
+
+
+        resizeWindow(width, height, true);
     });
 
     return 1;

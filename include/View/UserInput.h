@@ -80,6 +80,10 @@ private:
     SDL_Rect inputBox = {cbox.x + 10, cbox.y + cbox.h - CHAT_INPUT_HEIGHT, cbox.w - 20, CHAT_INPUT_HEIGHT - 20};
     SDL_Rect inputBoxText = {inputBox.x + inputBox.w - 50, inputBox.y + 15, 0, 0};
     ChatMessage inputMessage = {nullptr, inputBoxText, "> "};
+
+    bool backspaceHeld = false;
+    float backspaceHeldTime = 0.0f;
+    float backspaceRepeatTimer = 0.0f;
 public:
     explicit UserInput(passFunc_t func) : xProcess(true, func) {
         setFontColor(255, 255, 255, 255);

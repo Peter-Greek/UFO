@@ -51,6 +51,7 @@
 #include "wall.h"
 #include "AudioLoader.h"
 #include "Boss.h"
+#include "Scheduler.h"
 
 using sh_ptr_e = sh_ptr<entity>;
 using sh_ptr_at = sh_ptr<AT>;
@@ -63,6 +64,8 @@ public:
     enum db_WCS {CREATION_NOT_STARTED, COORDS_SET, LENGTH_SET, WIDTH_SET, WALL_CREATED};
 private:
     sh_ptr<ProcessManager> pM;
+    sh_ptr<Scheduler> sch;
+
     bool gameRunning = false;
     std::list<sh_ptr<entity>> entityList;
     std::map<std::string, sh_ptr<text>> textMap;
@@ -81,6 +84,7 @@ private:
     int db_wall_index = -1;
     bool inShiftFind = false;
     vector2 shiftFindStart;
+    int gameOverTimeStamp = 0;
 public:
     explicit GameManager(passFunc_t& func) : xProcess(false, func), passFunc(func) {}
 
@@ -92,6 +96,7 @@ public:
     void postAbort() override {terminateGame();};
 
     void setProcessManager(sh_ptr<ProcessManager> pm);
+    void setScheduler(sh_ptr<Scheduler> sch);
     void setCamera(sh_ptr<camera> c);
     void setWorld(std::shared_ptr<world> w);
 
@@ -134,6 +139,10 @@ public:
 
 
     void renderAT(vector2 screenCoords, vector2 dim);
+
+    void renderOxyTank(vector2 screenCoords, vector2 dim);
+
+    void renderKeyCard(vector2 screenCoords, vector2 dim, int keyCardType);
 };
 
 

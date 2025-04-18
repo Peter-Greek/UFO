@@ -462,7 +462,7 @@ json* world::findUnusedDoor(json& room) {
 
 void world::generateLayout(int count) {
     json roomTemplates;
-    std::ifstream file("../resource/world.json");
+    std::ifstream file("../resource/json/world.json");
     if (!file.is_open()) {
         error("Failed to open world template file.");
         return;

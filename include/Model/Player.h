@@ -114,6 +114,8 @@ public:
     void setOxygenLevel(float newOxygenLevel);
     void addOxygen(float oxygenToAdd);
     [[nodiscard]] std::string getOxygenString() const;
+    [[nodiscard]] float getMaxOxygenTime() const { return MAX_OXYGEN_TIME; }
+    [[nodiscard]] float getBaseOxygenTime() const { return BASE_OXYGEN_TIME; }
 
     // Invisibility functions
     void setInvisible(bool invisible);

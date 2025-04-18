@@ -34,6 +34,7 @@
 #include "Util.h"
 
 
+
 // Declare global variables with extern
 extern bool unlimitedFrames;
 extern int debugMode;
@@ -45,6 +46,14 @@ extern int BASE_SCREEN_HEIGHT;
 
 extern int SCREEN_WIDTH;
 extern int SCREEN_HEIGHT;
+
+extern bool AUDIO_ENABLED;
+extern float VOLUME_MUSIC;
+extern float VOLUME_SFX;
+
+extern bool FULL_SCREEN_ENABLED;
+extern std::pair<int, int> SCREEN_RESOLUTION;
+
 
 extern vector2 WORLD_MIN;
 extern vector2 WORLD_MAX;

@@ -68,7 +68,7 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
     fontSize = (int) getScaledCoords({12, 12}).length(); // base is 24
 
     // Load font
-    font = TTF_OpenFont("../resource/Arial.ttf", fontSize);
+    font = TTF_OpenFont("../resource/font/Arial.ttf", fontSize);
     if (font == nullptr) {
         error("Unable to open font! ", SDL_GetError());
         return 0;
@@ -77,6 +77,10 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         if (!running) return;
         if (renderer == nullptr) { return; }
+
+        if (menuTxd != nullptr && menuTxd->state() == xProcess::RUNNING) {
+            menuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+        }
 
         for (int i = 0; i < max_display; i++) {
             int pad = (padding * 2) + ((padding + templateBox.w) * i);
@@ -100,6 +104,14 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         if (!running) return;
         if (renderer == nullptr) { return; }
+
+        if (eventType == SDL_KEYDOWN) {
+            if (key == SDLK_ESCAPE) {
+                TriggerEvent("UFO::SaveSelector::Close");
+                running = false;
+                return;
+            }
+        }
 
         if (eventType == SDL_MOUSEBUTTONDOWN) {
             isMouseDown = true;

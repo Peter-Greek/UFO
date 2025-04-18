@@ -38,6 +38,27 @@
 #include "xProcess.h"
 #include <SDL_ttf.h>
 class text : public xProcess {
+private:
+    SDL_Event e;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Texture* texture;
+    SDL_Surface* sText;
+    TTF_Font* font;
+    SDL_Color color = { 255, 255, 255, 255 };
+    SDL_Rect dst;
+    SDL_Point rot;
+    bool red=true, green=true, blue=true;
+    float angle = 0;
+    bool running = false;
+    bool isHidden = false;
+    std::string textContent;
+    vector2 position;
+    vector2 relativePosition;
+    int fontSize = 50;
+
+    int textWidth;
+    int textHeight;
 public:
     explicit text(passFunc_t& func, std::string textContentInput) : xProcess(true, func) {
         textContent = textContentInput;
@@ -69,29 +90,11 @@ public:
     void hideText();
     void showText();
     void showText(std::string new_text);
+    void setTextColor(int r, int g, int b, int a);
+    void setTextColor(SDL_Color);
 
     SDL_Rect getTextRect() const {return dst;};
-private:
-    SDL_Event e;
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    SDL_Texture* texture;
-    SDL_Surface* sText;
-    TTF_Font* font;
-    SDL_Color color;
-    SDL_Rect dst;
-    SDL_Point rot;
-    bool red=true, green=true, blue=true;
-    float angle = 0;
-    bool running = false;
-    bool isHidden = false;
-    std::string textContent;
-    vector2 position;
-    vector2 relativePosition;
-    int fontSize = 50;
-
-    int textWidth;
-    int textHeight;
+    [[nodiscard]] int getFontSize() const {return fontSize;};
 };
 
 #endif //CSCI437_TEXT_H

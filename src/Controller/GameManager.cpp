@@ -78,13 +78,9 @@ int GameManager::initialize() {
                     renderHeart(screenCoords, dim, e);
                 }else if (e->getPickupType() == entity::OXY_TANK) {
                     //TODO: Render Oxy Tank Like Hearts and AT
-                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                    TriggerEvent("SDL::Render::ResetDrawColor");
+                    renderOxyTank(screenCoords, dim);
                 }else if (e->getPickupType() == entity::KEY_CARD) {
-                    TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
-                    TriggerEvent("SDL::Render::ResetDrawColor");
+                    renderKeyCard(screenCoords, dim, 1);
                 }else if (e->getPickupType() == entity::ESCAPE_POD) {
                     TriggerEvent("SDL::Render::SetDrawColor", 255, 215, 0, 255);
                     TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
@@ -120,6 +116,7 @@ int GameManager::initialize() {
         }
     });
 
+    // Commands
     RegisterCommand("setRoomIndex", [this](std::string command, sList_t args, std::string message) {
         if (args.empty()) {
             TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: setRoomIndex <index>");
@@ -142,7 +139,6 @@ int GameManager::initialize() {
         TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
         TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
     });
-
 
     RegisterCommand("escape", [this](std::string command, sList_t args, std::string message) {
         if (!args.empty()) {
@@ -270,7 +266,7 @@ void GameManager::updatePlayerView(bool isVisible, const sh_ptr_e& e, float delt
         currentFrame = animMap["FSS_IDLE"]->getCurrentFrame(deltaMs);
     }
 
-    // Need to change the position based on the direction the player is moving so the sprite stays within the hit box
+    // Need to change the position based on the direction the player is moving so the sprites stays within the hit box
     SDL_Rect destRect = {
             static_cast<int>(screenCoords.x - dim.x/2),
             static_cast<int>(screenCoords.y - dim.y),
@@ -576,6 +572,57 @@ void GameManager::renderHeart(vector2 screenCoords, vector2 dim, bool isBlue) {
     }
 
 
+}
+
+void GameManager::renderOxyTank(vector2 screenCoords, vector2 dim) {
+    // Check if the texture exists in txdMap
+    auto it = txdMap.find("OXY_TANK::TEXTURE");
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, 300, 600}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    if (isDebug()) {
+        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 0, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+    }
+
+    txdMap["OXY_TANK::TEXTURE"]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+}
+
+void GameManager::renderKeyCard(vector2 screenCoords, vector2 dim, int keyCardType) {
+    // Check if the texture exists in txdMap
+    std::string textureName = "KEY_CARD"+std::to_string(keyCardType)+"::TEXTURE";
+    auto it = txdMap.find(textureName);
+    if (it == txdMap.end() || !it->second) {
+        return;
+    }
+
+    // Render the texture
+    SDL_Rect srcRect = {0, 0, 100, 100}; // load the entire texture
+    SDL_Rect destRect = {
+            static_cast<int>(screenCoords.x),
+            static_cast<int>(screenCoords.y),
+            static_cast<int>(dim.x),
+            static_cast<int>(dim.y) // down scale the texture
+    };
+
+    if (isDebug()) {
+        TriggerEvent("SDL::Render::SetDrawColor", 0, 255, 255, 255);
+        TriggerEvent("SDL::Render::DrawRect", screenCoords.x, screenCoords.y, dim.x, dim.y);
+        TriggerEvent("SDL::Render::ResetDrawColor");
+    }
+
+    txdMap[textureName]->render(srcRect, destRect, 0, SDL_FLIP_NONE);
 }
 
 void GameManager::handleDebugWorldCreator(float deltaMs) {
@@ -997,7 +1044,38 @@ void GameManager::renderPickupInteraction(const sh_ptr_ply& ply, const sh_ptr_e&
 
 // Update Controller Functions
 void GameManager::update(float deltaMs) {
-    if (!gameRunning) {return;}
+    if (!gameRunning) {
+        int baseFontSize = (int) getScaledCoords({25, 25}).length(); // base is 50
+        auto gameOverText = textMap["GameOver"];
+        if (!gameOverText) {
+            gameOverText = std::make_shared<text>(passFunc, "YOU DIED", baseFontSize);
+            pM->attachProcess(gameOverText);
+            gameOverText->setTextRelativePosition(0.001, 0.001);
+            gameOverText->setCurrentPositionBasedOnRelativePosition();
+            gameOverText->setTextColor({255, 0, 0, 200});
+            textMap["GameOver"] = gameOverText;
+        }
+
+        if (gameOverText->state() != text::RUNNING) {
+            return;
+        }
+
+
+
+        int curFontSize = gameOverText->getFontSize();
+        float curTime = sch->getGameTime();
+        int elapsedTime = curTime - gameOverTimeStamp;
+
+        int toFontSize = map_range(elapsedTime, 0, 6000, baseFontSize, baseFontSize*3);
+        gameOverText->setFontSize(toFontSize);
+        if (toFontSize >= baseFontSize*3) {
+            TriggerEvent("UFO::EndGame");
+            TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
+        }
+
+
+        return;
+    }
 
     std::list<sh_ptr_e> removalList;
     for (auto& e : entityList) {
@@ -1007,8 +1085,8 @@ void GameManager::update(float deltaMs) {
 
             if (e->isEntityAPlayer()) {
                 if (!gameRunning) {return;}
-                TriggerEvent("UFO::EndGame");
-                TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
+                gameOverTimeStamp = sch->getGameTime();
+                gameRunning = false;
                 return;
             }
 
@@ -1216,11 +1294,6 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
         p->removeHearts(1);
         textMap["PlayerHearts"]->setText("Hearts: " + std::to_string(p->getHearts()));
         p->setOxygenLevel(0.0f);
-    }
-
-    if (p->getHearts() <= 0) {
-        TriggerEvent("UFO::EndGame");
-        TriggerEvent("UFO::Chat::AddMessage", "Game Over!");
     }
 
     if (p->isATCannonFire()) {
@@ -1434,6 +1507,10 @@ void GameManager::setProcessManager(sh_ptr<ProcessManager> pm) {
     pM = std::move(pm);
 }
 
+void GameManager::setScheduler(sh_ptr<Scheduler> sch_p) {
+    sch = sch_p;
+}
+
 void GameManager::setCamera(sh_ptr<camera> c) {
     cam = std::move(c);
 }
@@ -1521,3 +1598,5 @@ void GameManager::bounceEntities(sh_ptr_e e1, sh_ptr_e e2) {
     e1->setKnockedBack(true, 250.0f);
     e2->setKnockedBack(true, 250.0f);
 }
+
+

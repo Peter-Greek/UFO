@@ -39,6 +39,9 @@
 void GameInitializer::Init() {
     print("Game Init");
 
+    // Create And Play Main Menu Music (Stays until the main game loop is started)
+    CreateBackgroundMusic();
+
     // Config Changes
     AddEventHandler("UFO::OnConfigUpdate", [this](const std::string configName) {
         updateSettings(); // Update settings based on global variables
@@ -51,6 +54,15 @@ void GameInitializer::Init() {
             gameStorage->save();
         }else if (configName == "curRoomIndex") {
             (*gameStorage)["settings"]["curRoomIndex"] = curRoomIndex;
+            gameStorage->save();
+        }else if (configName == "AUDIO_ENABLED") {
+            (*gameStorage)["settings"]["AUDIO_ENABLED"] = AUDIO_ENABLED;
+            gameStorage->save();
+        }else if (configName == "FULL_SCREEN_ENABLED") {
+            (*gameStorage)["settings"]["FULL_SCREEN_ENABLED"] = FULL_SCREEN_ENABLED;
+            gameStorage->save();
+        }else if (configName == "SCREEN_RESOLUTION") {
+            (*gameStorage)["settings"]["SCREEN_RESOLUTION"] = SCREEN_RESOLUTION;
             gameStorage->save();
         }
     });
@@ -100,12 +112,21 @@ void GameInitializer::Init() {
 
         ShutdownSaveSelector();
         (*gameStorage).SelectPlayer(slotIndex);
+        ShutdownBackgroundMusic();
         CreateUpgradeMenu();
+    });
+
+    AddEventHandler("UFO::SaveSelector::Close", [this]() {
+        print("Closing Save Selector");
+        ShutdownSaveSelector();
+        CreateMainMenu();
     });
 
     // Upgrade Menu Press Play
     AddEventHandler("UFO::UpgradeMenu::StartGameLoop", [this]() {
         ShutdownUpgradeMenu();
+        ShutdownBackgroundMusic();
+        CreateGameLoopBackgroundMusic();
         Start();
         GameDebug();
     });
@@ -114,6 +135,7 @@ void GameInitializer::Init() {
     AddEventHandler("UFO::UpgradeMenu::State", [this](bool state) {
         if (state == false && uMenu != nullptr) {
             ShutdownUpgradeMenu();
+            CreateBackgroundMusic();
             CreateMainMenu();
         }
     });
@@ -186,6 +208,7 @@ void GameInitializer::Init() {
         (*gameStorage)["player"]["ATCount"] = (*gameStorage)["player"]["ATCount"].get<int>() + atcount;
         (*gameStorage)["player"]["TotalAT"] = (*gameStorage)["player"]["TotalAT"].get<int>() + atcount;
         (*gameStorage)["player"]["time"] = (*gameStorage)["player"]["time"].get<int>() + int (sch->getGameTime() - gameStartTime);
+
         (*gameStorage).SavePlayer();
         print("Saved Player Data!");
 
@@ -271,10 +294,13 @@ void GameInitializer::Init() {
 }
 
 void GameInitializer::Start(){
+    TriggerEvent("UFO::Cursor::Change", "crosshair");
     print("Game Start Called");
     gameStartTime = sch->getGameTime();
+    gameState = GAME_LOOP;
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
+    gM->setScheduler(sch);
     gameManager = gM;
 
     gM->AddEventHandler("UFO::CHECK::UUID", [this](UUID_t id) {
@@ -342,9 +368,42 @@ void GameInitializer::Start(){
     print("Game Environment Created");
 }
 
+void GameInitializer::update(float deltaMs) {
+    if (gameState == GAME_LOOP) {
+        auto player = gameManager->getPlayer();
+        float maxOxy = player->getMaxOxygenTime();
+        float oxy = player->getOxygenLevel();
+        float oxyPercent = oxy / maxOxy;
+        int intensityLevel = -1;
+
+        if (oxyPercent < 0.10f) {
+            intensityLevel = 3;
+        } else if (oxyPercent < 0.20f) {
+            intensityLevel = 2;
+        } else if (oxyPercent < 0.40f) {
+            intensityLevel = 1;
+        } else if (oxyPercent < 0.75f) {
+            intensityLevel = 0;
+        }
+
+        if (intensityLevel != lastIntensityLevel) {
+            for (int i = 0; i < 4; ++i) {
+                if (i == intensityLevel) {
+                    gameLoopMusic->enableTrack(i);
+                } else {
+                    gameLoopMusic->disableTrack(i);
+                }
+            }
+        }
+    }else {
+        lastIntensityLevel = -1;
+    }
+}
+
 void GameInitializer::End(GAME_RESULT result) {
     gameResult = result;
     TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
+    TriggerEvent("UFO::Cursor::Change", "default");
 
     gameManager->abort();
 
@@ -354,8 +413,8 @@ void GameInitializer::End(GAME_RESULT result) {
 
     //TODO: Add in some game result screen
 
+    ShutdownGameLoopBackgroundMusic();
     CreateUpgradeMenu();
-
 }
 
 void GameInitializer::Debug() {
@@ -431,22 +490,13 @@ void GameInitializer::GameDebug() {
     rHeading->setTextRelativePosition(0.0f, -0.7f);
 }
 
-void GameInitializer::CreateMainMenu() {
-    ShutdownSaveSelector();
-    ShutdownUpgradeMenu();
-    (*gameStorage).ResetPlayer();
-    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/MainMenuV2.png");
-    mMenu = attachProcess<MainMenu>(menuTxd);
-}
-
-
 void GameInitializer::LoadTextures() {
     print("Loading Textures");
     // [[Asperite Textures]]
 
 
     // Create Player Anim
-    auto fAnim = attachGameMappedProcess<AsepriteLoader>("FSS", "../resource/FSS.png", "../resource/FSS.json");
+    auto fAnim = attachGameMappedProcess<AsepriteLoader>("FSS", "../resource/GFX/sprites/FSS.png", "../resource/json/FSS.json");
         // [[Animations]]
         auto fAnimIdle = attachGameMappedNonProcess<Animation>("FSS_IDLE", fAnim->getJSONData(), "Ferret Sprite Sheet (Idle)");
         auto fAnimMove = attachGameMappedNonProcess<Animation>("FSS_MOVE", fAnim->getJSONData(), "Ferret Sprite Sheet (Movement)");
@@ -457,28 +507,35 @@ void GameInitializer::LoadTextures() {
 
 
     // Create Wall Texture
-    auto wTxd = attachGameMappedProcess<TxdLoader>("WALL::TEXTURE", "../resource/wall.png");
+    auto wTxd = attachGameMappedProcess<TxdLoader>("WALL::TEXTURE", "../resource/GFX/world/wall.png");
 
     // Create AT Texture
-    auto ATTxd = attachGameMappedProcess<TxdLoader>("AT::TEXTURE", "../resource/ATLoot1.png");
+    auto ATTxd = attachGameMappedProcess<TxdLoader>("AT::TEXTURE", "../resource/GFX/icons/ATLoot1.png");
 
     // Create Laser Texture
-    auto laserTxd = attachGameMappedProcess<TxdLoader>("LASER::TEXTURE", "../resource/LaserBeams.png");
+    auto laserTxd = attachGameMappedProcess<TxdLoader>("LASER::TEXTURE", "../resource/GFX/icons/LaserBeams.png");
 
     // Create NPC Txds
-    auto a1Txd =  attachGameMappedProcess<TxdLoader>("ALIEN1::TEXTURE", "../resource/Alien1.png");
-    auto a2Txd = attachGameMappedProcess<TxdLoader>("ALIEN2::TEXTURE", "../resource/Alien2.png");
-    auto a3Txd = attachGameMappedProcess<TxdLoader>("ALIEN3::TEXTURE", "../resource/Alien3.png");
+    auto a1Txd =  attachGameMappedProcess<TxdLoader>("ALIEN1::TEXTURE", "../resource/GFX/sprites/Alien1.png");
+    auto a2Txd = attachGameMappedProcess<TxdLoader>("ALIEN2::TEXTURE", "../resource/GFX/sprites/Alien2.png");
+    auto a3Txd = attachGameMappedProcess<TxdLoader>("ALIEN3::TEXTURE", "../resource/GFX/sprites/Alien3.png");
 
     // Create Heart Texture
-    auto HeartTxd = attachGameMappedProcess<TxdLoader>("HEART::TEXTURE", "../resource/HeartSS.png");
+    auto HeartTxd = attachGameMappedProcess<TxdLoader>("HEART::TEXTURE", "../resource/GFX/icons/HeartSS.png");
+
+    // Create Oxy Texture
+    auto OxyTxd = attachGameMappedProcess<TxdLoader>("OXY_TANK::TEXTURE", "../resource/GFX/icons/OxygenUpgradeIcon.png");
+
+    // Create Key Card Textures
+    auto keyTxd =  attachGameMappedProcess<TxdLoader>("KEY_CARD1::TEXTURE", "../resource/GFX/icons/Keycard1.png");
+    auto key2Txd = attachGameMappedProcess<TxdLoader>("KEY_CARD2::TEXTURE", "../resource/GFX/icons/Keycard2.png");
 
 }
 
 void GameInitializer::LoadAudio() {
     print("Loading Audio");
     // [[Audio]]
-    auto aHitMarker = attachGameMappedProcess<AudioLoader>("hitmarker", "../resource/sfx/hitmarker.wav");
+    auto aHitMarker = attachGameMappedProcess<AudioLoader>("hitmarker", "../resource/audio/hitmarker.wav", false);
 }
 
 void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
@@ -539,6 +596,57 @@ void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
     }
 }
 
+void GameInitializer::CreateBackgroundMusic() {
+    ShutdownBackgroundMusic();
+    ShutdownGameLoopBackgroundMusic();
+    mainMenuMusic = attachProcess<AudioLoader>("../resource/audio/MenuThemePreSynthLoopReady.wav", true);
+    mainMenuMusic->setVolume(VOLUME_MUSIC / 100.0f);
+    mainMenuMusic->play();
+}
+
+void GameInitializer::ShutdownBackgroundMusic() {
+    if (mainMenuMusic != nullptr) {
+        mainMenuMusic->stop();
+        mainMenuMusic->abort();
+        mainMenuMusic = nullptr;
+    }
+}
+
+void GameInitializer::CreateGameLoopBackgroundMusic() {
+    print("[GameInit] Creating Game Loop Music");
+    ShutdownBackgroundMusic();
+    ShutdownGameLoopBackgroundMusic();
+    gameLoopMusic = attachProcess<AudioLoader>("../resource/audio/TestBase.wav", true);
+    gameLoopMusic->attachTrack("../resource/audio/Drum1.wav"); // index: 0
+    gameLoopMusic->attachTrack("../resource/audio/Drum2.wav"); // index: 1
+    gameLoopMusic->attachTrack("../resource/audio/Drum3.wav"); // index: 2
+    gameLoopMusic->attachTrack("../resource/audio/Drum4.wav"); // index: 3
+    gameLoopMusic->setTrackVolume(0, VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->setTrackVolume(1, VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->setTrackVolume(2, VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->setTrackVolume(3, VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->setVolume(VOLUME_MUSIC / 100.0f);
+    gameLoopMusic->play();
+}
+
+void GameInitializer::ShutdownGameLoopBackgroundMusic() {
+    print("[GameInit] Shutting Down Game Loop Music");
+    if (gameLoopMusic != nullptr) {
+        gameLoopMusic->stop();
+        gameLoopMusic->abort();
+        gameLoopMusic = nullptr;
+    }
+}
+
+void GameInitializer::CreateMainMenu() {
+    ShutdownSaveSelector();
+    ShutdownUpgradeMenu();
+    gameState = MAIN_MENU;
+    (*gameStorage).ResetPlayer();
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/GFX/screens/MainMenuV2.png");
+    mMenu = attachProcess<MainMenu>(menuTxd);
+}
+
 void GameInitializer::ShutdownMainMenu() {
     if (mMenu != nullptr) {
         mMenu->abort();
@@ -548,7 +656,9 @@ void GameInitializer::ShutdownMainMenu() {
 
 void GameInitializer::CreateSaveSelector() {
     ShutdownMainMenu();
-    sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"]);
+    gameState = SAVE_SELECTOR;
+    auto menuTxd = attachMappedProcess<TxdLoader>("SAVE_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
+    sMenu = attachProcess<SaveSelector>((*gameStorage)["saves"], menuTxd);
 }
 
 void GameInitializer::ShutdownSaveSelector() {
@@ -561,10 +671,13 @@ void GameInitializer::ShutdownSaveSelector() {
 void GameInitializer::CreateUpgradeMenu() {
     ShutdownMainMenu();
     ShutdownSaveSelector();
-    auto dTxd = attachMappedProcess<TxdLoader>("DEATH_SCREEN::TEXTURE", "../resource/deathScreen.png");
-    auto eTxd = attachMappedProcess<TxdLoader>("ESCAPE_SCREEN::TEXTURE", "../resource/escapeScreen.png");
-    auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/escapeScreenWin2.png");
-    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd);
+    gameState = UPGRADE_MENU;
+    auto dTxd = attachMappedProcess<TxdLoader>("DEATH_SCREEN::TEXTURE", "../resource/GFX/screens/deathScreen.png");
+    auto eTxd = attachMappedProcess<TxdLoader>("ESCAPE_SCREEN::TEXTURE", "../resource/GFX/screens/escapeScreen.png");
+    auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/GFX/screens/escapeScreenWin2.png");
+    auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
+    auto rocketTxd = attachMappedProcess<TxdLoader>("ROCKET::TEXTURE", "../resource/GFX/icons/StartRocketIcon.png");
+    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd, menuTxd, rocketTxd);
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
     uMenu->setOxygenCount((*gameStorage)["player"]["upgrades"]["oxygen"].get<int>());
     uMenu->setSpeedCount((*gameStorage)["player"]["upgrades"]["speed"].get<int>()); 
@@ -597,7 +710,9 @@ void GameInitializer::ShutdownUserInputBox() {
 void GameInitializer::CreateSettingsMenu() {
     ShutdownMainMenu();
     ShutdownSaveSelector();
-    setMenu = attachProcess<SettingsMenu>(gameStorage);
+    gameState = SETTING_MENU;
+    auto menuTxd = attachMappedProcess<TxdLoader>("SETTINGS_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
+    setMenu = attachProcess<SettingsMenu>(gameStorage, menuTxd);
 }
 
 void GameInitializer::ShutdownSettingsMenu() {

@@ -31,7 +31,7 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
     }
 
     // Load font
-    font = TTF_OpenFont("../resource/Arial.ttf", fontSize);
+    font = TTF_OpenFont("../resource/font/Arial.ttf", fontSize);
     if (font == nullptr) {
         error("Unable to open font! ", SDL_GetError());
         return 0;
@@ -59,6 +59,13 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
 
         if (renderer == nullptr) {return;}
 
+        if (uMenuTxd != nullptr && uMenuTxd->state() == xProcess::RUNNING) {
+            uMenuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
+        }
+        if (rocketTxd != nullptr && rocketTxd->state() == xProcess::RUNNING) {
+            rocketTxd->render(srcRect, destRect2, 0, SDL_FLIP_NONE);
+        }
+
         if (displayingResult) {
             sh_ptr<TxdLoader> menuTxd;
             if (gameResult == GAME_RESULT::LOSE) {
@@ -77,10 +84,6 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             return;
         }
 
-
-        //Drawing menu background
-        SDL_SetRenderDrawColor(renderer, 0, 0, 75, 255);
-        SDL_RenderFillRect(renderer, &cbox);
         
         //Drawing box to show AT count
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 240);
