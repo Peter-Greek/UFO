@@ -35,6 +35,7 @@
 
 #include "view.h"
 #include "../Controller/WorldCreator.h"
+#include "Cursor.h"
 
 #ifdef __WIN32__
 #include <windows.h>
@@ -301,6 +302,9 @@ int view::initialize() {
     auto* WC = new WorldCreator(passFunc);
     pM->attachProcess(WC);
     chatBox->addMessage("World Creator Attached");
+
+    auto* cursor = new Cursor(passFunc);
+    pM->attachProcess(cursor);
 
     // Debug print sizes
     int w, h;

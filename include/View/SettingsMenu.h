@@ -148,6 +148,7 @@ private:
     json saveData;
     bool running = false;
     int fontSize = 24;
+    int prevFontSize = -1;
 
     bool isMouseDown = false;
 
@@ -156,6 +157,8 @@ private:
     sh_ptr<GameStorage> gS;
     sh_ptr<TxdLoader> menuTxd;
     SDL_Rect srcRect = {1, 1, 1024, 768}; // load the entire texture, 1 pixel in since there is white line
+
+
 public:
     SettingsMenu(passFunc_t p1, sh_ptr<GameStorage> gS_p, sh_ptr<TxdLoader> mTxd)
         : xProcess(true, p1), gS(gS_p), menuTxd(mTxd)  {}
@@ -167,6 +170,8 @@ public:
     void postSuccess() override {};
     void postFail() override {};
     void postAbort() override {};
+
+    int reloadFont();
 };
 
 

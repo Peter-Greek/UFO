@@ -1,5 +1,21 @@
 #include "SettingsMenu.h"
 
+int SettingsMenu::reloadFont() {
+    fontSize = getScaledCoords({12, 12}).length();
+    font = TTF_OpenFont("../resource/font/Arial.ttf", fontSize);
+    if (font == nullptr) {
+        error("Unable to open font! ", SDL_GetError());
+        return 0;
+    }
+
+    font_extra = TTF_OpenFont("../resource/font/symbol.ttf", fontSize);
+    if (font_extra == nullptr) {
+        error("Unable to open font! ", SDL_GetError());
+        return 0;
+    }
+    return 1;
+}
+
 int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
     window = passed_window;
 
@@ -27,34 +43,46 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
         }
     }
 
-    font = TTF_OpenFont("../resource/font/Arial.ttf", fontSize);
-    if (font == nullptr) {
-        error("Unable to open font! ", SDL_GetError());
+    if (!reloadFont()) {
+        error("Unable to load font! ", SDL_GetError());
         return 0;
     }
 
-    font_extra = TTF_OpenFont("../resource/font/symbol.ttf", fontSize);
-    if (font_extra == nullptr) {
-        error("Unable to open font! ", SDL_GetError());
-        return 0;
-    }
 
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         if (!running || renderer == nullptr) return;
 
-        int y_offset = 50;
-        const int spacing = 50;
+        // Dynamically reload font if resolution changes
+        int newFontSize = getScaledCoords({12, 12}).length();
+        if (newFontSize != prevFontSize) {
+            fontSize = newFontSize;
+
+            if (font) TTF_CloseFont(font);
+            font = TTF_OpenFont("../resource/font/Arial.ttf", fontSize);
+
+            if (font_extra) TTF_CloseFont(font_extra);
+            font_extra = TTF_OpenFont("../resource/font/symbol.ttf", fontSize);
+
+            if (!font || !font_extra) {
+                error("Unable to open font! ", SDL_GetError());
+                return;
+            }
+
+            prevFontSize = fontSize;
+        }
+
+        int x_offset = getScaledPixelWidth(50);
+        int y_offset = getScaledPixelHeight(50);
+        const int spacing = getScaledPixelHeight(50);
 
         textures.clear();
         dropdownHitboxes.clear();
 
         if (menuTxd != nullptr && menuTxd->state() == xProcess::RUNNING) {
-            // this needs to be created each call as the window size changes from user input
             SDL_Rect destRect = {
-                    static_cast<int>(0),
-                    static_cast<int>(0),
-                    static_cast<int>(SCREEN_WIDTH),
-                    static_cast<int>(SCREEN_HEIGHT) // down scale the texture
+                    0, 0,
+                    SCREEN_WIDTH,
+                    SCREEN_HEIGHT
             };
             menuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
         }
@@ -76,37 +104,47 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
 
                     SDL_Surface* textSurface = TTF_RenderText_Solid(font, label.c_str(), {255, 255, 255});
                     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, textSurface);
-                    SDL_Rect rect = {50, y_offset, textSurface->w, textSurface->h};
-                    dropdownHitboxes.emplace_back(rect, s.first, ""); // toggle dropdown
+                    SDL_Rect rect = {x_offset, y_offset, textSurface->w, textSurface->h};
+                    dropdownHitboxes.emplace_back(rect, s.first, "");
                     textures.emplace_back(texture, rect);
                     SDL_FreeSurface(textSurface);
 
-                    y_offset += 35;
+                    y_offset += getScaledPixelHeight(35);
 
                     if (openDropdowns.count(s.first)) {
                         for (const auto& [option, selected] : s.second) {
-                            SDL_Rect bgRect = {100, y_offset, 300, 30};
+                            SDL_Rect bgRect = {
+                                    getScaledPixelWidth(100),
+                                    y_offset,
+                                    getScaledPixelWidth(300),
+                                    getScaledPixelHeight(30)
+                            };
                             SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
                             SDL_RenderFillRect(renderer, &bgRect);
 
                             SDL_Color color = selected ? SDL_Color{0, 0, 255, 255} : SDL_Color{255, 255, 255, 255};
                             SDL_Surface* optSurface = TTF_RenderText_Solid(font, option.c_str(), color);
                             SDL_Texture* optTexture = SDL_CreateTextureFromSurface(renderer, optSurface);
-                            SDL_Rect optRect = {110, y_offset + 5, optSurface->w, optSurface->h};
+                            SDL_Rect optRect = {
+                                    getScaledPixelWidth(110),
+                                    y_offset + getScaledPixelHeight(5),
+                                    optSurface->w,
+                                    optSurface->h
+                            };
                             dropdownHitboxes.emplace_back(optRect, s.first, option);
                             textures.emplace_back(optTexture, optRect);
                             SDL_FreeSurface(optSurface);
 
-                            y_offset += 35;
+                            y_offset += getScaledPixelHeight(35);
                         }
                     }
 
-                    y_offset -= 35;
+                    y_offset -= getScaledPixelHeight(35);
                     y_offset += spacing;
                     return;
                 }
 
-                SDL_Surface* textSurface;
+                SDL_Surface* textSurface = nullptr;
                 if constexpr (std::is_same_v<T, toggle_t>) {
                     const char* mark = s.second.second ? "X" : "";
                     label = s.first + ": [" + mark + "]";
@@ -119,9 +157,13 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                 if (!textSurface) return;
 
                 SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, textSurface);
-                SDL_Rect rect = {50, y_offset, textSurface->w, textSurface->h};
+                SDL_Rect rect = {
+                        getScaledPixelWidth(50),
+                        y_offset,
+                        textSurface->w,
+                        textSurface->h
+                };
 
-                // For toggle_t, store hitbox
                 if constexpr (std::is_same_v<T, toggle_t>) {
                     dropdownHitboxes.emplace_back(rect, "toggle::" + s.first, "");
                 }
@@ -138,6 +180,7 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
             SDL_RenderCopy(renderer, texture.first, nullptr, &texture.second);
         }
     });
+
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         if (!running || renderer == nullptr) return;
