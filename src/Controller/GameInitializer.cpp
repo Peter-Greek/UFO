@@ -233,12 +233,11 @@ void GameInitializer::Init() {
     // Only triggered when main menu is open / settings menu
     AddEventHandler("UFO::View::UpdateWindowSize", [this](int w, int h) {
         print("Game Initializer: Window Size Resetting main menu: ", mMenu, sMenu, uMenu, SCREEN_WIDTH, "x", SCREEN_HEIGHT);
-        sch->setTimeout(100, [=]() {
-            if (mMenu != nullptr) {
-                ShutdownMainMenu();
-                CreateMainMenu();
-            }
-        });
+        if (mMenu != nullptr) {
+            print("Window Size Resetting Main Menu: ", mMenu);
+            ShutdownMainMenu();
+            CreateMainMenu();
+        }
     });
 
     // Triggered when a new user is trying to be made
@@ -294,10 +293,10 @@ void GameInitializer::Init() {
 }
 
 void GameInitializer::Start(){
-    TriggerEvent("UFO::Cursor::Change", "crosshair");
     print("Game Start Called");
     gameStartTime = sch->getGameTime();
     gameState = GAME_LOOP;
+    TriggerEvent("UFO::Cursor::Change", "crosshair"); // change the cursor to a crosshair
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
     gM->setScheduler(sch);
@@ -504,6 +503,7 @@ void GameInitializer::LoadTextures() {
 
 
     // [[Normal Textures]]
+    auto menuTxd = attachGameMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
 
 
     // Create Wall Texture

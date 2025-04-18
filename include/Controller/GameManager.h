@@ -85,6 +85,14 @@ private:
     bool inShiftFind = false;
     vector2 shiftFindStart;
     int gameOverTimeStamp = 0;
+
+    SDL_Rect srcRect = {1, 1, 1024, 1024}; // load the entire texture, 1 pixel in since there is white line
+    SDL_Rect destRect = {
+            static_cast<int>(0),
+            static_cast<int>(0),
+            static_cast<int>(SCREEN_WIDTH),
+            static_cast<int>(SCREEN_HEIGHT) // down scale the texture
+    };
 public:
     explicit GameManager(passFunc_t& func) : xProcess(false, func), passFunc(func) {}
 
@@ -143,6 +151,8 @@ public:
     void renderOxyTank(vector2 screenCoords, vector2 dim);
 
     void renderKeyCard(vector2 screenCoords, vector2 dim, int keyCardType);
+
+    void renderBackground();
 };
 
 
