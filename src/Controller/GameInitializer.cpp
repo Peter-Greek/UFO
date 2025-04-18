@@ -294,6 +294,7 @@ void GameInitializer::Init() {
 }
 
 void GameInitializer::Start(){
+    TriggerEvent("UFO::Cursor::Change", "crosshair");
     print("Game Start Called");
     gameStartTime = sch->getGameTime();
     gameState = GAME_LOOP;
@@ -402,6 +403,7 @@ void GameInitializer::update(float deltaMs) {
 void GameInitializer::End(GAME_RESULT result) {
     gameResult = result;
     TriggerEvent("UFO::OnGameEnd"); // clean up the current game environment
+    TriggerEvent("UFO::Cursor::Change", "default");
 
     gameManager->abort();
 
