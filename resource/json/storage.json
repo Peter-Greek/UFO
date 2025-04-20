@@ -1,25 +1,15 @@
 {
-    "curPlayer": 0,
-    "loads": 1819,
+    "curPlayer": -1,
+    "loads": 1834,
     "player": {
-        "ATCount": 2445,
-        "Ending": 2,
-        "TotalAT": 2575,
-        "date": 1744095919,
-        "loads": 203,
-        "name": "Peter Greek",
-        "settings": {
-            "curRoomIndex": 0,
-            "debugMode": 0,
-            "unlimitedFrames": false
-        },
-        "time": 2909664,
+        "ATCount": 0,
+        "TotalAT": 0,
         "upgrades": {
-            "at_cannon": 2,
-            "invisibility": 3,
-            "oxygen": 5,
-            "shield": 3,
-            "speed": 5
+            "at_cannon": 0,
+            "invisibility": 0,
+            "oxygen": 0,
+            "shield": 0,
+            "speed": 0
         }
     },
     "saves": [
@@ -188,14 +178,14 @@
         }
     ],
     "settings": {
-        "AUDIO_ENABLED": false,
+        "AUDIO_ENABLED": true,
         "FULL_SCREEN_ENABLED": true,
         "SCREEN_RESOLUTION": [
             1920,
             1080
         ],
-        "VOLUME_MUSIC": null,
-        "VOLUME_SFX": null,
+        "VOLUME_MUSIC": 94.0,
+        "VOLUME_SFX": 56.0,
         "curRoomIndex": 1,
         "debugMode": 0,
         "targetFPS": 90,

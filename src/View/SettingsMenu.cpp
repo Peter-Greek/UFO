@@ -16,6 +16,40 @@ int SettingsMenu::reloadFont() {
     return 1;
 }
 
+void SettingsMenu::updateSliderValue() {
+    if (!activeSlider.has_value()) return; // prevent crash
+
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    for (auto& setting : settings) {
+        if (auto* slider = std::get_if<slider_t>(&setting); slider && slider->name == activeSlider.value()) {
+            for (const auto& hit : sliderHitboxes) {
+                if (hit.name == slider->name) {
+                    float pct = std::clamp(
+                            static_cast<float>(x - hit.barRect.x) / hit.barRect.w,
+                            0.0f, 1.0f
+                    );
+                    float value = slider->min + pct * (slider->max - slider->min);
+                    float snapped = std::round(value / slider->step) * slider->step;
+                    slider->setting.second = static_cast<int>(snapped);
+
+                    std::string settingName = slider->setting.first;
+                    print("Slider:", slider->name, "Value:", snapped);
+                    if (settingName == "MusicVol") {
+                        VOLUME_MUSIC = snapped;
+                        TriggerEvent("UFO::ChangeConfigValue", "VOLUME_MUSIC");
+                    }else if (settingName == "SFXVolume") {
+                        VOLUME_SFX = snapped;
+                        TriggerEvent("UFO::ChangeConfigValue", "VOLUME_SFX");
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+}
+
 int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
     window = passed_window;
 
@@ -150,8 +184,49 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                     label = s.first + ": [" + mark + "]";
                     textSurface = TTF_RenderText_Solid(font, label.c_str(), {255, 255, 255});
                 } else if constexpr (std::is_same_v<T, slider_t>) {
+                    // Render label
                     label = s.name + ": " + std::to_string(s.setting.second);
-                    textSurface = TTF_RenderText_Solid(font, label.c_str(), {255, 255, 255});
+                    SDL_Surface* labelSurface = TTF_RenderText_Solid(font, label.c_str(), {255, 255, 255});
+                    SDL_Texture* labelTexture = SDL_CreateTextureFromSurface(renderer, labelSurface);
+                    SDL_Rect labelRect = {
+                            getScaledPixelWidth(50),
+                            y_offset,
+                            labelSurface->w,
+                            labelSurface->h
+                    };
+                    textures.emplace_back(labelTexture, labelRect);
+                    SDL_FreeSurface(labelSurface);
+
+                    y_offset += getScaledPixelHeight(40);  // Space below label
+
+                    // Render slider bar
+                    int barWidth = getScaledPixelWidth(300);
+                    int barHeight = getScaledPixelHeight(10);
+                    int barX = getScaledPixelWidth(100);
+                    int barY = y_offset;
+
+                    SDL_Rect barRect = {barX, barY, barWidth, barHeight};
+                    SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255); // Grey background
+                    SDL_RenderFillRect(renderer, &barRect);
+                    sliderHitboxes.push_back({barRect, s.name});
+
+                    // Calculate handle position
+                    float value = static_cast<float>(s.setting.second);
+                    float fraction = (value - s.min) / (s.max - s.min);
+                    int handleX = barX + static_cast<int>(fraction * barWidth);
+
+                    // Handler Size
+                    int handleWidth = getScaledPixelWidth(10);
+                    int handleHeight = getScaledPixelHeight(20);
+
+                    SDL_Rect handleRect = {handleX - 5, barY - 5, handleWidth, handleHeight};
+                    SDL_SetRenderDrawColor(renderer, 0, 200, 255, 255); // Cyan handle
+//                    SDL_RenderFillRect(renderer, &handleRect);
+                    TriggerEvent("SDL::Render::DrawCircle", handleX, barY + barHeight / 2, handleWidth/2);
+                    TriggerEvent("SDL::Render::FillCircle", handleX, barY + barHeight / 2, handleWidth/2);
+                    handlerHitboxes.push_back({handleRect, s.name});
+                    y_offset += getScaledPixelHeight(40);  // Space below slider
+                    return;
                 }
 
                 if (!textSurface) return;
@@ -182,11 +257,25 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
     });
 
 
+
+
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         if (!running || renderer == nullptr) return;
 
         if (eventType == SDL_MOUSEBUTTONDOWN) {
             isMouseDown = true;
+
+            // check if we are clicking on a slider
+            int x, y;
+            SDL_GetMouseState(&x, &y);
+            for (const auto& hit : sliderHitboxes) {
+                if (x >= hit.barRect.x && x <= hit.barRect.x + hit.barRect.w &&
+                    y >= hit.barRect.y && y <= hit.barRect.y + hit.barRect.h) {
+                    activeSlider = hit.name;
+                    break;
+                }
+            }
+            updateSliderValue(); // so when click just once
             return;
         }
 
@@ -277,6 +366,8 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                     break;
                 }
             }
+
+            activeSlider = std::nullopt;
         }
 
         if (eventType == SDL_KEYDOWN) {
@@ -285,6 +376,11 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                 running = false;
                 return;
             }
+        }
+
+
+        if (eventType == SDL_MOUSEMOTION && activeSlider.has_value()) {
+            updateSliderValue();
         }
     });
 

@@ -64,6 +64,12 @@ void GameInitializer::Init() {
         }else if (configName == "SCREEN_RESOLUTION") {
             (*gameStorage)["settings"]["SCREEN_RESOLUTION"] = SCREEN_RESOLUTION;
             gameStorage->save();
+        }else if (configName == "VOLUME_MUSIC") {
+            (*gameStorage)["settings"]["VOLUME_MUSIC"] = VOLUME_MUSIC;
+            gameStorage->save();
+        }else if (configName == "VOLUME_SFX") {
+            (*gameStorage)["settings"]["VOLUME_SFX"] = VOLUME_SFX;
+            gameStorage->save();
         }
     });
 

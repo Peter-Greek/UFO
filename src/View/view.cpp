@@ -267,6 +267,14 @@ int view::initialize() {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     });
 
+    AddEventHandler("SDL::Render::DrawCircle", [this](int x, int y, int radius) {
+        SDL_RenderDrawCircle(x, y, radius);
+    });
+
+    AddEventHandler("SDL::Render::FillCircle", [this](int x, int y, int radius) {
+        SDL_RenderFillCircle(x, y, radius);
+    });
+
     AddEventHandler("UFO::Chat::State", [this](bool state) {
         chatState = state;
     });
@@ -495,4 +503,97 @@ void view::postAbort() {
 void view::drawRect(int x, int y, int w, int h) {
     SDL_Rect fillRect = { x, y, w, h };
     SDL_RenderFillRect( renderer, &fillRect );
+}
+
+
+// Credit: https://gist.github.com/Gumichan01/332c26f6197a432db91cc4327fcabb1c
+// Author: Gumichan01
+// Slightly edited to remove CHECK_RENDERER_MAGIC
+int
+view::SDL_RenderDrawCircle(int x, int y, int radius)
+{
+    int offsetx, offsety, d;
+    int status;
+
+    offsetx = 0;
+    offsety = radius;
+    d = radius -1;
+    status = 0;
+
+    while (offsety >= offsetx) {
+        status += SDL_RenderDrawPoint(renderer, x + offsetx, y + offsety);
+        status += SDL_RenderDrawPoint(renderer, x + offsety, y + offsetx);
+        status += SDL_RenderDrawPoint(renderer, x - offsetx, y + offsety);
+        status += SDL_RenderDrawPoint(renderer, x - offsety, y + offsetx);
+        status += SDL_RenderDrawPoint(renderer, x + offsetx, y - offsety);
+        status += SDL_RenderDrawPoint(renderer, x + offsety, y - offsetx);
+        status += SDL_RenderDrawPoint(renderer, x - offsetx, y - offsety);
+        status += SDL_RenderDrawPoint(renderer, x - offsety, y - offsetx);
+
+        if (status < 0) {
+            status = -1;
+            break;
+        }
+
+        if (d >= 2*offsetx) {
+            d -= 2*offsetx + 1;
+            offsetx +=1;
+        }
+        else if (d < 2 * (radius - offsety)) {
+            d += 2 * offsety - 1;
+            offsety -= 1;
+        }
+        else {
+            d += 2 * (offsety - offsetx - 1);
+            offsety -= 1;
+            offsetx += 1;
+        }
+    }
+
+    return status;
+}
+
+
+int view::SDL_RenderFillCircle(int x, int y, int radius)
+{
+    int offsetx, offsety, d;
+    int status;
+
+    offsetx = 0;
+    offsety = radius;
+    d = radius -1;
+    status = 0;
+
+    while (offsety >= offsetx) {
+
+        status += SDL_RenderDrawLine(renderer, x - offsety, y + offsetx,
+                                     x + offsety, y + offsetx);
+        status += SDL_RenderDrawLine(renderer, x - offsetx, y + offsety,
+                                     x + offsetx, y + offsety);
+        status += SDL_RenderDrawLine(renderer, x - offsetx, y - offsety,
+                                     x + offsetx, y - offsety);
+        status += SDL_RenderDrawLine(renderer, x - offsety, y - offsetx,
+                                     x + offsety, y - offsetx);
+
+        if (status < 0) {
+            status = -1;
+            break;
+        }
+
+        if (d >= 2*offsetx) {
+            d -= 2*offsetx + 1;
+            offsetx +=1;
+        }
+        else if (d < 2 * (radius - offsety)) {
+            d += 2 * offsety - 1;
+            offsety -= 1;
+        }
+        else {
+            d += 2 * (offsety - offsetx - 1);
+            offsety -= 1;
+            offsetx += 1;
+        }
+    }
+
+    return status;
 }
