@@ -183,7 +183,7 @@ public:
 
     int reloadFont();
 
-    void updateSliderValue();
+    void updateSliderValue(int x, int y);
 };
 
 

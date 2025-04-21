@@ -155,7 +155,6 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
-        int x, y;
         if (isHidden) {
             if (eventType == SDL_KEYUP) {
                 if (key == SDLK_u) {
@@ -179,6 +178,7 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
                 if (displayingResult) {
                     displayingResult = false;
                 }else {
+                    int x, y;
                     SDL_GetMouseState(&x, &y);
                     if(x > PlayButton.x && y > PlayButton.y && x < PlayButton.x + PlayButton.w && y < PlayButton.y + PlayButton.h) {
                         TriggerEvent("UFO::UpgradeMenu::StartGameLoop", false);

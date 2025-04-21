@@ -48,6 +48,7 @@ private:
 
     int SHIELD_COUNT = 0; // count of how many shields the player has
     vector2 BASE_PLAYER_SPEED = {0.2, 0.2}; // base speed of the player
+
     vector2 PLAYER_SPEED = getScaledCoords(BASE_PLAYER_SPEED); // speed of the player
     int INVISIBILITY_DURATION = 2; // duration of invisibility
     int AT_CANNON_DAMAGE = 1; // damage of the AT cannon
@@ -65,6 +66,7 @@ private:
 
     bool chatState = false; // is the chat box open
 public:
+    const vector2 PROJECTILE_SPEED = getScaledCoords(BASE_PLAYER_SPEED * 3); // speed of the projectile
     enum UPGRADE_KEYS {
         INVISIBILITY_KEY = SDL_SCANCODE_1,
         AT_CANNON_KEY = SDL_SCANCODE_2,

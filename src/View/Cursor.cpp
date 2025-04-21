@@ -48,8 +48,9 @@ void Cursor::defineCursorRegions() {
     // Define regions on the cursor sprite sheet
     // Example cursors from rows of 32x32 tiles
     cursorRegions["default"] = {105, 375, 178-105, 467-375};      // Default
-    cursorRegions["default2"] = {98, 104, 178-98, 189-104};      // Default
-    cursorRegions["crosshair"] = {784, 516, 871-784, 600-516};      // Default
+    cursorRegions["default2"] = {98, 104, 178-98, 189-104};
+    cursorRegions["crosshair"] = {784, 516, 871-784, 600-516};
+    cursorRegions["pointer"] = {381, 110, 450 - 381, 189 - 100};
     // Add more as needed
 }
 
@@ -72,6 +73,10 @@ void Cursor::overrideCursor(const std::string& name) {
     if (it == cursors.end()) {
         print("Cursor: Unknown cursor name:", name);
         return;
+    }
+
+    if (currentCursor == name && activeCursor != nullptr) {
+        return; // No need to change if it's already the current cursor
     }
 
     currentCursor = name;

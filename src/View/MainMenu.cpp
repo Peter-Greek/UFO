@@ -88,19 +88,37 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
-        int x, y;
+
         if (eventType == SDL_MOUSEBUTTONDOWN) {
+            int x, y;
             SDL_GetMouseState(&x, &y);
             if(x > StartBox.x && y > StartBox.y && x < StartBox.x + StartBox.w && y < StartBox.y + StartBox.h) {
                 TriggerEvent("UFO::StartGame");
-            }
-            else if(x > SettingsBox.x && y > SettingsBox.y && x < SettingsBox.x + SettingsBox.w && y < SettingsBox.y + SettingsBox.h) {
+            }else if(x > SettingsBox.x && y > SettingsBox.y && x < SettingsBox.x + SettingsBox.w && y < SettingsBox.y + SettingsBox.h) {
                 TriggerEvent("UFO::SetSettingsState", true);
-            }
-            else if(x > LeaderboardBox.x && y > LeaderboardBox.y && x < LeaderboardBox.x + LeaderboardBox.w && y < LeaderboardBox.y + LeaderboardBox.h) {
+            }else if(x > LeaderboardBox.x && y > LeaderboardBox.y && x < LeaderboardBox.x + LeaderboardBox.w && y < LeaderboardBox.y + LeaderboardBox.h) {
                 TriggerEvent("UFO::OpenLeaderboard", true);
             }
+        }else if (eventType == SDL_MOUSEMOTION) {
+            int x, y;
+            SDL_GetMouseState(&x, &y);
+            bool inZone = false;
+            if(x > StartBox.x && y > StartBox.y && x < StartBox.x + StartBox.w && y < StartBox.y + StartBox.h) {
+                inZone = true;
+            }else if(x > SettingsBox.x && y > SettingsBox.y && x < SettingsBox.x + SettingsBox.w && y < SettingsBox.y + SettingsBox.h) {
+                inZone = true;
+            }else if(x > LeaderboardBox.x && y > LeaderboardBox.y && x < LeaderboardBox.x + LeaderboardBox.w && y < LeaderboardBox.y + LeaderboardBox.h) {
+                inZone = true;
+            }
+            if (inZone) {
+                TriggerEvent("UFO::Cursor::Change", "pointer");
+            }else {
+                TriggerEvent("UFO::Cursor::Change", "default");
+            }
         }
+
+
+
     });
     return 1;
 }

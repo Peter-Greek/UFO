@@ -16,11 +16,9 @@ int SettingsMenu::reloadFont() {
     return 1;
 }
 
-void SettingsMenu::updateSliderValue() {
+void SettingsMenu::updateSliderValue(int x, int y) {
     if (!activeSlider.has_value()) return; // prevent crash
 
-    int x, y;
-    SDL_GetMouseState(&x, &y);
     for (auto& setting : settings) {
         if (auto* slider = std::get_if<slider_t>(&setting); slider && slider->name == activeSlider.value()) {
             for (const auto& hit : sliderHitboxes) {
@@ -275,11 +273,9 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                     break;
                 }
             }
-            updateSliderValue(); // so when click just once
+            updateSliderValue(x, y); // so when click just once
             return;
-        }
-
-        if (eventType == SDL_MOUSEBUTTONUP && isMouseDown) {
+        }else if (eventType == SDL_MOUSEBUTTONUP && isMouseDown) {
             isMouseDown = false;
             int x, y;
             SDL_GetMouseState(&x, &y);
@@ -330,8 +326,11 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                     }
 
                     if (optionName.empty()) {
-                        if (openDropdowns.count(settingName)) openDropdowns.erase(settingName);
-                        else openDropdowns.insert(settingName);
+                        if (openDropdowns.count(settingName)){
+                            openDropdowns.erase(settingName);
+                        }else {
+                            openDropdowns.insert(settingName);
+                        }
                         return;
                     }
 
@@ -368,19 +367,54 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
             }
 
             activeSlider = std::nullopt;
-        }
-
-        if (eventType == SDL_KEYDOWN) {
+        }else if (eventType == SDL_KEYDOWN) {
             if (key == SDLK_ESCAPE) {
                 TriggerEvent("UFO::SetSettingsState", false);
                 running = false;
                 return;
             }
-        }
+        }else if (eventType == SDL_MOUSEMOTION) {
+            int x, y;
+            SDL_GetMouseState(&x, &y);
+            updateSliderValue(x, y);
+            bool inZone = false;
+
+            // check if we are clicking on a slider head
+            for (const auto& hit : handlerHitboxes) {
+                if (x >= hit.barRect.x && x <= hit.barRect.x + hit.barRect.w &&
+                    y >= hit.barRect.y && y <= hit.barRect.y + hit.barRect.h) {
+                    inZone = true;
+                    break;
+                }
+            }
+
+            // check if we are clicking on a slider bar
+            if (!inZone) {
+                for (const auto& hit : sliderHitboxes) {
+                    if (x >= hit.barRect.x && x <= hit.barRect.x + hit.barRect.w &&
+                        y >= hit.barRect.y && y <= hit.barRect.y + hit.barRect.h) {
+                        inZone = true;
+                        break;
+                    }
+                }
+            }
+
+            // check if we are clicking on any dropdown box
+            if (!inZone) {
+                for (auto& [rect, settingName, optionName] : dropdownHitboxes) {
+                    if (x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h) {
+                        inZone = true;
+                        break;
+                    }
+                }
+            }
 
 
-        if (eventType == SDL_MOUSEMOTION && activeSlider.has_value()) {
-            updateSliderValue();
+            if (inZone) {
+                TriggerEvent("UFO::Cursor::Change", "pointer");
+            }else {
+                TriggerEvent("UFO::Cursor::Change", "default");
+            }
         }
     });
 

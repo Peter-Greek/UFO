@@ -376,7 +376,9 @@ void GameInitializer::Start(){
 void GameInitializer::update(float deltaMs) {
     if (gameState == GAME_LOOP) {
         auto player = gameManager->getPlayer();
-        float maxOxy = player->getMaxOxygenTime();
+//        float maxOxy = player->getMaxOxygenTime();
+        // Reason used base instead of total is so the sound ques happen the same each time no matter the upgrades
+        float maxOxy = player->getBaseOxygenTime();
         float oxy = player->getOxygenLevel();
         float oxyPercent = oxy / maxOxy;
         int intensityLevel = -1;
@@ -542,6 +544,7 @@ void GameInitializer::LoadAudio() {
     print("Loading Audio");
     // [[Audio]]
     auto aHitMarker = attachGameMappedProcess<AudioLoader>("hitmarker", "../resource/audio/hitmarker.wav", false);
+    aHitMarker->setVolume(VOLUME_SFX / 100.0f);
 }
 
 void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
@@ -654,6 +657,7 @@ void GameInitializer::CreateMainMenu() {
 }
 
 void GameInitializer::ShutdownMainMenu() {
+    TriggerEvent("UFO::Cursor::Change", "default");
     if (mMenu != nullptr) {
         mMenu->abort();
         mMenu = nullptr;
@@ -668,6 +672,7 @@ void GameInitializer::CreateSaveSelector() {
 }
 
 void GameInitializer::ShutdownSaveSelector() {
+    TriggerEvent("UFO::Cursor::Change", "default");
     if (sMenu != nullptr) {
         sMenu->abort();
         sMenu = nullptr;
@@ -692,6 +697,7 @@ void GameInitializer::CreateUpgradeMenu() {
 }
 
 void GameInitializer::ShutdownUpgradeMenu() {
+    TriggerEvent("UFO::Cursor::Change", "default");
     if (uMenu != nullptr) {
         uMenu->abort();
         uMenu = nullptr;

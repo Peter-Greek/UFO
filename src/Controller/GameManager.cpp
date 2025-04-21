@@ -1137,8 +1137,11 @@ void GameManager::update(float deltaMs) {
 
     std::list<sh_ptr_e> removalList;
     for (auto& e : entityList) {
-        if (e->isDone() || e->getHearts() <= 0) {
-            e->fail();
+        if (e->isDone() || e->getHearts() <= 0 || e->dead()) {
+            if (!e->dead()) {
+                e->fail();
+            }
+
             removalList.push_back(e);
 
             if (e->isEntityAPlayer()) {
@@ -1367,9 +1370,8 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             int x, y; SDL_GetMouseState(&x, &y);
             vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
             Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
-            vector2 pVel = angleToVector2(h) * 0.35f;
-            pVel = getScaledCoords(pVel); // scale the velocity to be aligned with the resolution
-
+            // scale the velocity to be aligned with the resolution
+            vector2 pVel = angleToVector2(h) * p->PROJECTILE_SPEED.length();
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
             auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, e);
             pM->attachProcess(proj);
@@ -1379,7 +1381,16 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             proj->spawn();
 
             proj->AddEventHandler("ENTITY::SUCCEED", [p, this]() {
-                audioMap["hitmarker"]->play(0.1f);
+                print("Player Projectile Succeeded");
+                audioMap["hitmarker"]->play();
+            });
+
+            proj->AddEventHandler("ENTITY::FAIL", [p, this]() {
+                print("Player Projectile Failed");
+            });
+
+            proj->AddEventHandler("ENTITY::ABORT", [p, this]() {
+                print("Player Projectile Aborted");
             });
 
             if (p->isInvisible()) {
@@ -1432,7 +1443,7 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
                     bounceEntities(e2, e);
                     curVel = e->getVelocity();
                     inKnockback = true;
-                    e2->removeHearts(e2->getHearts());
+//                    e2->removeHearts(e2->getHearts());
                     e2->succeed();
                 }
             }
@@ -1498,7 +1509,6 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
             if ((currentCoords - playerCoords).length() < ((float) SCREEN_WIDTH)) {
                 if (b->canSpawnMinion()) {
                     Heading h = getHeadingFromVectors(currentCoords, playerCoords);
-                    vector2 pVel = angleToVector2(h) * 0.35f;
                     vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x * 2.0f));
                     sh_ptr_e minion = b->spawnMinion(spawnCoords);
                     pM->attachProcess(minion);
@@ -1515,9 +1525,8 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
 
                 if (b->canSpawnProjectile()) {
                     Heading h = getHeadingFromVectors(currentCoords, playerCoords);
-                    vector2 pVel = angleToVector2(h) * 0.35f;
-                    pVel = getScaledCoords(pVel); // scale the velocity to be aligned with the resolution
-                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + getScaledCoords({5.0, 5.0}).length()));
+                    vector2 pVel = angleToVector2(h) * getScaledCoords({0.70, 0.70}).length();
+                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * 10.0f );
                     sh_ptr_e proj = b->spawnProjectile(spawnCoords);
                     pM->attachProcess(proj);
                     attachEntity(proj);
