@@ -48,6 +48,7 @@
 #include "UpgradeMenu.h"
 #include "UserInput.h"
 #include "SettingsMenu.h"
+#include "LeaderboardMenu.h"
 
 class GameInitializer : public xProcess {
 public:
@@ -68,6 +69,7 @@ private:
     sh_ptr<UpgradeMenu> uMenu;
     sh_ptr<SaveSelector> sMenu;
     sh_ptr<SettingsMenu> setMenu;
+    sh_ptr<LeaderboardMenu> lMenu;
 
 
     passFunc_t passFunc;
@@ -223,6 +225,10 @@ public:
     void CreateGameLoopBackgroundMusic();
 
     void ShutdownGameLoopBackgroundMusic();
+
+    void CreateLeaderboardMenu();
+
+    void ShutdownLeaderboardMenu();
 };
 
 

@@ -95,7 +95,6 @@ void GameInitializer::Init() {
 
     // Main Menu Press Settings
     AddEventHandler("UFO::SetSettingsState", [this](bool state) {
-        print("TODO: Open Settings");
         if (state) {
             CreateSettingsMenu();
         }else {
@@ -106,8 +105,16 @@ void GameInitializer::Init() {
 
     // Main Menu Press Leaderboard
     AddEventHandler("UFO::OpenLeaderboard", [this]() {
-        print("TODO: Open Leaderboard");
+        ShutdownMainMenu();
+        CreateLeaderboardMenu();
     });
+
+    AddEventHandler("UFO::LeaderboardMenu::Close", [this]() {
+        print("Closing Leaderboard Menu");
+        ShutdownLeaderboardMenu();
+        CreateMainMenu();
+    });
+
 
     AddEventHandler("UFO::SaveSelector::Select", [this](int slotIndex) {
         print("Selected Slot: ", slotIndex);
@@ -728,9 +735,25 @@ void GameInitializer::CreateSettingsMenu() {
 }
 
 void GameInitializer::ShutdownSettingsMenu() {
+    TriggerEvent("UFO::Cursor::Change", "default");
     if (setMenu != nullptr) {
         setMenu->abort();
         setMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateLeaderboardMenu() {
+    ShutdownMainMenu();
+    gameState = LEADERBOARD_MENU;
+    auto menuTxd = attachMappedProcess<TxdLoader>("LEADERBOARD_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
+    lMenu = attachProcess<LeaderboardMenu>((*gameStorage)["saves"], menuTxd);
+}
+
+void GameInitializer::ShutdownLeaderboardMenu() {
+    TriggerEvent("UFO::Cursor::Change", "default");
+    if (lMenu != nullptr) {
+        lMenu->abort();
+        lMenu = nullptr;
     }
 }
 
