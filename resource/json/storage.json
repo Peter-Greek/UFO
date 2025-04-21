@@ -1,9 +1,19 @@
 {
     "curPlayer": -1,
-    "loads": 1854,
+    "loads": 1866,
     "player": {
         "ATCount": 0,
+        "Ending": 2,
         "TotalAT": 0,
+        "date": 1744095919,
+        "loads": 218,
+        "name": "Peter Greek",
+        "settings": {
+            "curRoomIndex": 0,
+            "debugMode": 0,
+            "unlimitedFrames": false
+        },
+        "time": 3309800,
         "upgrades": {
             "at_cannon": 0,
             "invisibility": 0,
@@ -14,18 +24,18 @@
     },
     "saves": [
         {
-            "ATCount": 2456,
+            "ATCount": 2471,
             "Ending": 2,
-            "TotalAT": 2586,
+            "TotalAT": 2601,
             "date": 1744095919,
-            "loads": 215,
+            "loads": 218,
             "name": "Peter Greek",
             "settings": {
                 "curRoomIndex": 0,
                 "debugMode": 0,
                 "unlimitedFrames": false
             },
-            "time": 3299296,
+            "time": 3309800,
             "upgrades": {
                 "at_cannon": 2,
                 "invisibility": 3,
@@ -56,18 +66,18 @@
             }
         },
         {
-            "ATCount": 0,
+            "ATCount": 6,
             "Ending": 0,
-            "TotalAT": 25,
+            "TotalAT": 31,
             "date": 1744242406,
-            "loads": 2,
+            "loads": 3,
             "name": "Bob",
             "settings": {
                 "curRoomIndex": 0,
                 "debugMode": 0,
                 "unlimitedFrames": false
             },
-            "time": 239931,
+            "time": 428322,
             "upgrades": {
                 "at_cannon": 1,
                 "invisibility": 0,
@@ -201,12 +211,12 @@
     ],
     "settings": {
         "AUDIO_ENABLED": false,
-        "FULL_SCREEN_ENABLED": true,
+        "FULL_SCREEN_ENABLED": false,
         "SCREEN_RESOLUTION": [
-            1920,
-            1080
+            2400,
+            1600
         ],
-        "VOLUME_MUSIC": 94.0,
+        "VOLUME_MUSIC": 52.0,
         "VOLUME_SFX": 56.0,
         "curRoomIndex": 1,
         "debugMode": 0,

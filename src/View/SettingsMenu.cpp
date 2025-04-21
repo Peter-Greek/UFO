@@ -107,8 +107,14 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
         int y_offset = getScaledPixelHeight(50);
         const int spacing = getScaledPixelHeight(50);
 
-        textures.clear();
         dropdownHitboxes.clear();
+        sliderHitboxes.clear();
+        handlerHitboxes.clear();
+//        openDropdowns.clear();
+        for (const auto& texture : textures) {
+            SDL_DestroyTexture(texture.first);
+        }
+        textures.clear();
 
         if (menuTxd != nullptr && menuTxd->state() == xProcess::RUNNING) {
             SDL_Rect destRect = {
@@ -427,4 +433,43 @@ void SettingsMenu::update(float deltaMs) {
 
     if (!running) return;
 
+}
+
+void SettingsMenu::postAbort() {
+    print("Settings Menu Aborted");
+    running = false;
+    dropdownHitboxes.clear();
+    sliderHitboxes.clear();
+    handlerHitboxes.clear();
+    openDropdowns.clear();
+    for (const auto& texture : textures) {
+        SDL_DestroyTexture(texture.first);
+    }
+    textures.clear();
+}
+
+void SettingsMenu::postSuccess() {
+    print("Settings Menu Success");
+    running = false;
+    dropdownHitboxes.clear();
+    sliderHitboxes.clear();
+    handlerHitboxes.clear();
+    openDropdowns.clear();
+    for (const auto& texture : textures) {
+        SDL_DestroyTexture(texture.first);
+    }
+    textures.clear();
+}
+
+void SettingsMenu::postFail() {
+    print("Settings Menu Failed");
+    running = false;
+    dropdownHitboxes.clear();
+    sliderHitboxes.clear();
+    handlerHitboxes.clear();
+    openDropdowns.clear();
+    for (const auto& texture : textures) {
+        SDL_DestroyTexture(texture.first);
+    }
+    textures.clear();
 }

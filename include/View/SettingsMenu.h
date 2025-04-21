@@ -177,9 +177,9 @@ public:
     int initialize_SDL_process(SDL_Window* passed_window) override;
     void update(float deltaMs) override;
     bool isDone() override { return !running; };
-    void postSuccess() override {};
-    void postFail() override {};
-    void postAbort() override {};
+    void postSuccess() override;
+    void postFail() override;
+    void postAbort() override;
 
     int reloadFont();
 

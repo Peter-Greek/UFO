@@ -47,7 +47,12 @@ public:
     explicit EventManager(std::function<void(const std::string&, const json&)> func)
             : pgx_onTriggerEvent(std::move(func)) {}
 
-    ~EventManager() = default;
+    ~EventManager() {
+        for (auto& [eventName, handlers] : eventHandlers) {
+            handlers.clear(); // Clear the list of handlers
+        }
+        eventHandlers.clear(); // Clear the map
+    };
 
     // Function wrapper for any callable with variadic args
     template <typename Func>
