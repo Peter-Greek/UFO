@@ -175,7 +175,10 @@ void GameInitializer::Init() {
             uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
             uMenu->setOxygenCount((*gameStorage)["player"]["upgrades"]["oxygen"].get<int>());
             uMenu->setSpeedCount((*gameStorage)["player"]["upgrades"]["speed"].get<int>());  
-            TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>(), (*gameStorage)["player"]["upgrades"]["oxygen"].get<int>(), (*gameStorage)["player"]["upgrades"]["speed"].get<int>());
+            uMenu->setInvisibilityCount((*gameStorage)["player"]["upgrades"]["invisibility"].get<int>());  
+            uMenu->setShieldCount((*gameStorage)["player"]["upgrades"]["shield"].get<int>());  
+            uMenu->setCannonCount((*gameStorage)["player"]["upgrades"]["at_cannon"].get<int>());              
+            TriggerEvent("UFO::UpgradeMenu::DisplayATCount", (*gameStorage)["player"]["ATCount"].get<int>(), (*gameStorage)["player"]["upgrades"]["oxygen"].get<int>(), (*gameStorage)["player"]["upgrades"]["speed"].get<int>(), (*gameStorage)["player"]["upgrades"]["invisibility"].get<int>(), (*gameStorage)["player"]["upgrades"]["shield"].get<int>(), (*gameStorage)["player"]["upgrades"]["at_cannon"].get<int>());
             print("Upgrade purchased: ", upgrade, " AT Count: ", atCount);
             TriggerEvent("UFO::Chat::AddMessage", "Upgrade purchased: " + upgrade + " AT Count: " + std::to_string(atCount));
         } else {
@@ -695,10 +698,19 @@ void GameInitializer::CreateUpgradeMenu() {
     auto wTxd = attachMappedProcess<TxdLoader>("WIN_SCREEN::TEXTURE", "../resource/GFX/screens/escapeScreenWin2.png");
     auto menuTxd = attachMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
     auto rocketTxd = attachMappedProcess<TxdLoader>("ROCKET::TEXTURE", "../resource/GFX/icons/StartRocketIcon.png");
-    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd, menuTxd, rocketTxd);
+    auto speedTxd = attachMappedProcess<TxdLoader>("SPEED::TEXTURE", "../resource/GFX/icons/SpeedUpgradeIcon.png");
+    auto oxygenTxd = attachMappedProcess<TxdLoader>("OXYGEN::TEXTURE", "../resource/GFX/icons/OxygenUpgradeIcon.png");
+    auto cannonTxd = attachMappedProcess<TxdLoader>("CANNON::TEXTURE", "../resource/GFX/icons/ATCannonIcon.png");
+    auto shieldTxd = attachMappedProcess<TxdLoader>("SHIELD::TEXTURE", "../resource/GFX/icons/ShieldUpgradeIconSpriteSheet.png");
+    auto invisibilityTxd = attachMappedProcess<TxdLoader>("INVISIBILITY::TEXTURE", "../resource/GFX/icons/InvisibilityUpgradeIconSpriteSheet.png");
+    auto UpgradeBarTxd = attachMappedProcess<TxdLoader>("INVISIBILITY::TEXTURE", "../resource/GFX/icons/UpgradeBarIconSpriteSheet.png");
+    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd, menuTxd, rocketTxd, speedTxd, oxygenTxd, cannonTxd, shieldTxd, invisibilityTxd, UpgradeBarTxd);
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
     uMenu->setOxygenCount((*gameStorage)["player"]["upgrades"]["oxygen"].get<int>());
     uMenu->setSpeedCount((*gameStorage)["player"]["upgrades"]["speed"].get<int>()); 
+    uMenu->setInvisibilityCount((*gameStorage)["player"]["upgrades"]["invisibility"].get<int>());  
+    uMenu->setShieldCount((*gameStorage)["player"]["upgrades"]["shield"].get<int>());  
+    uMenu->setCannonCount((*gameStorage)["player"]["upgrades"]["at_cannon"].get<int>());              
     uMenu->showUpgradeMenu();
     gameResult = GAME_RESULT::NONE;
 }

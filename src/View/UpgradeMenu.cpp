@@ -59,6 +59,7 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
 
         if (renderer == nullptr) {return;}
 
+        // render backround of menu
         if (uMenuTxd != nullptr && uMenuTxd->state() == xProcess::RUNNING) {
             uMenuTxd->render(srcRect, destRect, 0, SDL_FLIP_NONE);
         }
@@ -148,10 +149,12 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             SDL_RenderCopy(renderer, CannonText.texture, nullptr, &CannonText.dst);
         }   
 
-        //Draw Oxygen tracker
+        //Draw upgrade trackers
         displayOxygenCount(oxygen);
-        //Draw Speed tracker
         displaySpeedCount(speed);
+        displayInvisibilityCount(invisibility);
+        displayShieldCount(shield);
+        displayCannonCount(cannon);
     });
 
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
@@ -197,10 +200,13 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             }
         }
 });
-    AddEventHandler("UFO::UpgradeMenu::DisplayATCount", [this](int ATCount, int oxygenCount, int speedCount) {
+    AddEventHandler("UFO::UpgradeMenu::DisplayATCount", [this](int ATCount, int oxygenCount, int speedCount, int invisibilityCount, int shieldCount, int cannonCount) {
         displayATCount(ATCount);
         displayOxygenCount(oxygenCount);
         displaySpeedCount(speedCount);
+        displayInvisibilityCount(invisibilityCount);
+        displayShieldCount(shieldCount);
+        displayCannonCount(cannonCount);
     });
 
     displayATCount(AT);
@@ -221,6 +227,9 @@ void UpgradeMenu::showUpgradeMenu() {
     displayATCount(AT);
     displayOxygenCount(oxygen);
     displaySpeedCount(speed);
+    displayInvisibilityCount(invisibility);
+    displayShieldCount(shield);
+    displayCannonCount(cannon);
     TriggerEvent("UFO::UpgradeMenu::State", true);
 }
 
@@ -236,27 +245,72 @@ void UpgradeMenu::displayATCount(int ATCount){
 
 void UpgradeMenu::displayOxygenCount(int oxygenCount){            
         for (int i = 0; i < 5; i++) {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white (or any other color)
-            SDL_RenderDrawRect(renderer, &OxygenTracker.rects[i]); 
+            SDL_SetRenderDrawColor(renderer, 200, 150, 255, 100); // Set color to white (or any other color)
+            SDL_RenderFillRect(renderer, &OxygenTracker.rects[i]); 
 
             if (i<oxygenCount){
-                SDL_SetRenderDrawColor(renderer, 255, 255, 100, 100); // Set color to white (or any other color)
+                SDL_SetRenderDrawColor(renderer, 200, 150, 255, 255); // Set color to light purple
                 SDL_RenderFillRect(renderer, &OxygenTracker.rects[i]);
             }
-        }
-}
+        }}
 
 void UpgradeMenu::displaySpeedCount(int speedCount){
         for (int i = 0; i < 5; i++) {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set color to white (or any other color)
-            SDL_RenderDrawRect(renderer, &SpeedTracker.rects[i]); 
+            SDL_SetRenderDrawColor(renderer, 200, 150, 255, 100); // Set color to white (or any other color)
+            SDL_RenderFillRect(renderer, &SpeedTracker.rects[i]); 
 
             if (i<speedCount){
-                SDL_SetRenderDrawColor(renderer, 255, 255, 100, 100); // Set color to white (or any other color)
+                SDL_SetRenderDrawColor(renderer, 200, 150, 255, 255); // Set color to white (or any other color)
                 SDL_RenderFillRect(renderer, &SpeedTracker.rects[i]);
             }
         }
 }
+
+void UpgradeMenu::displayInvisibilityCount(int invisibilityCount){            
+        if (invisibilityTxd != nullptr && invisibilityTxd->state() == xProcess::RUNNING) {
+            // Get the dimensions of the original texture
+            int textureWidth, textureHeight;
+            SDL_QueryTexture(invisibilityTxd->getTexture(), NULL, NULL, &textureWidth, &textureHeight);
+
+            SDL_Rect adjustedInvisRect = invisibilityRect;
+            adjustedInvisRect.w = invisibilityRect.w / 4;
+
+
+        SDL_Rect quarterSrcRect = {
+            (invisibility * textureWidth) / 4,  // x starts at the chosen quarter
+            0,                                  // y starts at the top
+            textureWidth / 4,                   // width is 1/4 of the texture width
+            textureHeight                       // full height
+        };
+
+        invisibilityTxd->render(quarterSrcRect, adjustedInvisRect, 0, SDL_FLIP_NONE);
+        }
+        }
+
+void UpgradeMenu::displayShieldCount(int shieldCount){            
+        if (shieldTxd != nullptr && shieldTxd->state() == xProcess::RUNNING) {
+            // Get the dimensions of the original texture
+            int textureWidth, textureHeight;
+            SDL_QueryTexture(shieldTxd->getTexture(), NULL, NULL, &textureWidth, &textureHeight);
+
+            SDL_Rect adjustedShieldRect = shieldRect;
+            adjustedShieldRect.w = shieldRect.w / 4;
+
+
+        SDL_Rect quarterSrcRect = {
+            (shield * textureWidth) / 4,  // x starts at the chosen quarter
+            0,                                  // y starts at the top
+            textureWidth / 4,                   // width is 1/4 of the texture width
+            textureHeight                       // full height
+        };
+
+        shieldTxd->render(quarterSrcRect, adjustedShieldRect, 0, SDL_FLIP_NONE);
+        }        }
+void UpgradeMenu::displayCannonCount(int cannonCount){            
+        if (cannonTxd != nullptr && cannonTxd->state() == xProcess::RUNNING) {
+            cannonTxd->render(srcRect, cannonRect, 0, SDL_FLIP_NONE);
+        }
+    }
 
 void UpgradeMenu::setATCount(int ATCount){
     AT = ATCount;
@@ -268,6 +322,18 @@ void UpgradeMenu::setOxygenCount(int oxygenCount){
 
 void UpgradeMenu::setSpeedCount(int speedCount){
     speed = speedCount;
+}
+
+void UpgradeMenu::setInvisibilityCount(int invisibilityCount){
+    invisibility = invisibilityCount;
+}
+
+void UpgradeMenu::setShieldCount(int shieldCount){
+    shield = shieldCount;
+}
+
+void UpgradeMenu::setCannonCount(int cannonCount){
+    cannon = cannonCount;
 }
 
 void UpgradeMenu::closeUpgradeMenu() {
