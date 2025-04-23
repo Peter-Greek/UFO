@@ -46,6 +46,10 @@ public:
     void resizeWindow(int width, int height, bool center);
 
     std::pair<int, int> getScreenResolution();
+
+    int SDL_RenderDrawCircle(int x, int y, int radius);
+
+    int SDL_RenderFillCircle(int x, int y, int radius);
 };
 
 #endif //CSCI437_VIEW_H

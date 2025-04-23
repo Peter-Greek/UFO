@@ -64,6 +64,12 @@ void GameInitializer::Init() {
         }else if (configName == "SCREEN_RESOLUTION") {
             (*gameStorage)["settings"]["SCREEN_RESOLUTION"] = SCREEN_RESOLUTION;
             gameStorage->save();
+        }else if (configName == "VOLUME_MUSIC") {
+            (*gameStorage)["settings"]["VOLUME_MUSIC"] = VOLUME_MUSIC;
+            gameStorage->save();
+        }else if (configName == "VOLUME_SFX") {
+            (*gameStorage)["settings"]["VOLUME_SFX"] = VOLUME_SFX;
+            gameStorage->save();
         }
     });
 
@@ -89,7 +95,6 @@ void GameInitializer::Init() {
 
     // Main Menu Press Settings
     AddEventHandler("UFO::SetSettingsState", [this](bool state) {
-        print("TODO: Open Settings");
         if (state) {
             CreateSettingsMenu();
         }else {
@@ -100,8 +105,16 @@ void GameInitializer::Init() {
 
     // Main Menu Press Leaderboard
     AddEventHandler("UFO::OpenLeaderboard", [this]() {
-        print("TODO: Open Leaderboard");
+        ShutdownMainMenu();
+        CreateLeaderboardMenu();
     });
+
+    AddEventHandler("UFO::LeaderboardMenu::Close", [this]() {
+        print("Closing Leaderboard Menu");
+        ShutdownLeaderboardMenu();
+        CreateMainMenu();
+    });
+
 
     AddEventHandler("UFO::SaveSelector::Select", [this](int slotIndex) {
         print("Selected Slot: ", slotIndex);
@@ -233,12 +246,11 @@ void GameInitializer::Init() {
     // Only triggered when main menu is open / settings menu
     AddEventHandler("UFO::View::UpdateWindowSize", [this](int w, int h) {
         print("Game Initializer: Window Size Resetting main menu: ", mMenu, sMenu, uMenu, SCREEN_WIDTH, "x", SCREEN_HEIGHT);
-        sch->setTimeout(100, [=]() {
-            if (mMenu != nullptr) {
-                ShutdownMainMenu();
-                CreateMainMenu();
-            }
-        });
+        if (mMenu != nullptr) {
+            print("Window Size Resetting Main Menu: ", mMenu);
+            ShutdownMainMenu();
+            CreateMainMenu();
+        }
     });
 
     // Triggered when a new user is trying to be made
@@ -294,10 +306,10 @@ void GameInitializer::Init() {
 }
 
 void GameInitializer::Start(){
-    TriggerEvent("UFO::Cursor::Change", "crosshair");
     print("Game Start Called");
     gameStartTime = sch->getGameTime();
     gameState = GAME_LOOP;
+    TriggerEvent("UFO::Cursor::Change", "crosshair"); // change the cursor to a crosshair
     auto gM = attachProcess<GameManager>();
     gM->setProcessManager(processManager);
     gM->setScheduler(sch);
@@ -371,7 +383,9 @@ void GameInitializer::Start(){
 void GameInitializer::update(float deltaMs) {
     if (gameState == GAME_LOOP) {
         auto player = gameManager->getPlayer();
-        float maxOxy = player->getMaxOxygenTime();
+//        float maxOxy = player->getMaxOxygenTime();
+        // Reason used base instead of total is so the sound ques happen the same each time no matter the upgrades
+        float maxOxy = player->getBaseOxygenTime();
         float oxy = player->getOxygenLevel();
         float oxyPercent = oxy / maxOxy;
         int intensityLevel = -1;
@@ -504,6 +518,7 @@ void GameInitializer::LoadTextures() {
 
 
     // [[Normal Textures]]
+    auto menuTxd = attachGameMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
 
 
     // Create Wall Texture
@@ -536,6 +551,7 @@ void GameInitializer::LoadAudio() {
     print("Loading Audio");
     // [[Audio]]
     auto aHitMarker = attachGameMappedProcess<AudioLoader>("hitmarker", "../resource/audio/hitmarker.wav", false);
+    aHitMarker->setVolume(VOLUME_SFX / 100.0f);
 }
 
 void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
@@ -648,6 +664,7 @@ void GameInitializer::CreateMainMenu() {
 }
 
 void GameInitializer::ShutdownMainMenu() {
+    TriggerEvent("UFO::Cursor::Change", "default");
     if (mMenu != nullptr) {
         mMenu->abort();
         mMenu = nullptr;
@@ -662,6 +679,7 @@ void GameInitializer::CreateSaveSelector() {
 }
 
 void GameInitializer::ShutdownSaveSelector() {
+    TriggerEvent("UFO::Cursor::Change", "default");
     if (sMenu != nullptr) {
         sMenu->abort();
         sMenu = nullptr;
@@ -686,6 +704,7 @@ void GameInitializer::CreateUpgradeMenu() {
 }
 
 void GameInitializer::ShutdownUpgradeMenu() {
+    TriggerEvent("UFO::Cursor::Change", "default");
     if (uMenu != nullptr) {
         uMenu->abort();
         uMenu = nullptr;
@@ -716,9 +735,25 @@ void GameInitializer::CreateSettingsMenu() {
 }
 
 void GameInitializer::ShutdownSettingsMenu() {
+    TriggerEvent("UFO::Cursor::Change", "default");
     if (setMenu != nullptr) {
         setMenu->abort();
         setMenu = nullptr;
+    }
+}
+
+void GameInitializer::CreateLeaderboardMenu() {
+    ShutdownMainMenu();
+    gameState = LEADERBOARD_MENU;
+    auto menuTxd = attachMappedProcess<TxdLoader>("LEADERBOARD_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
+    lMenu = attachProcess<LeaderboardMenu>((*gameStorage)["saves"], menuTxd);
+}
+
+void GameInitializer::ShutdownLeaderboardMenu() {
+    TriggerEvent("UFO::Cursor::Change", "default");
+    if (lMenu != nullptr) {
+        lMenu->abort();
+        lMenu = nullptr;
     }
 }
 

@@ -87,6 +87,15 @@ int AudioLoader::initialize_SDL_process(SDL_Window* window) {
     AddEventHandler("UFO::OnConfigUpdate", [this](const std::string configName) {
         if (configName == "AUDIO_ENABLED") {
             refreshVolume();
+        }else if (configName == "VOLUME_MUSIC") {
+            if (isMusic) {
+                print("[AudioLoader] Attempt Music Volume changed:", configName, VOLUME_MUSIC);
+                setVolume(VOLUME_MUSIC / 100);
+            }
+        }else if (configName == "VOLUME_SFX") {
+            if (!isMusic) {
+                setVolume(VOLUME_SFX / 100);
+            }
         }
     });
 

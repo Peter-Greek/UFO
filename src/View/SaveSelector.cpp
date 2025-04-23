@@ -111,14 +111,10 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
                 running = false;
                 return;
             }
-        }
-
-        if (eventType == SDL_MOUSEBUTTONDOWN) {
+        }else if (eventType == SDL_MOUSEBUTTONDOWN) {
             isMouseDown = true;
             return;
-        }
-
-        if (eventType == SDL_MOUSEBUTTONUP && isMouseDown) {
+        }else if (eventType == SDL_MOUSEBUTTONUP && isMouseDown) {
             isMouseDown = false;
             int x, y;
             SDL_GetMouseState(&x, &y);
@@ -161,7 +157,33 @@ int SaveSelector::initialize_SDL_process(SDL_Window *passed_window) {
                 }
                 return;
             }
+        }else if (eventType == SDL_MOUSEMOTION) {
+            int x, y;
+            SDL_GetMouseState(&x, &y);
+            bool inZone = false;
+            for (int i = 0; i < max_display; i++) {
+                int pad = (padding * 2) + ((padding + templateBox.w) * i);
+                if (x >= templateBox.x + pad && x <= templateBox.x + pad + templateBox.w &&
+                    y >= templateBox.y && y <= templateBox.y + templateBox.h) {
+                    inZone = true;
+                    break;
+                }
+            }
+            if (!inZone) {
+                if (x >= leftArrow.x && x <= leftArrow.x + leftArrow.w &&
+                    y >= leftArrow.y && y <= leftArrow.y + leftArrow.h) {
+                    inZone = true;
+                }else if (x >= rightArrow.x && x <= rightArrow.x + rightArrow.w &&
+                          y >= rightArrow.y && y <= rightArrow.y + rightArrow.h) {
+                    inZone = true;
+                }
+            }
 
+            if (inZone) {
+                TriggerEvent("UFO::Cursor::Change", "pointer");
+            }else {
+                TriggerEvent("UFO::Cursor::Change", "default");
+            }
         }
     });
 

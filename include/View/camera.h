@@ -60,6 +60,10 @@ public:
     void postFail() override {};
     void postAbort() override {};
 
+    vector2 getPosition() const {
+        return vector2(cameraX, cameraY);
+    }
+
     void updateCamera(float x, float y);
     void updateCamera(vector2 pos);
 

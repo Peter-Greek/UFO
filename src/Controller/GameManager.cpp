@@ -36,12 +36,70 @@
 #include <utility>
 #include "Projectile.h"
 
+void GameManager::renderBackground() {
+    auto it = txdMap.find("MENU::TEXTURE");
+    if (it == txdMap.end() || !it->second || !cam) return;
+
+    SDL_Texture* tex = it->second->getTexture();
+    if (!tex) return;
+
+    // Get actual texture dimensions
+    int texW, texH;
+    SDL_QueryTexture(tex, nullptr, nullptr, &texW, &texH);
+
+    // Calculate scale factor to fit full screen
+    float scaleX = static_cast<float>(SCREEN_WIDTH) / texW;
+    float scaleY = static_cast<float>(SCREEN_HEIGHT) / texH;
+
+    int scaledW = static_cast<int>(texW * scaleX);
+    int scaledH = static_cast<int>(texH * scaleY);
+
+    // Get camera position
+    vector2 camPos = cam->getPosition();
+    int offsetX = static_cast<int>(camPos.x) % scaledW;
+    int offsetY = static_cast<int>(camPos.y) % scaledH;
+    if (offsetX < 0) offsetX += scaledW;
+    if (offsetY < 0) offsetY += scaledH;
+
+    // Tile the scaled texture to fill the screen
+    int tilesX = SCREEN_WIDTH / scaledW + 2;
+    int tilesY = SCREEN_HEIGHT / scaledH + 2;
+
+    SDL_Rect srcRect = {1, 1, texW, texH};
+
+    for (int i = -1; i < tilesX; ++i) {
+        for (int j = -1; j < tilesY; ++j) {
+            int drawX = i * scaledW - offsetX;
+            int drawY = j * scaledH - offsetY;
+
+            SDL_Rect destRect = { drawX, drawY, scaledW, scaledH };
+            SDL_RendererFlip flip = SDL_FLIP_NONE;
+
+            // Flip based on absolute world tile indices
+            camPos = cam->getPosition();
+            int worldTileX = static_cast<int>(std::floor(camPos.x / scaledW)) + i;
+            int worldTileY = static_cast<int>(std::floor(camPos.y / scaledH)) + j;
+
+            if (worldTileX % 2 != 0) flip = (SDL_RendererFlip)(flip | SDL_FLIP_HORIZONTAL);
+            if (worldTileY % 2 != 0) flip = (SDL_RendererFlip)(flip | SDL_FLIP_VERTICAL);
+
+            it->second->render(srcRect, destRect, 0, flip);
+        }
+    }
+
+}
+
+
+
 int GameManager::initialize() {
     print("Game Manager Initialize");
 
     AddEventHandler("SDL::OnUpdate", [this](float deltaMs) {
         if (!gameRunning) {return;}
         if (cam == nullptr) {print("ALERT: Camera not set in Game Manager"); return;}
+
+        renderBackground();
+
         // Update Before render
         renderWorld(deltaMs);
         for (auto& e : entityList) {
@@ -1079,8 +1137,11 @@ void GameManager::update(float deltaMs) {
 
     std::list<sh_ptr_e> removalList;
     for (auto& e : entityList) {
-        if (e->isDone() || e->getHearts() <= 0) {
-            e->fail();
+        if (e->isDone() || e->getHearts() <= 0 || e->dead()) {
+            if (!e->dead()) {
+                e->fail();
+            }
+
             removalList.push_back(e);
 
             if (e->isEntityAPlayer()) {
@@ -1309,9 +1370,8 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             int x, y; SDL_GetMouseState(&x, &y);
             vector2 mouseCoords = cam->screenToWorldCoords(vector2(x, y));
             Heading h = getHeadingFromVectors(currentCoords, mouseCoords);
-            vector2 pVel = angleToVector2(h) * 0.35f;
-            pVel = getScaledCoords(pVel); // scale the velocity to be aligned with the resolution
-
+            // scale the velocity to be aligned with the resolution
+            vector2 pVel = angleToVector2(h) * p->PROJECTILE_SPEED.length();
             vector2 spawnCoords = playerCoords + (angleToVector2(h) * (p->getDimensions().x + 1.0f));
             auto proj = std::make_shared<Projectile>(passFunc, spawnCoords, damage, e);
             pM->attachProcess(proj);
@@ -1321,7 +1381,16 @@ void GameManager::handlePlayerUpdate(const sh_ptr_e& e, float deltaMs) {
             proj->spawn();
 
             proj->AddEventHandler("ENTITY::SUCCEED", [p, this]() {
-                audioMap["hitmarker"]->play(0.1f);
+                print("Player Projectile Succeeded");
+                audioMap["hitmarker"]->play();
+            });
+
+            proj->AddEventHandler("ENTITY::FAIL", [p, this]() {
+                print("Player Projectile Failed");
+            });
+
+            proj->AddEventHandler("ENTITY::ABORT", [p, this]() {
+                print("Player Projectile Aborted");
             });
 
             if (p->isInvisible()) {
@@ -1374,7 +1443,7 @@ void GameManager::handleEnemyUpdate(const sh_ptr_e& e, float deltaMs) {
                     bounceEntities(e2, e);
                     curVel = e->getVelocity();
                     inKnockback = true;
-                    e2->removeHearts(e2->getHearts());
+//                    e2->removeHearts(e2->getHearts());
                     e2->succeed();
                 }
             }
@@ -1440,7 +1509,6 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
             if ((currentCoords - playerCoords).length() < ((float) SCREEN_WIDTH)) {
                 if (b->canSpawnMinion()) {
                     Heading h = getHeadingFromVectors(currentCoords, playerCoords);
-                    vector2 pVel = angleToVector2(h) * 0.35f;
                     vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x * 2.0f));
                     sh_ptr_e minion = b->spawnMinion(spawnCoords);
                     pM->attachProcess(minion);
@@ -1457,9 +1525,8 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
 
                 if (b->canSpawnProjectile()) {
                     Heading h = getHeadingFromVectors(currentCoords, playerCoords);
-                    vector2 pVel = angleToVector2(h) * 0.35f;
-                    pVel = getScaledCoords(pVel); // scale the velocity to be aligned with the resolution
-                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * (p->getDimensions().x + getScaledCoords({5.0, 5.0}).length()));
+                    vector2 pVel = angleToVector2(h) * getScaledCoords({0.70, 0.70}).length();
+                    vector2 spawnCoords = currentCoords + (angleToVector2(h) * 10.0f );
                     sh_ptr_e proj = b->spawnProjectile(spawnCoords);
                     pM->attachProcess(proj);
                     attachEntity(proj);

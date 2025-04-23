@@ -42,6 +42,7 @@
 #include <string>
 #include <variant>
 #include <set>
+#include <optional>
 
 class SettingsMenu : public xProcess {
 
@@ -67,6 +68,11 @@ private:
         bool includeMax;
     };
 
+    struct sliderHitbox_t {
+        SDL_Rect barRect;
+        std::string name;
+    };
+
     using setting_variant_t = std::variant<dropdown_t, toggle_t, slider_t>;
 
 
@@ -89,6 +95,9 @@ private:
 
     std::vector<std::tuple<SDL_Rect, std::string, std::string>> dropdownHitboxes;
     std::set<std::string> openDropdowns;
+    std::vector<sliderHitbox_t> sliderHitboxes;
+    std::vector<sliderHitbox_t> handlerHitboxes;
+    std::optional<std::string> activeSlider;
 
     static bool isResolutionActive(const std::string& resolution) {
         int height = SCREEN_HEIGHT;
@@ -130,7 +139,8 @@ private:
             setting_variant_t{std::in_place_type<toggle_t>, "VSync", setting_t{"vsync", false}},
             setting_variant_t{std::in_place_type<toggle_t>, "Audio", setting_t{"sound", AUDIO_ENABLED}},
 
-            setting_variant_t{std::in_place_type<slider_t>, slider_t{"Volume", {"Volume", 50.0f}, 0.0f, 100.0f, 1.0f, true, true}},
+            setting_variant_t{std::in_place_type<slider_t>, slider_t{"Music Volume", {"MusicVol", VOLUME_MUSIC}, 0.0f, 100.0f, 1.0f, true, true}},
+            setting_variant_t{std::in_place_type<slider_t>, slider_t{"Effects Volume", {"SFXVolume", VOLUME_SFX}, 0.0f, 100.0f, 1.0f, true, true}},
 
 
             setting_variant_t{std::in_place_type<dropdown_t>, "Language", settings_t{
@@ -167,11 +177,13 @@ public:
     int initialize_SDL_process(SDL_Window* passed_window) override;
     void update(float deltaMs) override;
     bool isDone() override { return !running; };
-    void postSuccess() override {};
-    void postFail() override {};
-    void postAbort() override {};
+    void postSuccess() override;
+    void postFail() override;
+    void postAbort() override;
 
     int reloadFont();
+
+    void updateSliderValue(int x, int y);
 };
 
 

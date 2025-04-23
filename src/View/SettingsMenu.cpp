@@ -16,6 +16,38 @@ int SettingsMenu::reloadFont() {
     return 1;
 }
 
+void SettingsMenu::updateSliderValue(int x, int y) {
+    if (!activeSlider.has_value()) return; // prevent crash
+
+    for (auto& setting : settings) {
+        if (auto* slider = std::get_if<slider_t>(&setting); slider && slider->name == activeSlider.value()) {
+            for (const auto& hit : sliderHitboxes) {
+                if (hit.name == slider->name) {
+                    float pct = std::clamp(
+                            static_cast<float>(x - hit.barRect.x) / hit.barRect.w,
+                            0.0f, 1.0f
+                    );
+                    float value = slider->min + pct * (slider->max - slider->min);
+                    float snapped = std::round(value / slider->step) * slider->step;
+                    slider->setting.second = static_cast<int>(snapped);
+
+                    std::string settingName = slider->setting.first;
+                    print("Slider:", slider->name, "Value:", snapped);
+                    if (settingName == "MusicVol") {
+                        VOLUME_MUSIC = snapped;
+                        TriggerEvent("UFO::ChangeConfigValue", "VOLUME_MUSIC");
+                    }else if (settingName == "SFXVolume") {
+                        VOLUME_SFX = snapped;
+                        TriggerEvent("UFO::ChangeConfigValue", "VOLUME_SFX");
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+}
+
 int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
     window = passed_window;
 
@@ -75,8 +107,14 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
         int y_offset = getScaledPixelHeight(50);
         const int spacing = getScaledPixelHeight(50);
 
-        textures.clear();
         dropdownHitboxes.clear();
+        sliderHitboxes.clear();
+        handlerHitboxes.clear();
+//        openDropdowns.clear();
+        for (const auto& texture : textures) {
+            SDL_DestroyTexture(texture.first);
+        }
+        textures.clear();
 
         if (menuTxd != nullptr && menuTxd->state() == xProcess::RUNNING) {
             SDL_Rect destRect = {
@@ -150,8 +188,49 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                     label = s.first + ": [" + mark + "]";
                     textSurface = TTF_RenderText_Solid(font, label.c_str(), {255, 255, 255});
                 } else if constexpr (std::is_same_v<T, slider_t>) {
+                    // Render label
                     label = s.name + ": " + std::to_string(s.setting.second);
-                    textSurface = TTF_RenderText_Solid(font, label.c_str(), {255, 255, 255});
+                    SDL_Surface* labelSurface = TTF_RenderText_Solid(font, label.c_str(), {255, 255, 255});
+                    SDL_Texture* labelTexture = SDL_CreateTextureFromSurface(renderer, labelSurface);
+                    SDL_Rect labelRect = {
+                            getScaledPixelWidth(50),
+                            y_offset,
+                            labelSurface->w,
+                            labelSurface->h
+                    };
+                    textures.emplace_back(labelTexture, labelRect);
+                    SDL_FreeSurface(labelSurface);
+
+                    y_offset += getScaledPixelHeight(40);  // Space below label
+
+                    // Render slider bar
+                    int barWidth = getScaledPixelWidth(300);
+                    int barHeight = getScaledPixelHeight(10);
+                    int barX = getScaledPixelWidth(100);
+                    int barY = y_offset;
+
+                    SDL_Rect barRect = {barX, barY, barWidth, barHeight};
+                    SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255); // Grey background
+                    SDL_RenderFillRect(renderer, &barRect);
+                    sliderHitboxes.push_back({barRect, s.name});
+
+                    // Calculate handle position
+                    float value = static_cast<float>(s.setting.second);
+                    float fraction = (value - s.min) / (s.max - s.min);
+                    int handleX = barX + static_cast<int>(fraction * barWidth);
+
+                    // Handler Size
+                    int handleWidth = getScaledPixelWidth(10);
+                    int handleHeight = getScaledPixelHeight(20);
+
+                    SDL_Rect handleRect = {handleX - 5, barY - 5, handleWidth, handleHeight};
+                    SDL_SetRenderDrawColor(renderer, 0, 200, 255, 255); // Cyan handle
+//                    SDL_RenderFillRect(renderer, &handleRect);
+                    TriggerEvent("SDL::Render::DrawCircle", handleX, barY + barHeight / 2, handleWidth/2);
+                    TriggerEvent("SDL::Render::FillCircle", handleX, barY + barHeight / 2, handleWidth/2);
+                    handlerHitboxes.push_back({handleRect, s.name});
+                    y_offset += getScaledPixelHeight(40);  // Space below slider
+                    return;
                 }
 
                 if (!textSurface) return;
@@ -182,15 +261,27 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
     });
 
 
+
+
     AddEventHandler("SDL::OnPollEvent", [this](int eventType, int key) {
         if (!running || renderer == nullptr) return;
 
         if (eventType == SDL_MOUSEBUTTONDOWN) {
             isMouseDown = true;
-            return;
-        }
 
-        if (eventType == SDL_MOUSEBUTTONUP && isMouseDown) {
+            // check if we are clicking on a slider
+            int x, y;
+            SDL_GetMouseState(&x, &y);
+            for (const auto& hit : sliderHitboxes) {
+                if (x >= hit.barRect.x && x <= hit.barRect.x + hit.barRect.w &&
+                    y >= hit.barRect.y && y <= hit.barRect.y + hit.barRect.h) {
+                    activeSlider = hit.name;
+                    break;
+                }
+            }
+            updateSliderValue(x, y); // so when click just once
+            return;
+        }else if (eventType == SDL_MOUSEBUTTONUP && isMouseDown) {
             isMouseDown = false;
             int x, y;
             SDL_GetMouseState(&x, &y);
@@ -241,8 +332,11 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                     }
 
                     if (optionName.empty()) {
-                        if (openDropdowns.count(settingName)) openDropdowns.erase(settingName);
-                        else openDropdowns.insert(settingName);
+                        if (openDropdowns.count(settingName)){
+                            openDropdowns.erase(settingName);
+                        }else {
+                            openDropdowns.insert(settingName);
+                        }
                         return;
                     }
 
@@ -277,13 +371,55 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                     break;
                 }
             }
-        }
 
-        if (eventType == SDL_KEYDOWN) {
+            activeSlider = std::nullopt;
+        }else if (eventType == SDL_KEYDOWN) {
             if (key == SDLK_ESCAPE) {
                 TriggerEvent("UFO::SetSettingsState", false);
                 running = false;
                 return;
+            }
+        }else if (eventType == SDL_MOUSEMOTION) {
+            int x, y;
+            SDL_GetMouseState(&x, &y);
+            updateSliderValue(x, y);
+            bool inZone = false;
+
+            // check if we are clicking on a slider head
+            for (const auto& hit : handlerHitboxes) {
+                if (x >= hit.barRect.x && x <= hit.barRect.x + hit.barRect.w &&
+                    y >= hit.barRect.y && y <= hit.barRect.y + hit.barRect.h) {
+                    inZone = true;
+                    break;
+                }
+            }
+
+            // check if we are clicking on a slider bar
+            if (!inZone) {
+                for (const auto& hit : sliderHitboxes) {
+                    if (x >= hit.barRect.x && x <= hit.barRect.x + hit.barRect.w &&
+                        y >= hit.barRect.y && y <= hit.barRect.y + hit.barRect.h) {
+                        inZone = true;
+                        break;
+                    }
+                }
+            }
+
+            // check if we are clicking on any dropdown box
+            if (!inZone) {
+                for (auto& [rect, settingName, optionName] : dropdownHitboxes) {
+                    if (x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h) {
+                        inZone = true;
+                        break;
+                    }
+                }
+            }
+
+
+            if (inZone) {
+                TriggerEvent("UFO::Cursor::Change", "pointer");
+            }else {
+                TriggerEvent("UFO::Cursor::Change", "default");
             }
         }
     });
@@ -297,4 +433,43 @@ void SettingsMenu::update(float deltaMs) {
 
     if (!running) return;
 
+}
+
+void SettingsMenu::postAbort() {
+    print("Settings Menu Aborted");
+    running = false;
+    dropdownHitboxes.clear();
+    sliderHitboxes.clear();
+    handlerHitboxes.clear();
+    openDropdowns.clear();
+    for (const auto& texture : textures) {
+        SDL_DestroyTexture(texture.first);
+    }
+    textures.clear();
+}
+
+void SettingsMenu::postSuccess() {
+    print("Settings Menu Success");
+    running = false;
+    dropdownHitboxes.clear();
+    sliderHitboxes.clear();
+    handlerHitboxes.clear();
+    openDropdowns.clear();
+    for (const auto& texture : textures) {
+        SDL_DestroyTexture(texture.first);
+    }
+    textures.clear();
+}
+
+void SettingsMenu::postFail() {
+    print("Settings Menu Failed");
+    running = false;
+    dropdownHitboxes.clear();
+    sliderHitboxes.clear();
+    handlerHitboxes.clear();
+    openDropdowns.clear();
+    for (const auto& texture : textures) {
+        SDL_DestroyTexture(texture.first);
+    }
+    textures.clear();
 }
