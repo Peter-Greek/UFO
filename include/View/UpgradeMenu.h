@@ -29,6 +29,9 @@ private:
     int AT = 0;
     int speed = 0;
     int oxygen =0;
+    int invisibility =0;
+    int shield =0;
+    int cannon =0;
 
     bool running = false;
     bool isHidden = true;
@@ -95,6 +98,13 @@ private:
     sh_ptr<TxdLoader> winTxd;
     sh_ptr<TxdLoader> uMenuTxd;
     sh_ptr<TxdLoader> rocketTxd;
+    sh_ptr<TxdLoader> speedTxd;
+    // sh_ptr<TxdLoader> oxygenTxd;
+    sh_ptr<TxdLoader> cannonTxd;
+    sh_ptr<TxdLoader> shieldTxd;
+    sh_ptr<TxdLoader> invisibilityTxd;
+    sh_ptr<TxdLoader> UpgradeBarTxd;
+
 
 
     int gameResult = GAME_RESULT::NONE;
@@ -114,9 +124,31 @@ private:
             SCREEN_HEIGHT/2 // down scale the texture
     };
 
+    SDL_Rect invisibilityRect = {
+        8*(SCREEN_WIDTH/22), 
+        4*(SCREEN_HEIGHT/9), 
+        5*(SCREEN_WIDTH/17), 
+        SCREEN_HEIGHT/7
+    };
+
+    SDL_Rect shieldRect = {
+        2*(SCREEN_WIDTH/38), 
+        4*(SCREEN_HEIGHT/9), 
+        5*(SCREEN_WIDTH/17), 
+        SCREEN_HEIGHT/7
+    };
+
+    SDL_Rect cannonRect = {
+        2*(SCREEN_WIDTH/38), 
+        6*(SCREEN_HEIGHT/9), 
+        5*(SCREEN_WIDTH/17), 
+        SCREEN_HEIGHT/7
+    };
+
+
 public:
-    explicit UpgradeMenu(passFunc_t& func, int res,  sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3, sh_ptr<TxdLoader> txd4, sh_ptr<TxdLoader> txd5)
-        : xProcess(true, func), gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3), uMenuTxd(std::move(txd4)), rocketTxd(std::move(txd5))
+    explicit UpgradeMenu(passFunc_t& func, int res,  sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3, sh_ptr<TxdLoader> txd4, sh_ptr<TxdLoader> txd5, sh_ptr<TxdLoader> txd6, sh_ptr<TxdLoader> txd7, sh_ptr<TxdLoader> txd8, sh_ptr<TxdLoader> txd9)
+        : xProcess(true, func), gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3), uMenuTxd(std::move(txd4)), rocketTxd(std::move(txd5)), cannonTxd(std::move(txd6)), shieldTxd(std::move(txd7)), invisibilityTxd(std::move(txd8)), UpgradeBarTxd(std::move(txd9))
     {
         if (res != GAME_RESULT::NONE) {
             displayingResult = true;
@@ -138,9 +170,15 @@ public:
     void displayATCount(int ATCount);
     void displayOxygenCount(int oxygen);
     void displaySpeedCount(int speed);
+    void displayInvisibilityCount(int invisibility);
+    void displayShieldCount(int shield);
+    void displayCannonCount(int cannon);
     void setATCount(int ATCount);
     void setOxygenCount(int oxygen);
     void setSpeedCount(int speed);
+    void setInvisibilityCount(int invisibility);
+    void setShieldCount(int shield);
+    void setCannonCount(int cannon);
     void setFontColor(int r, int g, int b, int a);
 };
 #endif //CSCI437_UPGRADEMENU_H
