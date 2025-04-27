@@ -88,7 +88,8 @@ private:
     >;
 
     L_t leaderboardTemplate = {
-            {"Quickest", {
+            {"Quickest Win", {
+                {"Ending", 0},
                 {"time", 1},
             }},
             {"TotalAT", {

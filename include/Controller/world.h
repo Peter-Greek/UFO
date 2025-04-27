@@ -21,6 +21,37 @@ private:
     bool gameRunning = false;
     jLoader worldData;
 
+    struct roomType {
+        std::string name;
+        bool required;
+    };
+
+    std::list<roomType> roomTypes = {
+        {"startRoom", true},
+        {"lockedRoom1", false},
+        {"lockedRoom2", false},
+        {"medicalRoom", false},
+        {"engineRoom", false},
+        {"escapePodRoom", false},
+        {"monsterAmbushRoom", false},
+        {"adminRoom", false},
+        {"randomRoom", false},
+        {"randomRoom2", false},
+    };
+
+    struct hallwayType {
+        std::string name;
+        bool horizontal;
+    };
+
+    std::list<hallwayType> hallwayTypes = {
+        {"horizontalHallway", true},
+        {"verticalHallway", false},
+    };
+
+    std::string imgPath = "../resource/GFX/world/";
+    std::string worldPath = "../resource/json/world.json";
+
     // Debug world maker function
     int curRoom = 0;
     int curWall = 0;
@@ -44,7 +75,7 @@ private:
     json pickUsedSpecialRoom(const json& templates);
 public:
     explicit world(const std::function<void(const std::string& eventName, const json& eventData)>& func) : xProcess(false, func) {
-        worldData = jsonLoader("../resource/json/world.json");
+        worldData = jsonLoader(worldPath);
     }
 
     int initialize() override;

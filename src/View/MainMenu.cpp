@@ -115,11 +115,13 @@ int MainMenu::initialize_SDL_process(SDL_Window* passed_window) {
             }else {
                 TriggerEvent("UFO::Cursor::Change", "default");
             }
+        }else if (eventType == SDL_KEYDOWN) {
+            if (key == SDLK_ESCAPE) {
+                TriggerEvent("UFO::Quit");
+            }
         }
-
-
-
     });
+
     return 1;
 }
 

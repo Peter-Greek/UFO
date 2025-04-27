@@ -245,7 +245,7 @@ void UpgradeMenu::displayATCount(int ATCount){
 
 void UpgradeMenu::displayOxygenCount(int oxygenCount){            
         for (int i = 0; i < 5; i++) {
-            SDL_SetRenderDrawColor(renderer, 200, 150, 255, 100); // Set color to white (or any other color)
+            SDL_SetRenderDrawColor(renderer, 200, 150, 255, 100); 
             SDL_RenderFillRect(renderer, &OxygenTracker.rects[i]); 
 
             if (i<oxygenCount){
@@ -310,6 +310,21 @@ void UpgradeMenu::displayCannonCount(int cannonCount){
         if (cannonTxd != nullptr && cannonTxd->state() == xProcess::RUNNING) {
             cannonTxd->render(srcRect, cannonRect, 0, SDL_FLIP_NONE);
         }
+        for (int i = 0; i < 2; i++) {
+        SDL_SetRenderDrawColor(renderer, 255, 165, 0, 50);  // Set color to white (or any other color)
+        SDL_RenderFillRect(renderer, &cannonOne); 
+        SDL_RenderFillRect(renderer, &cannonTwo); 
+
+        if (cannonCount==1){
+            SDL_SetRenderDrawColor(renderer, 255, 165, 0, 255); // Set color to white (or any other color)
+            SDL_RenderFillRect(renderer, &cannonOne);
+        }
+        if (cannonCount==2){
+            SDL_SetRenderDrawColor(renderer, 255, 165, 0, 255); // Set color to white (or any other color)
+            SDL_RenderFillRect(renderer, &cannonOne);
+            SDL_RenderFillRect(renderer, &cannonTwo);
+        }
+    }
     }
 
 void UpgradeMenu::setATCount(int ATCount){
