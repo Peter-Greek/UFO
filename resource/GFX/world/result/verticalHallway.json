@@ -1,0 +1,30 @@
+{
+    "id": "verticalHallway",
+    "name": "verticalHallway",
+    "type": "hall",
+    "center": {
+        "X": 200,
+        "Y": 296
+    },
+    "walls": [
+        {
+            "coords": {
+                "X": 40,
+                "Y": 15
+            },
+            "l": 48,
+            "h": 0,
+            "w": 354
+        },
+        {
+            "coords": {
+                "X": 296,
+                "Y": 15
+            },
+            "l": 48,
+            "h": 0,
+            "w": 354
+        }
+    ],
+    "doors": []
+}

@@ -214,6 +214,12 @@ void GameInitializer::Init() {
         if (beatBoss) thisEnding += 2; // the good ending
         if (isDead) thisEnding -= 1; // make it a bad ending if we are dead
 
+        /*         * Save Player Data
+         * Ending: 0 = Escape, 1 = Boss Defeated + No Escape, 2 = Escape + Boss Defeated
+         * AT Count: Amount of AT collected
+         * Time: Time played in seconds
+         */
+
         print("Ending Game Loop, AT Count: ", atcount);
         int curEnding = 0;
         if ((*gameStorage)["player"]["Ending"] != nullptr) {
@@ -525,7 +531,7 @@ void GameInitializer::LoadTextures() {
 
 
     // Create Wall Texture
-    auto wTxd = attachGameMappedProcess<TxdLoader>("WALL::TEXTURE", "../resource/GFX/world/wall.png");
+    auto wTxd = attachGameMappedProcess<TxdLoader>("WALL::TEXTURE", "../resource/GFX/misc/wall.png");
 
     // Create AT Texture
     auto ATTxd = attachGameMappedProcess<TxdLoader>("AT::TEXTURE", "../resource/GFX/icons/ATLoot1.png");

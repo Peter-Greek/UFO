@@ -1,0 +1,30 @@
+{
+    "id": "horizontalHallway",
+    "name": "horizontalHallway",
+    "type": "hall",
+    "center": {
+        "X": 344,
+        "Y": 256
+    },
+    "walls": [
+        {
+            "coords": {
+                "X": 0,
+                "Y": 79
+            },
+            "l": 320,
+            "h": 0,
+            "w": 34
+        },
+        {
+            "coords": {
+                "X": 0,
+                "Y": 399
+            },
+            "l": 320,
+            "h": 0,
+            "w": 34
+        }
+    ],
+    "doors": []
+}
