@@ -160,8 +160,14 @@ private:
 
 
 public:
-    explicit UpgradeMenu(passFunc_t& func, int res,  sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3, sh_ptr<TxdLoader> txd4, sh_ptr<TxdLoader> txd5, sh_ptr<TxdLoader> txd6, sh_ptr<TxdLoader> txd7, sh_ptr<TxdLoader> txd8, sh_ptr<TxdLoader> txd9)
-        : xProcess(true, func), gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3), uMenuTxd(std::move(txd4)), rocketTxd(std::move(txd5)), cannonTxd(std::move(txd6)), shieldTxd(std::move(txd7)), invisibilityTxd(std::move(txd8)), UpgradeBarTxd(std::move(txd9))
+    explicit UpgradeMenu(passFunc_t& func, int res,
+                         sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3,
+                         sh_ptr<TxdLoader> txd4, sh_ptr<TxdLoader> txd5, sh_ptr<TxdLoader> txd6,
+                         sh_ptr<TxdLoader> txd7, sh_ptr<TxdLoader> txd8, sh_ptr<TxdLoader> txd9
+    ): xProcess(true, func),
+        gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3), uMenuTxd(txd4),
+        rocketTxd(txd5), cannonTxd(txd6),
+        shieldTxd(txd7), invisibilityTxd(txd8), UpgradeBarTxd(txd9)
     {
         if (res != GAME_RESULT::NONE) {
             displayingResult = true;
