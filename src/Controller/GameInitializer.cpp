@@ -708,7 +708,9 @@ void GameInitializer::CreateUpgradeMenu() {
     auto shieldTxd = attachMappedProcess<TxdLoader>("SHIELD::TEXTURE", "../resource/GFX/icons/ShieldUpgradeIconSpriteSheet.png");
     auto invisibilityTxd = attachMappedProcess<TxdLoader>("INVISIBILITY::TEXTURE", "../resource/GFX/icons/InvisibilityUpgradeIconSpriteSheet.png");
     auto UpgradeBarTxd = attachMappedProcess<TxdLoader>("INVISIBILITY::TEXTURE", "../resource/GFX/icons/UpgradeBarIconSpriteSheet.png");
-    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd, menuTxd, rocketTxd, cannonTxd, shieldTxd, invisibilityTxd, UpgradeBarTxd);
+    //here
+    auto cannonButtonTxd = attachMappedProcess<TxdLoader>("CANNON::TEXTURE", "../resource/GFX/icons/ATCannonUpgradeButton.png");
+    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd, menuTxd, rocketTxd, cannonTxd, shieldTxd, invisibilityTxd, UpgradeBarTxd, cannonButtonTxd);
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
     uMenu->setOxygenCount((*gameStorage)["player"]["upgrades"]["oxygen"].get<int>());
     uMenu->setSpeedCount((*gameStorage)["player"]["upgrades"]["speed"].get<int>()); 
@@ -758,19 +760,19 @@ void GameInitializer::ShutdownSettingsMenu() {
     }
 }
 
-void GameInitializer::CreateLeaderboardMenu() {
+void GameInitializer::CreateLeaderboardMenu() {/*
     ShutdownMainMenu();
     gameState = LEADERBOARD_MENU;
     auto menuTxd = attachMappedProcess<TxdLoader>("LEADERBOARD_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
-    lMenu = attachProcess<LeaderboardMenu>((*gameStorage)["saves"], menuTxd);
+    lMenu = attachProcess<LeaderboardMenu>((*gameStorage)["saves"], menuTxd);*/
 }
 
-void GameInitializer::ShutdownLeaderboardMenu() {
+void GameInitializer::ShutdownLeaderboardMenu() {/*
     TriggerEvent("UFO::Cursor::Change", "default");
     if (lMenu != nullptr) {
         lMenu->abort();
         lMenu = nullptr;
-    }
+    }*/
 }
 
 

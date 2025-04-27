@@ -47,7 +47,7 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
     ShieldText.texture = SDL_CreateTextureFromSurface(renderer, shieldSurface);
     SDL_Surface* invisSurface = TTF_RenderText_Solid(font, "10 AT: Invisibility", color);
     InvisibilityText.texture = SDL_CreateTextureFromSurface(renderer, invisSurface);
-    SDL_Surface* cannonSurface = TTF_RenderText_Solid(font, "25 AT: Cannon", color);
+    SDL_Surface* cannonSurface = TTF_RenderText_Solid(font, "", color);
     CannonText.texture = SDL_CreateTextureFromSurface(renderer, cannonSurface);
 
     running = true;
@@ -142,7 +142,7 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
 
         //Draw AT Cannon Button
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderDrawRect(renderer, &CannonButton);
+        SDL_RenderDrawRect(renderer, &CannonButtonText);
 
         if (CannonText.texture) {
             SDL_SetTextureColorMod(CannonText.texture, 255, 255, 255);
@@ -310,6 +310,11 @@ void UpgradeMenu::displayCannonCount(int cannonCount){
         if (cannonTxd != nullptr && cannonTxd->state() == xProcess::RUNNING) {
             cannonTxd->render(srcRect, cannonRect, 0, SDL_FLIP_NONE);
         }
+
+        if (cannonButtonTxd != nullptr && cannonButtonTxd->state() == xProcess::RUNNING) {
+            cannonButtonTxd->render(srcRect, CannonButtonText, 0, SDL_FLIP_NONE);
+        }
+
         for (int i = 0; i < 2; i++) {
         SDL_SetRenderDrawColor(renderer, 255, 165, 0, 50);  // Set color to white (or any other color)
         SDL_RenderFillRect(renderer, &cannonOne); 

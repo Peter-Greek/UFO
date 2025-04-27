@@ -311,8 +311,8 @@ int view::initialize() {
     pM->attachProcess(WC);
     chatBox->addMessage("World Creator Attached");
 
-    auto* cursor = new Cursor(passFunc);
-    pM->attachProcess(cursor);
+    //auto* cursor = new Cursor(passFunc);
+    //pM->attachProcess(cursor);
 
     // Debug print sizes
     int w, h;

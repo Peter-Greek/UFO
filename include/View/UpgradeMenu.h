@@ -100,6 +100,7 @@ private:
     sh_ptr<TxdLoader> uMenuTxd;
     sh_ptr<TxdLoader> rocketTxd;
     sh_ptr<TxdLoader> cannonTxd;
+    sh_ptr<TxdLoader> cannonButtonTxd;
     sh_ptr<TxdLoader> shieldTxd;
     sh_ptr<TxdLoader> invisibilityTxd;
     sh_ptr<TxdLoader> UpgradeBarTxd;
@@ -144,6 +145,13 @@ private:
         SCREEN_HEIGHT/7
     };
 
+    SDL_Rect cannonButtonRect = {
+        2*(SCREEN_WIDTH/38),
+        6*(SCREEN_HEIGHT/9),
+        5*(SCREEN_WIDTH/17),
+        SCREEN_HEIGHT/7
+    };
+
     SDL_Rect cannonOne = {
         15*(SCREEN_WIDTH/50), 
         71*(SCREEN_HEIGHT/100), 
@@ -163,11 +171,12 @@ public:
     explicit UpgradeMenu(passFunc_t& func, int res,
                          sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3,
                          sh_ptr<TxdLoader> txd4, sh_ptr<TxdLoader> txd5, sh_ptr<TxdLoader> txd6,
-                         sh_ptr<TxdLoader> txd7, sh_ptr<TxdLoader> txd8, sh_ptr<TxdLoader> txd9
+                         sh_ptr<TxdLoader> txd7, sh_ptr<TxdLoader> txd8, sh_ptr<TxdLoader> txd9,
+                         sh_ptr<TxdLoader> txd10
     ): xProcess(true, func),
         gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3), uMenuTxd(txd4),
         rocketTxd(txd5), cannonTxd(txd6),
-        shieldTxd(txd7), invisibilityTxd(txd8), UpgradeBarTxd(txd9)
+        shieldTxd(txd7), invisibilityTxd(txd8), UpgradeBarTxd(txd9), cannonButtonTxd(txd10)
     {
         if (res != GAME_RESULT::NONE) {
             displayingResult = true;
