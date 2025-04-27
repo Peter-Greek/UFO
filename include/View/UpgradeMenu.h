@@ -91,6 +91,7 @@ private:
 
     UpgradeTracker SpeedTracker = {SCREEN_HEIGHT/10};
     UpgradeTracker OxygenTracker = {3*(SCREEN_HEIGHT/10)};
+    UpgradeTracker CannonTracker = {6*(SCREEN_HEIGHT/9)};
 
     int fontSize = 50;
     sh_ptr<TxdLoader> deathTxd;
@@ -98,8 +99,6 @@ private:
     sh_ptr<TxdLoader> winTxd;
     sh_ptr<TxdLoader> uMenuTxd;
     sh_ptr<TxdLoader> rocketTxd;
-    sh_ptr<TxdLoader> speedTxd;
-    // sh_ptr<TxdLoader> oxygenTxd;
     sh_ptr<TxdLoader> cannonTxd;
     sh_ptr<TxdLoader> shieldTxd;
     sh_ptr<TxdLoader> invisibilityTxd;
@@ -143,6 +142,20 @@ private:
         6*(SCREEN_HEIGHT/9), 
         5*(SCREEN_WIDTH/17), 
         SCREEN_HEIGHT/7
+    };
+
+    SDL_Rect cannonOne = {
+        15*(SCREEN_WIDTH/50), 
+        71*(SCREEN_HEIGHT/100), 
+        SCREEN_WIDTH/22, 
+        SCREEN_HEIGHT/14
+    };
+
+    SDL_Rect cannonTwo = {
+        18*(SCREEN_WIDTH/50), 
+        71*(SCREEN_HEIGHT/100), 
+        SCREEN_WIDTH/22, 
+        SCREEN_HEIGHT/14
     };
 
 
