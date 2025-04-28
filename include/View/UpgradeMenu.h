@@ -158,16 +158,16 @@ private:
 
     SDL_Rect cannonOne = {
         15*(SCREEN_WIDTH/50), 
-        76*(SCREEN_HEIGHT/100),
-        SCREEN_WIDTH/22, 
-        SCREEN_HEIGHT/14
+        72*(SCREEN_HEIGHT/100),
+        SCREEN_WIDTH/24, 
+        SCREEN_HEIGHT/16
     };
 
     SDL_Rect cannonTwo = {
         18*(SCREEN_WIDTH/50), 
-        76*(SCREEN_HEIGHT/100),
-        SCREEN_WIDTH/22, 
-        SCREEN_HEIGHT/14
+        72*(SCREEN_HEIGHT/100),
+        SCREEN_WIDTH/24, 
+        SCREEN_HEIGHT/16
     };
 
 
