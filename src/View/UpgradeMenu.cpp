@@ -249,6 +249,10 @@ void UpgradeMenu::displayATCount(int ATCount){
 }
 
 void UpgradeMenu::displayOxygenCount(int oxygenCount){
+        if (oxygenTxd != nullptr && oxygenTxd->state() == xProcess::RUNNING) {
+            oxygenTxd->render(srcRect, oxygenRect, 0, SDL_FLIP_NONE);
+        }
+
         //display gfx button
         if (oxygenButtonTxd != nullptr && oxygenButtonTxd->state() == xProcess::RUNNING) {
             oxygenButtonTxd->render(srcRect, OxygenButton, 0, SDL_FLIP_NONE);
@@ -265,6 +269,10 @@ void UpgradeMenu::displayOxygenCount(int oxygenCount){
         }}
 
 void UpgradeMenu::displaySpeedCount(int speedCount){
+        if (speedTxd != nullptr && speedTxd->state() == xProcess::RUNNING) {
+            speedTxd->render(srcRect, speedRect, 0, SDL_FLIP_NONE);
+        }
+
         //draw gfx button
         if (speedButtonTxd != nullptr && speedButtonTxd->state() == xProcess::RUNNING) {
             speedButtonTxd->render(srcRect, SpeedButton, 0, SDL_FLIP_NONE);
@@ -279,6 +287,27 @@ void UpgradeMenu::displaySpeedCount(int speedCount){
                 SDL_RenderFillRect(renderer, &SpeedTracker.rects[i]);
             }
         }
+
+/*    if (UpgradeBarTxd != nullptr && UpgradeBarTxd->state() == xProcess::RUNNING) {
+        // Get the dimensions of the original texture
+        int textureWidth, textureHeight;
+        SDL_QueryTexture(UpgradeBarTxd->getTexture(), NULL, NULL, &textureWidth, &textureHeight);
+
+
+        SDL_Rect adjustedUpgradeRect = speedUpgradeBarRect;
+        adjustedUpgradeRect.w = speedUpgradeBarRect.w / 7;
+        adjustedUpgradeRect.x = adjustedUpgradeRect.x - 50;
+
+
+        SDL_Rect quarterSrcRect = {
+                (bar * textureWidth) / 4,  // x starts at the chosen quarter
+                0,                                  // y starts at the top
+                textureWidth / 8,                   // width is 1/4 of the texture width
+                textureHeight                       // full height
+        };
+
+        UpgradeBarTxd->render(quarterSrcRect, adjustedUpgradeRect, 0, SDL_FLIP_NONE);
+    }*/
 }
 
 void UpgradeMenu::displayInvisibilityCount(int invisibilityCount){

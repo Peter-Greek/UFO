@@ -706,6 +706,8 @@ void GameInitializer::CreateUpgradeMenu() {
     auto rocketTxd = attachMappedProcess<TxdLoader>("ROCKET::TEXTURE", "../resource/GFX/icons/StartRocketIcon.png");
     auto cannonTxd = attachMappedProcess<TxdLoader>("CANNON::TEXTURE", "../resource/GFX/icons/ATCannonIcon.png");
     auto shieldTxd = attachMappedProcess<TxdLoader>("SHIELD::TEXTURE", "../resource/GFX/icons/ShieldUpgradeIconSpriteSheet.png");
+    auto speedTxd = attachMappedProcess<TxdLoader>("SPEED::TEXTURE", "../resource/GFX/icons/SpeedUpgradeIcon.png");
+    auto oxygenTxd = attachMappedProcess<TxdLoader>("OXYGEN::TEXTURE", "../resource/GFX/icons/OxygenUpgradeIcon.png");
     auto invisibilityTxd = attachMappedProcess<TxdLoader>("INVISIBILITY::TEXTURE", "../resource/GFX/icons/InvisibilityUpgradeIconSpriteSheet.png");
     auto UpgradeBarTxd = attachMappedProcess<TxdLoader>("INVISIBILITY::TEXTURE", "../resource/GFX/icons/UpgradeBarIconSpriteSheet.png");
 
@@ -716,7 +718,7 @@ void GameInitializer::CreateUpgradeMenu() {
     auto cannonButtonTxd = attachMappedProcess<TxdLoader>("CANNON::TEXTURE", "../resource/GFX/icons/ATCannonUpgradeButton.png");
     auto playButtonTxd = attachMappedProcess<TxdLoader>("START::TEXTURE", "../resource/GFX/icons/StartButton.png");
 
-    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd, menuTxd, rocketTxd, cannonTxd, shieldTxd, invisibilityTxd, UpgradeBarTxd,
+    uMenu = attachProcess<UpgradeMenu>(gameResult, dTxd, eTxd, wTxd, menuTxd, rocketTxd, cannonTxd, shieldTxd, speedTxd, oxygenTxd, invisibilityTxd, UpgradeBarTxd,
                                        speedButtonTxd, oxygenButtonTxd, shieldButtonTxd, invisibilityButtonTxd, cannonButtonTxd, playButtonTxd);
     uMenu->setATCount((*gameStorage)["player"]["ATCount"].get<int>());
     uMenu->setOxygenCount((*gameStorage)["player"]["upgrades"]["oxygen"].get<int>());

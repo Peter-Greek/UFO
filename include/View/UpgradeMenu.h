@@ -32,6 +32,7 @@ private:
     int invisibility =0;
     int shield =0;
     int cannon =0;
+    int bar =0;
 
     bool running = false;
     bool isHidden = true;
@@ -101,6 +102,8 @@ private:
     sh_ptr<TxdLoader> rocketTxd;
     sh_ptr<TxdLoader> cannonTxd;
     sh_ptr<TxdLoader> shieldTxd;
+    sh_ptr<TxdLoader> speedTxd;
+    sh_ptr<TxdLoader> oxygenTxd;
     sh_ptr<TxdLoader> invisibilityTxd;
     sh_ptr<TxdLoader> UpgradeBarTxd;
     sh_ptr<TxdLoader> speedButtonTxd;
@@ -126,6 +129,27 @@ private:
             SCREEN_HEIGHT/5,
             SCREEN_WIDTH/4,
             SCREEN_HEIGHT/2 // down scale the texture
+    };
+
+    SDL_Rect speedUpgradeBarRect = {
+            (SCREEN_WIDTH/3)+10,
+            (SCREEN_HEIGHT/11),
+            5*(SCREEN_WIDTH/10),
+            SCREEN_HEIGHT/6
+    };
+
+    SDL_Rect speedRect = {
+        1*(SCREEN_WIDTH/38),
+        1*(SCREEN_HEIGHT/15),
+        1*(SCREEN_WIDTH/14),
+        SCREEN_HEIGHT/7
+    };
+
+    SDL_Rect oxygenRect = {
+        1*(SCREEN_WIDTH/38),
+        4*(SCREEN_HEIGHT/15),
+        1*(SCREEN_WIDTH/14),
+        SCREEN_HEIGHT/5
     };
 
     SDL_Rect invisibilityRect = {
@@ -177,12 +201,13 @@ public:
                          sh_ptr<TxdLoader> txd4, sh_ptr<TxdLoader> txd5, sh_ptr<TxdLoader> txd6,
                          sh_ptr<TxdLoader> txd7, sh_ptr<TxdLoader> txd8, sh_ptr<TxdLoader> txd9,
                          sh_ptr<TxdLoader> txd10, sh_ptr<TxdLoader> txd11, sh_ptr<TxdLoader> txd12,
-                         sh_ptr<TxdLoader> txd13, sh_ptr<TxdLoader> txd14, sh_ptr<TxdLoader> txd15
+                         sh_ptr<TxdLoader> txd13, sh_ptr<TxdLoader> txd14, sh_ptr<TxdLoader> txd15,
+                         sh_ptr<TxdLoader> txd16, sh_ptr<TxdLoader> txd17
     ): xProcess(true, func),
         gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3), uMenuTxd(txd4),
-        rocketTxd(txd5), cannonTxd(txd6), shieldTxd(txd7), invisibilityTxd(txd8),
-        UpgradeBarTxd(txd9), speedButtonTxd(txd10), oxygenButtonTxd(txd11), shieldButtonTxd(txd12),
-        invisibilityButtonTxd(txd13), cannonButtonTxd(txd14), playButtonTxd(txd15)
+        rocketTxd(txd5), cannonTxd(txd6), shieldTxd(txd7), speedTxd(txd8), oxygenTxd(txd9),
+        invisibilityTxd(txd10), UpgradeBarTxd(txd11), speedButtonTxd(txd12), oxygenButtonTxd(txd13),
+        shieldButtonTxd(txd14), invisibilityButtonTxd(txd15), cannonButtonTxd(txd16), playButtonTxd(txd17)
     {
         if (res != GAME_RESULT::NONE) {
             displayingResult = true;
