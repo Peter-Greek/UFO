@@ -37,15 +37,15 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
         return 0;
     }
 
-    SDL_Surface* playSurface = TTF_RenderText_Solid(font, "Play", color);
+    SDL_Surface* playSurface = TTF_RenderText_Solid(font, "", color);
     PlayText.texture = SDL_CreateTextureFromSurface(renderer, playSurface);
-    SDL_Surface* speedSurface = TTF_RenderText_Solid(font, "2 AT: Speed", color);
+    SDL_Surface* speedSurface = TTF_RenderText_Solid(font, "", color);
     SpeedText.texture = SDL_CreateTextureFromSurface(renderer, speedSurface);
-    SDL_Surface* oxygenSurface = TTF_RenderText_Solid(font, "2 AT: Oxygen", color);
+    SDL_Surface* oxygenSurface = TTF_RenderText_Solid(font, "", color);
     OxygenText.texture = SDL_CreateTextureFromSurface(renderer, oxygenSurface);
-    SDL_Surface* shieldSurface = TTF_RenderText_Solid(font, "10 AT: Shield", color);
+    SDL_Surface* shieldSurface = TTF_RenderText_Solid(font, "", color);
     ShieldText.texture = SDL_CreateTextureFromSurface(renderer, shieldSurface);
-    SDL_Surface* invisSurface = TTF_RenderText_Solid(font, "10 AT: Invisibility", color);
+    SDL_Surface* invisSurface = TTF_RenderText_Solid(font, "", color);
     InvisibilityText.texture = SDL_CreateTextureFromSurface(renderer, invisSurface);
     SDL_Surface* cannonSurface = TTF_RenderText_Solid(font, "", color);
     CannonText.texture = SDL_CreateTextureFromSurface(renderer, cannonSurface);
@@ -104,6 +104,11 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
             SDL_RenderCopy(renderer, PlayText.texture, nullptr, &PlayText.dst);
         }
 
+        //display gfx button
+        if (playButtonTxd != nullptr && playButtonTxd->state() == xProcess::RUNNING) {
+            playButtonTxd->render(srcRect, PlayButton, 0, SDL_FLIP_NONE);
+        }
+
         //Draw Speed Button
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderDrawRect(renderer, &SpeedButton);
@@ -142,7 +147,7 @@ int UpgradeMenu::initialize_SDL_process(SDL_Window* passed_window) {
 
         //Draw AT Cannon Button
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderDrawRect(renderer, &CannonButtonText);
+        SDL_RenderDrawRect(renderer, &CannonButton);
 
         if (CannonText.texture) {
             SDL_SetTextureColorMod(CannonText.texture, 255, 255, 255);
@@ -243,7 +248,12 @@ void UpgradeMenu::displayATCount(int ATCount){
     SDL_FreeSurface(textSurface);
 }
 
-void UpgradeMenu::displayOxygenCount(int oxygenCount){            
+void UpgradeMenu::displayOxygenCount(int oxygenCount){
+        //display gfx button
+        if (oxygenButtonTxd != nullptr && oxygenButtonTxd->state() == xProcess::RUNNING) {
+            oxygenButtonTxd->render(srcRect, OxygenButton, 0, SDL_FLIP_NONE);
+        }
+
         for (int i = 0; i < 5; i++) {
             SDL_SetRenderDrawColor(renderer, 200, 150, 255, 100); 
             SDL_RenderFillRect(renderer, &OxygenTracker.rects[i]); 
@@ -255,6 +265,11 @@ void UpgradeMenu::displayOxygenCount(int oxygenCount){
         }}
 
 void UpgradeMenu::displaySpeedCount(int speedCount){
+        //draw gfx button
+        if (speedButtonTxd != nullptr && speedButtonTxd->state() == xProcess::RUNNING) {
+            speedButtonTxd->render(srcRect, SpeedButton, 0, SDL_FLIP_NONE);
+        }
+
         for (int i = 0; i < 5; i++) {
             SDL_SetRenderDrawColor(renderer, 200, 150, 255, 100); // Set color to white (or any other color)
             SDL_RenderFillRect(renderer, &SpeedTracker.rects[i]); 
@@ -266,7 +281,12 @@ void UpgradeMenu::displaySpeedCount(int speedCount){
         }
 }
 
-void UpgradeMenu::displayInvisibilityCount(int invisibilityCount){            
+void UpgradeMenu::displayInvisibilityCount(int invisibilityCount){
+        //display gfx button
+        if (invisibilityButtonTxd != nullptr && invisibilityButtonTxd->state() == xProcess::RUNNING) {
+            invisibilityButtonTxd->render(srcRect, InvisButton, 0, SDL_FLIP_NONE);
+        }
+
         if (invisibilityTxd != nullptr && invisibilityTxd->state() == xProcess::RUNNING) {
             // Get the dimensions of the original texture
             int textureWidth, textureHeight;
@@ -274,6 +294,7 @@ void UpgradeMenu::displayInvisibilityCount(int invisibilityCount){
 
             SDL_Rect adjustedInvisRect = invisibilityRect;
             adjustedInvisRect.w = invisibilityRect.w / 4;
+            adjustedInvisRect.x = adjustedInvisRect.x - 50;
 
 
         SDL_Rect quarterSrcRect = {
@@ -287,7 +308,12 @@ void UpgradeMenu::displayInvisibilityCount(int invisibilityCount){
         }
         }
 
-void UpgradeMenu::displayShieldCount(int shieldCount){            
+void UpgradeMenu::displayShieldCount(int shieldCount){
+        //display gfx button
+        if (shieldButtonTxd != nullptr && shieldButtonTxd->state() == xProcess::RUNNING) {
+            shieldButtonTxd->render(srcRect, ShieldButton, 0, SDL_FLIP_NONE);
+        }
+
         if (shieldTxd != nullptr && shieldTxd->state() == xProcess::RUNNING) {
             // Get the dimensions of the original texture
             int textureWidth, textureHeight;
@@ -295,6 +321,7 @@ void UpgradeMenu::displayShieldCount(int shieldCount){
 
             SDL_Rect adjustedShieldRect = shieldRect;
             adjustedShieldRect.w = shieldRect.w / 4;
+            adjustedShieldRect.x = adjustedShieldRect.x - 50;
 
 
         SDL_Rect quarterSrcRect = {
@@ -312,7 +339,7 @@ void UpgradeMenu::displayCannonCount(int cannonCount){
         }
 
         if (cannonButtonTxd != nullptr && cannonButtonTxd->state() == xProcess::RUNNING) {
-            cannonButtonTxd->render(srcRect, CannonButtonText, 0, SDL_FLIP_NONE);
+            cannonButtonTxd->render(srcRect, CannonButton, 0, SDL_FLIP_NONE);
         }
 
         for (int i = 0; i < 2; i++) {
