@@ -66,17 +66,17 @@ private:
     SDL_Rect OxygenButtonText = {OxygenButton.x+30, OxygenButton.y+30, OxygenButton.w-60, OxygenButton.h-60};
     UpgradeText OxygenText = {nullptr, OxygenButtonText, "Play"}; 
 
-    SDL_Rect ShieldButton = {SCREEN_WIDTH/11, SCREEN_HEIGHT/2, SCREEN_WIDTH/4, SCREEN_HEIGHT/6};
+    SDL_Rect ShieldButton = {(SCREEN_WIDTH/11)+0, (SCREEN_HEIGHT/2)+0, (SCREEN_WIDTH/5)-0, (SCREEN_HEIGHT/7)-0};
     SDL_Rect ShieldButtonText = {ShieldButton.x+30, ShieldButton.y+30, ShieldButton.w-60, ShieldButton.h-60};
     UpgradeText ShieldText = {nullptr, ShieldButtonText, "Play"}; 
 
-    SDL_Rect InvisButton = {2*(SCREEN_WIDTH/5), SCREEN_HEIGHT/2, SCREEN_WIDTH/4, SCREEN_HEIGHT/6};
+    SDL_Rect InvisButton = {2*(SCREEN_WIDTH/5), SCREEN_HEIGHT/2, SCREEN_WIDTH/4, SCREEN_HEIGHT/7};
     SDL_Rect InvisButtonText = {InvisButton.x+30, InvisButton.y+30, InvisButton.w-60, InvisButton.h-60};
     UpgradeText InvisibilityText = {nullptr, InvisButtonText, "Play"}; 
 
-    SDL_Rect CannonButton = {SCREEN_WIDTH/9, 3*(SCREEN_HEIGHT/4), SCREEN_WIDTH/2, SCREEN_HEIGHT/5};
-    SDL_Rect CannonButtonText = {CannonButton.x+30, CannonButton.y+30, CannonButton.w-60, CannonButton.h-60};
-    UpgradeText CannonText = {nullptr, CannonButtonText, "Play"}; 
+    SDL_Rect CannonButton = {(SCREEN_WIDTH/9)+30, (3*(SCREEN_HEIGHT/4))+60, (SCREEN_WIDTH/2)-60, (SCREEN_HEIGHT/5)-60};
+    SDL_Rect CannonButtonText = {CannonButton.x+30, CannonButton.y+60, CannonButton.w-60, CannonButton.h-60};
+    UpgradeText CannonText = {nullptr, CannonButtonText, "Play"};
 
     struct UpgradeTracker {
         int height;
@@ -103,7 +103,12 @@ private:
     sh_ptr<TxdLoader> shieldTxd;
     sh_ptr<TxdLoader> invisibilityTxd;
     sh_ptr<TxdLoader> UpgradeBarTxd;
-
+    sh_ptr<TxdLoader> speedButtonTxd;
+    sh_ptr<TxdLoader> oxygenButtonTxd;
+    sh_ptr<TxdLoader> shieldButtonTxd;
+    sh_ptr<TxdLoader> invisibilityButtonTxd;
+    sh_ptr<TxdLoader> cannonButtonTxd;
+    sh_ptr<TxdLoader> playButtonTxd;
 
 
     int gameResult = GAME_RESULT::NONE;
@@ -144,16 +149,23 @@ private:
         SCREEN_HEIGHT/7
     };
 
+    SDL_Rect cannonButtonRect = {
+        2*(SCREEN_WIDTH/38),
+        6*(SCREEN_HEIGHT/9),
+        5*(SCREEN_WIDTH/17),
+        SCREEN_HEIGHT/7
+    };
+
     SDL_Rect cannonOne = {
         15*(SCREEN_WIDTH/50), 
-        71*(SCREEN_HEIGHT/100), 
+        76*(SCREEN_HEIGHT/100),
         SCREEN_WIDTH/22, 
         SCREEN_HEIGHT/14
     };
 
     SDL_Rect cannonTwo = {
         18*(SCREEN_WIDTH/50), 
-        71*(SCREEN_HEIGHT/100), 
+        76*(SCREEN_HEIGHT/100),
         SCREEN_WIDTH/22, 
         SCREEN_HEIGHT/14
     };
@@ -163,11 +175,14 @@ public:
     explicit UpgradeMenu(passFunc_t& func, int res,
                          sh_ptr<TxdLoader> txd1, sh_ptr<TxdLoader> txd2, sh_ptr<TxdLoader> txd3,
                          sh_ptr<TxdLoader> txd4, sh_ptr<TxdLoader> txd5, sh_ptr<TxdLoader> txd6,
-                         sh_ptr<TxdLoader> txd7, sh_ptr<TxdLoader> txd8, sh_ptr<TxdLoader> txd9
+                         sh_ptr<TxdLoader> txd7, sh_ptr<TxdLoader> txd8, sh_ptr<TxdLoader> txd9,
+                         sh_ptr<TxdLoader> txd10, sh_ptr<TxdLoader> txd11, sh_ptr<TxdLoader> txd12,
+                         sh_ptr<TxdLoader> txd13, sh_ptr<TxdLoader> txd14, sh_ptr<TxdLoader> txd15
     ): xProcess(true, func),
         gameResult(res), deathTxd(txd1), escapeTxd(txd2), winTxd(txd3), uMenuTxd(txd4),
-        rocketTxd(txd5), cannonTxd(txd6),
-        shieldTxd(txd7), invisibilityTxd(txd8), UpgradeBarTxd(txd9)
+        rocketTxd(txd5), cannonTxd(txd6), shieldTxd(txd7), invisibilityTxd(txd8),
+        UpgradeBarTxd(txd9), speedButtonTxd(txd10), oxygenButtonTxd(txd11), shieldButtonTxd(txd12),
+        invisibilityButtonTxd(txd13), cannonButtonTxd(txd14), playButtonTxd(txd15)
     {
         if (res != GAME_RESULT::NONE) {
             displayingResult = true;
