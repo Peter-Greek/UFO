@@ -905,10 +905,10 @@ void GameManager::renderWorld(float deltaMs) {
         for (auto& room : roomList) {
             roomIndex++;
 
-            if (!cam->isPointInView(room->coords)) {
-//                print("Room not in view: ", room->id);
-                continue;
-            }
+//            if (!cam->isPointInView(room->coords)) {
+////                print("Room not in view: ", room->id);
+//                continue;
+//            }
 
 
             std::string txdName = "WORLD::"+room->id+"::TEXTURE";
@@ -1710,6 +1710,9 @@ void GameManager::attachEntity(sh_ptr<entity> e) {
         if (world_ptr != nullptr) {
             vector2 spawnPoint = world_ptr->getSpawnPoint();
             e->setPosition(spawnPoint);
+            if (cam != nullptr) {
+                cam->updateCamera(spawnPoint - vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
+            }
         }
     }
 }

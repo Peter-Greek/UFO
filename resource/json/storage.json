@@ -1,12 +1,12 @@
 {
     "curPlayer": 0,
-    "loads": 1979,
+    "loads": 1984,
     "player": {
         "ATCount": 2542,
         "Ending": 2,
         "TotalAT": 2672,
         "date": 1744095919,
-        "loads": 235,
+        "loads": 240,
         "name": "Peter Greek",
         "settings": {
             "curRoomIndex": 0,
@@ -28,7 +28,7 @@
             "Ending": 2,
             "TotalAT": 2672,
             "date": 1744095919,
-            "loads": 235,
+            "loads": 240,
             "name": "Peter Greek",
             "settings": {
                 "curRoomIndex": 0,
@@ -219,7 +219,7 @@
         "VOLUME_MUSIC": 31.0,
         "VOLUME_SFX": 15.0,
         "curRoomIndex": 1,
-        "debugMode": 0,
+        "debugMode": 1,
         "targetFPS": 90,
         "unlimitedFrames": false
     }
