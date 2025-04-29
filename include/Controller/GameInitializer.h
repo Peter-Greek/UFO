@@ -125,7 +125,7 @@ public:
         if constexpr (std::is_base_of_v<entity, T>) {
             gameManager->attachEntity(instance);
             instance->spawn();
-        } else if constexpr (std::is_same_v<T, world>) {
+        } else if constexpr (std::is_same_v<T, World>) {
             gameManager->setWorld(instance);
         } else if constexpr (std::is_same_v<T, camera>) {
             gameManager->setCamera(instance);
@@ -194,7 +194,7 @@ public:
 
     void LoadAudio();
 
-    void LoadEntitiesFromWorld(sh_ptr<world> w);
+    void LoadEntitiesFromWorld(sh_ptr<World> w);
 
     void GameDebug();
 

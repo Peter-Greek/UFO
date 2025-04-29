@@ -99,7 +99,7 @@ class Heading : public BoundedInt {
 public:
     explicit Heading(int v = 0) : BoundedInt(v, 0, 360) {}
     // keep the default constructor
-    Heading() : BoundedInt(0, 0, 360) {}
+//    Heading() : BoundedInt(0, 0, 360) {}
 
     bool isWithin(int a1, int a2) const {
         // check if the current heading is within the range of angles
@@ -117,6 +117,60 @@ public:
             return get() >= a1.get() || get() <= a2.get();
         }
     }
+
+    // Overload the == operator to compare to int
+    bool operator==(int v) const {
+        return get() == v;
+    }
+    // Overload the == operator to compare to Heading
+    bool operator==(const Heading& h) const {
+        return get() == h.get();
+    }
+    // Overload the != operator to compare to int
+    bool operator!=(int v) const {
+        return get() != v;
+    }
+    // Overload the != operator to compare to Heading
+    bool operator!=(const Heading& h) const {
+        return get() != h.get();
+    }
+    // Overload the + operator to add to int
+    Heading operator+(int v) const {
+        return Heading(get() + v);
+    }
+    // Overload the - operator to subtract from int
+    Heading operator-(int v) const {
+        return Heading(get() - v);
+    }
+    // when cast to an int it will return the value
+    operator int() const {
+        return get();
+    }
+    operator float() const {
+        return get() + 0.0f;
+    }
+
+
+    // heading - heading
+    Heading operator-(const Heading& h) const {
+        return Heading(get() - h.get());
+    }
+
+    // all float operators
+    Heading operator+(float v) const {
+        return Heading(get() + (int)v);
+    }
+    Heading operator-(float v) const {
+        return Heading(get() - (int)v);
+    }
+    Heading operator*(float v) const {
+        return Heading(get() * (int)v);
+    }
+    Heading operator/(float v) const {
+        return Heading(get() / (int)v);
+    }
+
+
 };
 
 #endif //CSCI437_HEADING_H

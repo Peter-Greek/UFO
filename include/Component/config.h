@@ -40,6 +40,7 @@ extern bool unlimitedFrames;
 extern int debugMode;
 extern int curRoomIndex;
 extern int targetFPS;
+extern int seed; // Random seed for world generation
 
 extern int BASE_SCREEN_WIDTH;
 extern int BASE_SCREEN_HEIGHT;

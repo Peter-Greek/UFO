@@ -105,6 +105,7 @@ void GameInitializer::Init() {
 
     // Main Menu Press Leaderboard
     AddEventHandler("UFO::OpenLeaderboard", [this]() {
+        print("Opening Leaderboard Menu");
         ShutdownMainMenu();
         CreateLeaderboardMenu();
     });
@@ -333,8 +334,9 @@ void GameInitializer::Start(){
     LoadAudio();
 
     // Create World (HAS TO START BEFORE ANY ENTITY IS ATTACHED!)
-    auto w = attachGameProcess<world>();
-//    LoadEntitiesFromWorld(w);
+    print("Creating World");
+    auto w = attachGameProcess<World>();
+    LoadEntitiesFromWorld(w);
 
     // Create Camera
     auto cam = attachGameProcess<camera>();
@@ -354,37 +356,37 @@ void GameInitializer::Start(){
     // Create Random AT (Debug)
     for (int i = 0; i < 200; i++) {
         // random location for the AT
-        vector2 coords = {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))};
-        auto at = attachGameProcess<AT>(coords);
+//        vector2 coords = {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))};
+//        auto at = attachGameProcess<AT>(coords);
     }
 
 
-    auto sc = getScaledCoords; // scale the coords of placed entities by resolution factor
-    using v2 = vector2;
+//    auto sc = getScaledCoords; // scale the coords of placed entities by resolution factor
+//    using v2 = vector2;
     // Create Laser
-    auto laser = attachGameProcess<Laser>(sc(v2{-700.0f, 0.0f}), Heading (360 - 45 * 6), 500, 20, 10, 200000, 1, 1);
-    laser->setSpin(true);
+//    auto laser = attachGameProcess<Laser>(sc(v2{-700.0f, 0.0f}), Heading (360 - 45 * 6), 500, 20, 10, 200000, 1, 1);
+//    laser->setSpin(true);
 
-    auto laser2 = attachGameProcess<Laser>(sc(v2 {50.0f, 0.0f}), Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
+//    auto laser2 = attachGameProcess<Laser>(sc(v2 {50.0f, 0.0f}), Heading (360 - 45 * 7), 500, 20, 1000, 3000, 1, 1);
 
     // Create NPC
-    auto npc = attachGameProcess<entity>(entity::ENEMY, 3, sc(v2{350.0f, 0.0f}));
+//    auto npc = attachGameProcess<entity>(entity::ENEMY, 3, sc(v2{350.0f, 0.0f}));
 
     // Create Boss
-    auto boss = attachGameProcess<Boss>(sc(v2{0.0f, -550.0f}));
+//    auto boss = attachGameProcess<Boss>(sc(v2{0.0f, -550.0f}));
 
     // Create Heart Pickup
 
-    auto heart = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::HEART, sc(v2{-50.0f, 0.0f}));
+//    auto heart = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::HEART, sc(v2{-50.0f, 0.0f}));
 
     // Create Oxy Pickup
-    auto oxy = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::OXY_TANK, sc(v2{0.0f, 50.0f}));
+//    auto oxy = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::OXY_TANK, sc(v2{0.0f, 50.0f}));
 
     // Create Key Card Pickup
-    auto key = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::KEY_CARD, sc(v2{0.0f, 250.0f}));
+//    auto key = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::KEY_CARD, sc(v2{0.0f, 250.0f}));
 
     // Create Escape Pod "Pickup"
-    auto escape = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::ESCAPE_POD, sc(v2{0.0f, 550.0f}));
+//    auto escape = attachGameProcess<entity>(entity::ITEM_PICKUP, entity::ESCAPE_POD, sc(v2{0.0f, 550.0f}));
 
     print("Game Environment Created");
 }
@@ -531,8 +533,23 @@ void GameInitializer::LoadTextures() {
     auto menuTxd = attachGameMappedProcess<TxdLoader>("MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
 
 
-    // Create Wall Texture
+    // Create World Texture
     auto wTxd = attachGameMappedProcess<TxdLoader>("WALL::TEXTURE", "../resource/GFX/misc/wall.png");
+    auto wTxd2 = attachGameMappedProcess<TxdLoader>("WORLD::adminRoom::TEXTURE", "../resource/GFX/world/rooms/adminRoom.png");
+    auto wTxd3 = attachGameMappedProcess<TxdLoader>("WORLD::bossRoom::TEXTURE", "../resource/GFX/world/rooms/bossRoom.png");
+    auto wTxd4 = attachGameMappedProcess<TxdLoader>("WORLD::engineRoom::TEXTURE", "../resource/GFX/world/rooms/engineRoom.png");
+    auto wTxd5 = attachGameMappedProcess<TxdLoader>("WORLD::escapePodRoom::TEXTURE", "../resource/GFX/world/rooms/escapePodRoom.png");
+    auto wTxd6 = attachGameMappedProcess<TxdLoader>("WORLD::horizontalHallway::TEXTURE", "../resource/GFX/world/rooms/horizontalHallway.png");
+    auto wTxd7 = attachGameMappedProcess<TxdLoader>("WORLD::lockedRoom1::TEXTURE", "../resource/GFX/world/rooms/lockedRoom1.png");
+    auto wTxd8 = attachGameMappedProcess<TxdLoader>("WORLD::lockedRoom2::TEXTURE", "../resource/GFX/world/rooms/lockedRoom2.png");
+    auto wTxd9 = attachGameMappedProcess<TxdLoader>("WORLD::medicalRoom::TEXTURE", "../resource/GFX/world/rooms/medicalRoom.png");
+    auto wTxd10 = attachGameMappedProcess<TxdLoader>("WORLD::monsterAmbushRoom::TEXTURE", "../resource/GFX/world/rooms/monsterAmbushRoom.png");
+    auto wTxd11 = attachGameMappedProcess<TxdLoader>("WORLD::randomRoom::TEXTURE", "../resource/GFX/world/rooms/randomRoom.png");
+    auto wTxd12 = attachGameMappedProcess<TxdLoader>("WORLD::randomRoom2::TEXTURE", "../resource/GFX/world/rooms/randomRoom2.png");
+    auto wTxd13 = attachGameMappedProcess<TxdLoader>("WORLD::startRoom::TEXTURE", "../resource/GFX/world/rooms/startRoom.png");
+    auto wTxd14 = attachGameMappedProcess<TxdLoader>("WORLD::verticalHallway::TEXTURE", "../resource/GFX/world/rooms/verticalHallway.png");
+
+
 
     // Create AT Texture
     auto ATTxd = attachGameMappedProcess<TxdLoader>("AT::TEXTURE", "../resource/GFX/icons/ATLoot1.png");
@@ -564,9 +581,10 @@ void GameInitializer::LoadAudio() {
     aHitMarker->setVolume(VOLUME_SFX / 100.0f);
 }
 
-void GameInitializer::LoadEntitiesFromWorld(sh_ptr<world> w) {
+void GameInitializer::LoadEntitiesFromWorld(sh_ptr<World> w) {
     print("Loading Entities from World");
-    w->loadWorld(); // loads the world
+//    w->loadWorld(); // loads the world
+    w->generateWorld(6);
     json worldEntityList = w->getAllEntities();
 
     for (auto &worldE : worldEntityList) {

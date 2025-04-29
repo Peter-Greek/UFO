@@ -38,6 +38,7 @@ bool unlimitedFrames = false;
 int debugMode = 0;
 int curRoomIndex = -1;
 int targetFPS = 90;
+int seed = -1; // Random seed for world generation
 
 int BASE_SCREEN_WIDTH = 1024; // DO NOT CHANGE THESE VALUES (WHAT THE GAME IS BASED ON IN INIT DEVELOPMENT)
 int BASE_SCREEN_HEIGHT = 768; // DO NOT CHANGE THESE VALUES (WHAT THE GAME IS BASED ON IN INIT DEVELOPMENT)

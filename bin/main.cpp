@@ -90,7 +90,8 @@ int main(int argc, char* argv[])
 
     // Seed the random number generator
     if (debugMode == 1) {
-        srand(69420);
+        seed = 69422;
+        srand(seed);
     }else {
         // cast startTime to int
         srand(static_cast<unsigned int>(scheduler->getStartTime().time_since_epoch().count()));

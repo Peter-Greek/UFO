@@ -40,7 +40,7 @@
 #include "AT.h"
 #include "Laser.h"
 #include "camera.h"
-#include "world.h"
+#include "World.h"
 #include "MainMenu.h"
 #include "text.h"
 #include "AsepriteLoader.h"
@@ -74,7 +74,7 @@ private:
     std::map<std::string, sh_ptr<TxdLoader>> txdMap;
     std::map<std::string, sh_ptr<AudioLoader>> audioMap;
     sh_ptr<camera> cam;
-    sh_ptr<world> world_ptr;
+    sh_ptr<World> world_ptr;
     passFunc_t passFunc;
     wall* debugWall = nullptr;
     // debug wall creation state
@@ -106,7 +106,7 @@ public:
     void setProcessManager(sh_ptr<ProcessManager> pm);
     void setScheduler(sh_ptr<Scheduler> sch);
     void setCamera(sh_ptr<camera> c);
-    void setWorld(std::shared_ptr<world> w);
+    void setWorld(std::shared_ptr<World> w);
 
     void attachEntity(sh_ptr<entity> e);
     void attachText(const std::string& name, sh_ptr<text> t);

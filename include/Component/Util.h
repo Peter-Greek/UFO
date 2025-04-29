@@ -127,4 +127,10 @@ float getScaledPixelWidth(float num);
 float getScaledPixelHeight(float num);
 vector2 getScaledCoords(const vector2& coords);
 
+vectorList_t calculatePoints(
+        const vector2& center,
+        float length,
+        float width
+);
+
 #endif //CSCI437_UTIL_H

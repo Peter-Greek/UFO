@@ -106,6 +106,25 @@ std::pair<float, float> calculateDimensions(const std::vector<vector2>& points) 
     return {width, height};
 }
 
+vectorList_t calculatePoints(
+        const vector2& center,
+        float length,
+        float width
+) {
+    float halfLength = length / 2.0f;
+    float halfWidth = width / 2.0f;
+
+    vector2 min(-halfWidth, -halfLength);
+    vector2 max(halfWidth, halfLength);
+
+    vector2 p1 = center + vector2(min.x, min.y);
+    vector2 p2 = center + vector2(max.x, min.y);
+    vector2 p3 = center + vector2(max.x, max.y);
+    vector2 p4 = center + vector2(min.x, max.y);
+
+    return {p1, p2, p3, p4};
+}
+
 bool isPointInBounds(const vector2& point, const vectorList_t& polygon) {
     bool oddNodes = false;
     size_t j = polygon.size() - 1;

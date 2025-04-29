@@ -46,6 +46,7 @@ private:
     nlohmann::json jsonData;
 public:
     explicit jsonLoader(std::string path) : jsonPath(std::move(path)) {
+        print("Loading JSON from:", jsonPath);
         std::ifstream i(jsonPath);
         i >> jsonData;
     }

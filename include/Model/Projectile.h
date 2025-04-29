@@ -43,7 +43,6 @@ private:
     float range = getScaledCoords(vector2(500, 500)).length();
 
     vector2 getProjectileDimensions(std::shared_ptr<entity> parent, int damage) {
-        print("Parent: ", parent->getEntityType(), " Damage: ", damage);
         if (parent->isEntityAPlayer()) {
             return {
                 getScaledPixelWidth(static_cast<float>(20 * damage)),

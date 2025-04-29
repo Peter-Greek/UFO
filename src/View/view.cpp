@@ -251,6 +251,10 @@ int view::initialize() {
         SDL_RenderDrawLines(renderer, p, 5);
     });
 
+    AddEventHandler("SDL::Render::DrawLine", [this](int x1, int y1, int x2, int y2) {
+        SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+    });
+
     AddEventHandler("SDL::Render::DrawPoint", [this](int x, int y) {
         SDL_RenderDrawPoint(renderer, x, y);
     });

@@ -175,28 +175,28 @@ int GameManager::initialize() {
     });
 
     // Commands
-    RegisterCommand("setRoomIndex", [this](std::string command, sList_t args, std::string message) {
-        if (args.empty()) {
-            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: setRoomIndex <index>");
-            return;
-        }
+//    RegisterCommand("setRoomIndex", [this](std::string command, sList_t args, std::string message) {
+//        if (args.empty()) {
+//            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: setRoomIndex <index>");
+//            return;
+//        }
+//
+//        int index = std::stoi(args[0]);
+//        curRoomIndex = index;
+//        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
+//        TriggerEvent("UFO::Chat::AddMessage", "Room Index Set to: " + std::to_string(index));
+//    });
 
-        int index = std::stoi(args[0]);
-        curRoomIndex = index;
-        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
-        TriggerEvent("UFO::Chat::AddMessage", "Room Index Set to: " + std::to_string(index));
-    });
-
-    RegisterCommand("createNewRoom", [this](std::string command, sList_t args, std::string message) {
-        if (!args.empty()) {
-            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: createNewRoom");
-            return;
-        }
-        int roomIndex = world_ptr->addRoom();
-        curRoomIndex = roomIndex;
-        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
-        TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
-    });
+//    RegisterCommand("createNewRoom", [this](std::string command, sList_t args, std::string message) {
+//        if (!args.empty()) {
+//            TriggerEvent("UFO::Chat::AddMessage", "Incorrect Usage: createNewRoom");
+//            return;
+//        }
+//        int roomIndex = world_ptr->addRoom();
+//        curRoomIndex = roomIndex;
+//        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
+//        TriggerEvent("UFO::Chat::AddMessage", "New Room Created and set as current room: " + std::to_string(roomIndex));
+//    });
 
     RegisterCommand("escape", [this](std::string command, sList_t args, std::string message) {
         if (!args.empty()) {
@@ -684,271 +684,213 @@ void GameManager::renderKeyCard(vector2 screenCoords, vector2 dim, int keyCardTy
 }
 
 void GameManager::handleDebugWorldCreator(float deltaMs) {
-    if (isDebug()) {
-        // If Ctrl + left click, start create a wall or place point
-        // If Ctrl + right click, Undo last point
-        // P place point at player coords
-        // C clear all points
-        // store cur wall in debugWall
-        // cur state debugWallSate of enum wallState
-        // DO NOT USE EVENTS IN THIS FUNCTION USE NATIVE SDL EVENTS
-
-        int x, y;
-        Uint32 mouseState = SDL_GetMouseState(&x, &y); // Get mouse position
-        const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
-        if (mouseState && SDL_BUTTON(SDL_BUTTON_LEFT) && keyboard_state_array[SDL_SCANCODE_LCTRL]) {
-            if (inClick) {
-                return;
-            }
-            inClick = true;
-
-            print("Debug Wall Create Mouse Clicked: ", x, " ", y, debugWallSate);
-            if (debugWallSate == db_WCS::CREATION_NOT_STARTED) {
-
-                // if we click near or in a wall set that as the current debug wall and set the indexes so we can update later on
-                db_room_index = -1;
-                db_wall_index = -1;
-                debugWall = new wall();
-                debugWall->length = 50;
-                debugWall->width = 8;
-                debugWall->position = cam->screenToWorldCoords(vector2(x, y));
-                debugWall->heading = Heading(0);
-
-                debugWallSate = db_WCS::COORDS_SET;
-                textMap["DEBUG::WALL::0"]->showText(
-                        "Wall Coords: " + std::to_string((int) debugWall->position.x) + " " +
-                        std::to_string((int) debugWall->position.y));
-                print("Wall Creation Started: set coords", debugWall->position);
-            } else if (debugWallSate == db_WCS::COORDS_SET) {
-                debugWall->length = (int) (cam->screenToWorldCoords(vector2(x, y)) - debugWall->position).length();
-                debugWallSate = db_WCS::LENGTH_SET;
-                textMap["DEBUG::WALL::1"]->showText("Wall Length: " + std::to_string(debugWall->length));
-                print("Wall Creation: set length", debugWall->length);
-
-                // set heading of wall
-                Heading h = getHeadingFromVectors(debugWall->position, cam->screenToWorldCoords(vector2(x, y)));
-                debugWall->heading = h;
-                textMap["DEBUG::WALL::2"]->showText("Wall Heading: " + std::to_string(debugWall->heading.get()));
-                print("Wall Creation: set heading", h.get());
-            } else if (debugWallSate == db_WCS::LENGTH_SET) {
-                // get the value / magnitude of the vector of h + 90 degrees
-                vector2 cur_pos = cam->screenToWorldCoords(vector2(x, y));
-                Heading h_cur = getHeadingFromVectors(debugWall->position, cur_pos);
-                Heading w_heading = debugWall->heading;
-                auto h_target = Heading(debugWall->heading.get() + 90);
-
-                // check if the h_cur is from debugWall->heading to h_target
-                if (h_cur.isWithin(w_heading, h_target)) {
-                    vector2 v1 = debugWall->position;
-                    vector2 v2 = debugWall->position + (angleToVector2(debugWall->heading) * (float) debugWall->length);
-                    // get the magnitude of the vector from the wall to the point
-                    float distance = getPerpendicularDistance(cur_pos, v1, v2);
-                    if (distance > 0) {
-                        debugWall->width = distance;
-                        debugWallSate = db_WCS::WIDTH_SET;
-                        textMap["DEBUG::WALL::3"]->showText("Wall Width: " + std::to_string(debugWall->width));
-                    }
-                }
-            } else if (debugWallSate == db_WCS::WIDTH_SET) {
-                // add the wall to the room
-                json worldData = world_ptr->getWorldData().get();
-                if (worldData["rooms"].empty() == 0) {
-                    if (db_room_index == -1 || db_wall_index == -1) {
-                        int roomIndex = curRoomIndex;
-                        if (roomIndex == -1) {roomIndex = world_ptr->addRoom();}
-                        curRoomIndex = roomIndex;
-                        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
-                        world_ptr->addWall(roomIndex, debugWall);
-                    } else {
-                        world_ptr->updateWall(db_room_index, db_wall_index, debugWall);
-                    }
-                } else {
-                    int roomIndex = world_ptr->addRoom();
-                    curRoomIndex = roomIndex;
-                    TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
-                    world_ptr->addWall(roomIndex, debugWall);
-                }
-                world_ptr->saveWorld();
-                debugWall = nullptr;
-                debugWallSate = db_WCS::CREATION_NOT_STARTED;
-                for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
-                    textMap["DEBUG::WALL::" + std::to_string(i)]->hideText();
-                }
-            }
-        }else if (mouseState && SDL_BUTTON(SDL_BUTTON_LEFT) && keyboard_state_array[SDL_SCANCODE_LALT]) {
-            if (debugWallSate != db_WCS::CREATION_NOT_STARTED) {
-                // delete this wall from the shit
-                if (db_room_index != -1 || db_wall_index != -1) {
-                    world_ptr->deleteWall(db_room_index, db_wall_index);
-                }
-
-                debugWallSate = db_WCS::CREATION_NOT_STARTED;
-                debugWall = nullptr;
-                for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
-                    textMap["DEBUG::WALL::" + std::to_string(i)]->hideText();
-                }
-            }
-        }else if (mouseState && SDL_BUTTON(SDL_BUTTON_LEFT) && keyboard_state_array[SDL_SCANCODE_LSHIFT]) {
-            if (inShiftFind) {return;}
-
-            inShiftFind = true;
-            shiftFindStart = cam->screenToWorldCoords(vector2(x, y));
-        }else {
-            if (inShiftFind) {
-                bool foundWall = false;
-                roomList_t roomList = world_ptr->getRoomList();
-                if (roomList.empty() == 0) {
-                    for (auto &wallList: roomList) {
-                        for (auto &cur_wall: wallList) {
-                            vector2 wallPos = cur_wall->position;
-                            vector2 mousePos = cam->screenToWorldCoords(vector2(x, y));
-                            vectorList_t mm = getMinMaxFromVectors(mousePos, shiftFindStart);
-                            if ( isPointInBounds(mousePos, calculateBoundingBox(mm[0], mm[1])) ) {
-                                debugWall = cur_wall;
-                                db_room_index = std::distance(roomList.begin(),
-                                                              std::find(roomList.begin(), roomList.end(), wallList));
-                                db_wall_index = std::distance(wallList.begin(),
-                                                              std::find(wallList.begin(), wallList.end(), cur_wall));
-                                foundWall = true;
-                                print("Debug Found Wall", db_room_index, db_wall_index);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (foundWall) {
-                    if (debugWallSate == db_WCS::CREATION_NOT_STARTED) {
-                        debugWallSate = db_WCS::COORDS_SET;
-                        textMap["DEBUG::WALL::0"]->showText(
-                                "Wall Coords: " + std::to_string((int) debugWall->position.x) + " " +
-                                std::to_string((int) debugWall->position.y));
-                        print("Wall Creation Started: set coords", debugWall->position);
-                    }
-                }
-                inShiftFind = false;
-            }
-
-
-
-            inClick = false;
-            if (debugWallSate != db_WCS::CREATION_NOT_STARTED) {
-                if (debugWallSate == db_WCS::COORDS_SET) {
-                    vector2 cur_pos = cam->screenToWorldCoords(vector2(x, y));
-                    debugWall->length = (int) (cur_pos - debugWall->position).length();
-                    textMap["DEBUG::WALL::1"]->showText("Wall Length: " + std::to_string(debugWall->length));
-                    // set heading of wall
-                    Heading h = getHeadingFromVectors(debugWall->position, cur_pos);
-                    debugWall->heading = h;
-                    textMap["DEBUG::WALL::2"]->showText("Wall Heading: " + std::to_string(debugWall->heading.get()));
-                }else if (debugWallSate == db_WCS::LENGTH_SET) {
-                    // get the value / magnitude of the vector of h + 90 degrees
-                    vector2 cur_pos = cam->screenToWorldCoords(vector2(x, y));
-                    Heading h_cur = getHeadingFromVectors(debugWall->position, cur_pos);
-                    Heading w_heading = debugWall->heading;
-                    auto h_target = Heading(debugWall->heading.get() + 90);
-
-                    // check if the h_cur is from debugWall->heading to h_target
-                    if (h_cur.isWithin(w_heading, h_target)) {
-                        vector2 v1 = debugWall->position;
-                        vector2 v2 = debugWall->position + (angleToVector2(debugWall->heading) * (float) debugWall->length);
-                        // get the magnitude of the vector from the wall to the point
-                        float distance = getPerpendicularDistance(cur_pos, v1, v2);
-                        if (distance > 0) {
-                            debugWall->width = distance;
-                            textMap["DEBUG::WALL::3"]->showText("Wall Width: " + std::to_string(debugWall->width));
-                        }
-                    }
-                }
-            }
-        }
-    }else {
-        debugWallSate = db_WCS::CREATION_NOT_STARTED;
-        debugWall = nullptr;
-        for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
-            textMap["DEBUG::WALL::" + std::to_string(i)]->hideText();
-        }
-    }
+//    if (isDebug()) {
+//        // If Ctrl + left click, start create a wall or place point
+//        // If Ctrl + right click, Undo last point
+//        // P place point at player coords
+//        // C clear all points
+//        // store cur wall in debugWall
+//        // cur state debugWallSate of enum wallState
+//        // DO NOT USE EVENTS IN THIS FUNCTION USE NATIVE SDL EVENTS
+//
+//        int x, y;
+//        Uint32 mouseState = SDL_GetMouseState(&x, &y); // Get mouse position
+//        const Uint8 *keyboard_state_array = SDL_GetKeyboardState(nullptr);
+//        if (mouseState && SDL_BUTTON(SDL_BUTTON_LEFT) && keyboard_state_array[SDL_SCANCODE_LCTRL]) {
+//            if (inClick) {
+//                return;
+//            }
+//            inClick = true;
+//
+//            print("Debug Wall Create Mouse Clicked: ", x, " ", y, debugWallSate);
+//            if (debugWallSate == db_WCS::CREATION_NOT_STARTED) {
+//
+//                // if we click near or in a wall set that as the current debug wall and set the indexes so we can update later on
+//                db_room_index = -1;
+//                db_wall_index = -1;
+//                debugWall = new wall();
+//                debugWall->length = 50;
+//                debugWall->width = 8;
+//                debugWall->position = cam->screenToWorldCoords(vector2(x, y));
+//                debugWall->heading = Heading(0);
+//
+//                debugWallSate = db_WCS::COORDS_SET;
+//                textMap["DEBUG::WALL::0"]->showText(
+//                        "Wall Coords: " + std::to_string((int) debugWall->position.x) + " " +
+//                        std::to_string((int) debugWall->position.y));
+//                print("Wall Creation Started: set coords", debugWall->position);
+//            } else if (debugWallSate == db_WCS::COORDS_SET) {
+//                debugWall->length = (int) (cam->screenToWorldCoords(vector2(x, y)) - debugWall->position).length();
+//                debugWallSate = db_WCS::LENGTH_SET;
+//                textMap["DEBUG::WALL::1"]->showText("Wall Length: " + std::to_string(debugWall->length));
+//                print("Wall Creation: set length", debugWall->length);
+//
+//                // set heading of wall
+//                Heading h = getHeadingFromVectors(debugWall->position, cam->screenToWorldCoords(vector2(x, y)));
+//                debugWall->heading = h;
+//                textMap["DEBUG::WALL::2"]->showText("Wall Heading: " + std::to_string(debugWall->heading.get()));
+//                print("Wall Creation: set heading", h.get());
+//            } else if (debugWallSate == db_WCS::LENGTH_SET) {
+//                // get the value / magnitude of the vector of h + 90 degrees
+//                vector2 cur_pos = cam->screenToWorldCoords(vector2(x, y));
+//                Heading h_cur = getHeadingFromVectors(debugWall->position, cur_pos);
+//                Heading w_heading = debugWall->heading;
+//                auto h_target = Heading(debugWall->heading.get() + 90);
+//
+//                // check if the h_cur is from debugWall->heading to h_target
+//                if (h_cur.isWithin(w_heading, h_target)) {
+//                    vector2 v1 = debugWall->position;
+//                    vector2 v2 = debugWall->position + (angleToVector2(debugWall->heading) * (float) debugWall->length);
+//                    // get the magnitude of the vector from the wall to the point
+//                    float distance = getPerpendicularDistance(cur_pos, v1, v2);
+//                    if (distance > 0) {
+//                        debugWall->width = distance;
+//                        debugWallSate = db_WCS::WIDTH_SET;
+//                        textMap["DEBUG::WALL::3"]->showText("Wall Width: " + std::to_string(debugWall->width));
+//                    }
+//                }
+//            } else if (debugWallSate == db_WCS::WIDTH_SET) {
+//                // add the wall to the room
+//                json worldData = world_ptr->getWorldData().get();
+//                if (worldData["rooms"].empty() == 0) {
+//                    if (db_room_index == -1 || db_wall_index == -1) {
+//                        int roomIndex = curRoomIndex;
+//                        if (roomIndex == -1) {roomIndex = world_ptr->addRoom();}
+//                        curRoomIndex = roomIndex;
+//                        TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
+//                        world_ptr->addWall(roomIndex, debugWall);
+//                    } else {
+//                        world_ptr->updateWall(db_room_index, db_wall_index, debugWall);
+//                    }
+//                } else {
+//                    int roomIndex = world_ptr->addRoom();
+//                    curRoomIndex = roomIndex;
+//                    TriggerEvent("UFO::OnConfigUpdate", "curRoomIndex");
+//                    world_ptr->addWall(roomIndex, debugWall);
+//                }
+//                world_ptr->saveWorld();
+//                debugWall = nullptr;
+//                debugWallSate = db_WCS::CREATION_NOT_STARTED;
+//                for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
+//                    textMap["DEBUG::WALL::" + std::to_string(i)]->hideText();
+//                }
+//            }
+//        }else if (mouseState && SDL_BUTTON(SDL_BUTTON_LEFT) && keyboard_state_array[SDL_SCANCODE_LALT]) {
+//            if (debugWallSate != db_WCS::CREATION_NOT_STARTED) {
+//                // delete this wall from the
+//                if (db_room_index != -1 || db_wall_index != -1) {
+//                    world_ptr->deleteWall(db_room_index, db_wall_index);
+//                }
+//
+//                debugWallSate = db_WCS::CREATION_NOT_STARTED;
+//                debugWall = nullptr;
+//                for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
+//                    textMap["DEBUG::WALL::" + std::to_string(i)]->hideText();
+//                }
+//            }
+//        }else if (mouseState && SDL_BUTTON(SDL_BUTTON_LEFT) && keyboard_state_array[SDL_SCANCODE_LSHIFT]) {
+//            if (inShiftFind) {return;}
+//
+//            inShiftFind = true;
+//            shiftFindStart = cam->screenToWorldCoords(vector2(x, y));
+//        }else {
+//            if (inShiftFind) {
+//                bool foundWall = false;
+//                roomList_t roomList = world_ptr->getRoomList();
+//                if (roomList.empty() == 0) {
+//                    for (auto &wallList: roomList) {
+//                        for (auto &cur_wall: wallList) {
+//                            vector2 wallPos = cur_wall->position;
+//                            vector2 mousePos = cam->screenToWorldCoords(vector2(x, y));
+//                            vectorList_t mm = getMinMaxFromVectors(mousePos, shiftFindStart);
+//                            if ( isPointInBounds(mousePos, calculateBoundingBox(mm[0], mm[1])) ) {
+//                                debugWall = cur_wall;
+//                                db_room_index = std::distance(roomList.begin(),
+//                                                              std::find(roomList.begin(), roomList.end(), wallList));
+//                                db_wall_index = std::distance(wallList.begin(),
+//                                                              std::find(wallList.begin(), wallList.end(), cur_wall));
+//                                foundWall = true;
+//                                print("Debug Found Wall", db_room_index, db_wall_index);
+//                                break;
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                if (foundWall) {
+//                    if (debugWallSate == db_WCS::CREATION_NOT_STARTED) {
+//                        debugWallSate = db_WCS::COORDS_SET;
+//                        textMap["DEBUG::WALL::0"]->showText(
+//                                "Wall Coords: " + std::to_string((int) debugWall->position.x) + " " +
+//                                std::to_string((int) debugWall->position.y));
+//                        print("Wall Creation Started: set coords", debugWall->position);
+//                    }
+//                }
+//                inShiftFind = false;
+//            }
+//
+//
+//
+//            inClick = false;
+//            if (debugWallSate != db_WCS::CREATION_NOT_STARTED) {
+//                if (debugWallSate == db_WCS::COORDS_SET) {
+//                    vector2 cur_pos = cam->screenToWorldCoords(vector2(x, y));
+//                    debugWall->length = (int) (cur_pos - debugWall->position).length();
+//                    textMap["DEBUG::WALL::1"]->showText("Wall Length: " + std::to_string(debugWall->length));
+//                    // set heading of wall
+//                    Heading h = getHeadingFromVectors(debugWall->position, cur_pos);
+//                    debugWall->heading = h;
+//                    textMap["DEBUG::WALL::2"]->showText("Wall Heading: " + std::to_string(debugWall->heading.get()));
+//                }else if (debugWallSate == db_WCS::LENGTH_SET) {
+//                    // get the value / magnitude of the vector of h + 90 degrees
+//                    vector2 cur_pos = cam->screenToWorldCoords(vector2(x, y));
+//                    Heading h_cur = getHeadingFromVectors(debugWall->position, cur_pos);
+//                    Heading w_heading = debugWall->heading;
+//                    auto h_target = Heading(debugWall->heading.get() + 90);
+//
+//                    // check if the h_cur is from debugWall->heading to h_target
+//                    if (h_cur.isWithin(w_heading, h_target)) {
+//                        vector2 v1 = debugWall->position;
+//                        vector2 v2 = debugWall->position + (angleToVector2(debugWall->heading) * (float) debugWall->length);
+//                        // get the magnitude of the vector from the wall to the point
+//                        float distance = getPerpendicularDistance(cur_pos, v1, v2);
+//                        if (distance > 0) {
+//                            debugWall->width = distance;
+//                            textMap["DEBUG::WALL::3"]->showText("Wall Width: " + std::to_string(debugWall->width));
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }else {
+//        debugWallSate = db_WCS::CREATION_NOT_STARTED;
+//        debugWall = nullptr;
+//        for (int i = 0; i <= GameManager::db_WCS::WIDTH_SET; i++) {
+//            textMap["DEBUG::WALL::" + std::to_string(i)]->hideText();
+//        }
+//    }
 }
 
 void GameManager::drawWall(wall* cur_wall) {
-    int textureLength = 32;
-    int textureWidth = 4;
-    auto h90 = Heading(90);
-    auto h180 = Heading(270);
-    // make dashed line for each wall in the direction of center following h till length
-    // use triggerevent SDL::Render::DrawPoint
-    auto h = cur_wall->heading;
     vector2 startPoint = cur_wall->position;
+    vector2 endPoint = startPoint + angleToVector2(cur_wall->heading) * cur_wall->length;
 
-    int baseLength = cur_wall->length;
-    int baseWidth = cur_wall->width;
+    vector2 perpDir = angleToVector2(Heading(cur_wall->heading.get() + 90));
 
-    int wid = 0;
-    vector2 dir = angleToVector2(h);
-    auto h2 =  Heading (h.get() + 90);
-    vector2 perpDir = angleToVector2(h2);
-    while (wid < baseWidth) {
-        int len = 0;
-        int cur_wid = std::min(baseWidth - wid, textureWidth);
-        vector2 curPoint = startPoint + (perpDir * (float)(wid));
-        while (len < baseLength) {
-            int cur_len = std::min(baseLength - len, textureLength);
-            vector2 thisPoint = curPoint + (dir * (float) len);
-            if (cam->isPointInView(thisPoint)) {
-                vector2 screenCoords = cam->worldToScreenCoords(thisPoint);
+    vector2 corners[4] = {
+            cam->worldToScreenCoords(startPoint),
+            cam->worldToScreenCoords(startPoint + perpDir * cur_wall->width),
+            cam->worldToScreenCoords(endPoint + perpDir * cur_wall->width),
+            cam->worldToScreenCoords(endPoint)
+    };
 
-
-
-
-                SDL_Rect srcRect;
-                SDL_Rect destRect;
-                srcRect = {0, 0, textureLength, textureWidth};
-
-                bool isWithin = h.isWithin(h90, h180);
-
-                destRect = {
-                        static_cast<int>(std::round(screenCoords.x)),
-                        static_cast<int>(std::round(screenCoords.y)),
-                        isWithin ? -cur_len : cur_len, cur_wid
-                };
-
-                if (len >= baseLength && wid >= baseWidth) {
-                    // dump all the data into print
-                    print("Wall: ", cur_wall->position, cur_wall->heading, cur_wall->length, cur_wall->width);
-                    print("Wall 2: ", thisPoint, wid, len, cur_wid, cur_len);
-                    print("Wall 3: ", screenCoords, destRect.x, destRect.y, destRect.w, destRect.h);
-                }else {
-                    TriggerEvent("SDL::Render::DrawRect", screenCoords.x + 5, screenCoords.y, 1, 1);
-                }
-
-//                txdMap["WALL::TEXTURE"]->render(srcRect, destRect, h, SDL_FLIP_NONE);
-            }
-            len += cur_len;
-        }
-        wid += cur_wid;
+    TriggerEvent("SDL::Render::SetDrawColor", 255, 255, 255, 255);
+    for (int i = 0; i < 4; ++i) {
+        vector2& from = corners[i];
+        vector2& to = corners[(i + 1) % 4];
+        TriggerEvent("SDL::Render::DrawLine", from.x, from.y, to.x, to.y);
     }
-
-
-//    for (int w = 0; w < txdsW; ++w) {
-//    vector2 curPoint = startPoint + (angleToVector2(h2) * (float) (w * textureWidth));
-//        for (int l = 0; l < txdsL; ++l) {
-//            vector2 dir = angleToVector2(h);
-//            vector2 thisPoint = curPoint + (dir * (float) (l * textureLength));
-//            if (cam->isPointInView(thisPoint)) {
-//                vector2 screenCoords = cam->worldToScreenCoords(thisPoint);
-//                SDL_Rect srcRect;
-//                SDL_Rect destRect;
-//                srcRect = {0, 0, textureLength, textureWidth};
-//                destRect = {
-//                        static_cast<int>(screenCoords.x),
-//                        static_cast<int>(screenCoords.y),
-//                        textureLength, textureWidth
-//                };
-//                txdMap["WALL::TEXTURE"]->render(srcRect, destRect, h, SDL_FLIP_NONE);
-//            }
-//        }
-//    }
+    TriggerEvent("SDL::Render::ResetDrawColor");
 }
 
 void GameManager::renderWorld(float deltaMs) {
@@ -957,28 +899,130 @@ void GameManager::renderWorld(float deltaMs) {
         error("World Map not set in Game Manager");
         return;
     }
+    roomList_t roomList = world_ptr->getRoomList();
+    if (roomList.empty() == 0) {
+        int roomIndex = 0;
+        for (auto& room : roomList) {
+            roomIndex++;
 
-    auto it = txdMap.find("WALL::TEXTURE");
-    if (it == txdMap.end() || !it->second) {
-        return;
-    }
-
-    if (isDebug()) {
-        roomList_t roomList = world_ptr->getRoomList();
-
-
-        if (roomList.empty() == 0) {
-            for (auto& wallList : roomList) {
-                for (auto& cur_wall : wallList) {
-                    drawWall(cur_wall);
-                }
+            if (!cam->isPointInView(room->coords)) {
+//                print("Room not in view: ", room->id);
+                continue;
             }
-        }
 
 
-        if (debugWall != nullptr) {
-            if (debugWallSate != db_WCS::CREATION_NOT_STARTED) {
-                drawWall(debugWall);
+            std::string txdName = "WORLD::"+room->id+"::TEXTURE";
+            auto it = txdMap.find(txdName);
+            if (it == txdMap.end() || !it->second) {
+                print("Texture not found: ", txdName);
+                return;
+            }
+//            print("Room Bounds: ", room.bounds->position, room.bounds->size);
+            SDL_Rect srcRect = {
+                    static_cast<int>(room->bounds->position.x),
+                    static_cast<int>(room->bounds->position.y),
+                    static_cast<int>(room->bounds->size.x),
+                    static_cast<int>(room->bounds->size.y)
+            }; // load the entire texture
+//            print("Center: ", room.center);
+
+            vector2 screenCoords = cam->worldToScreenCoords(room->coords);
+//            print("Screen Coords: ", screenCoords);
+
+//            print("Room Real Bounds: ", room.real_bounds->position, room.real_bounds->size);
+            SDL_Rect destRect = {
+                    static_cast<int>(screenCoords.x),
+                    static_cast<int>(screenCoords.y),
+                    static_cast<int>(room->real_bounds->size.x), // scaled size
+                    static_cast<int>(room->real_bounds->size.y) // scaled size
+            };
+            txdMap[txdName]->render(srcRect, destRect, room->rotation, room->flip);
+//            print("Room render id: ", room->id, room->changes);
+
+            if (isDebug()) {
+                for (auto &cur_wall: room->real_walls) {
+                    if (cam->isPointInView(cur_wall->position)) {
+                        drawWall(cur_wall);
+                    }
+                }
+                for (auto &door: room->real_doors) {
+                    if (!cam->isPointInView(door.coords)) {
+                        // hide text if it is not in view
+                        std::string doorTextMapName = "DOOR::" + std::to_string(roomIndex) + "::" + door.id;
+                        auto it = textMap.find(doorTextMapName);
+                        if (it != textMap.end()) {
+                            it->second->hideText();
+                        }
+                    }
+
+                    SDL_Color color = door.attached ? SDL_Color{255, 0, 0, 255} : SDL_Color{0, 0, 255, 200};
+                    vector2 p1 = door.coords, p2, p3, p4;
+
+                    switch (door.heading.get()) {
+                        case 0: // Right
+                            p2 = p1 + vector2(door.length, 0);
+                            p3 = p2 + vector2(0, door.width);
+                            p4 = p1 + vector2(0, door.width);
+                            break;
+                        case 180: // Left
+                            p2 = p1 - vector2(door.length, 0);
+                            p3 = p2 + vector2(0, door.width);
+                            p4 = p1 + vector2(0, door.width);
+                            break;
+                        case 90: // Down
+                            p2 = p1 + vector2(door.length, 0);
+                            p3 = p2 + vector2(0, door.width);
+                            p4 = p1 + vector2(0, door.width);
+                            break;
+                        case 270: // Up
+                            p2 = p1 + vector2(door.length, 0);
+                            p3 = p2 - vector2(0, door.width);
+                            p4 = p1 - vector2(0, door.width);
+                            break;
+                        default:
+                            print("Invalid door heading: ", door.heading.get(), door.id);
+                            break;
+                    }
+
+                    vector2 sp1 = cam->worldToScreenCoords(p1);
+                    vector2 sp2 = cam->worldToScreenCoords(p2);
+                    vector2 sp3 = cam->worldToScreenCoords(p3);
+                    vector2 sp4 = cam->worldToScreenCoords(p4);
+
+                    TriggerEvent("SDL::Render::SetDrawColor", color.r, color.g, color.b, color.a);
+                    TriggerEvent("SDL::Render::DrawLine", sp1.x, sp1.y, sp2.x, sp2.y);
+                    TriggerEvent("SDL::Render::DrawLine", sp2.x, sp2.y, sp3.x, sp3.y);
+                    TriggerEvent("SDL::Render::DrawLine", sp3.x, sp3.y, sp4.x, sp4.y);
+                    TriggerEvent("SDL::Render::DrawLine", sp4.x, sp4.y, sp1.x, sp1.y);
+                    TriggerEvent("SDL::Render::ResetDrawColor");
+
+
+                    // create debug text for this door id if not exists in text map
+                    std::string doorTextMapName = "DOOR::" + std::to_string(roomIndex) + "::" + door.id;
+                    auto it = textMap.find(doorTextMapName);
+                    if (it == textMap.end()) {
+                        textMap[doorTextMapName] = std::make_shared<text>(passFunc, door.id, 25);
+                        pM->attachProcess(textMap[doorTextMapName]);
+                        textMap[doorTextMapName]->setTextColor(color);
+                        textMap[doorTextMapName]->setTextPosition(sp1.x, sp1.y);
+                    } else {
+                        it->second->setTextPosition(sp1.x, sp1.y);
+                    }
+                    textMap[doorTextMapName]->showText(door.id); // ensure on top
+
+
+                    int x, y;
+                    SDL_GetMouseState(&x, &y); // Get mouse position
+                    vector2 mousePos = vector2(x, y);
+                    // if mousePos is in the door
+                    if (isPointInBounds(mousePos, calculateBoundingBox(sp1, sp3))) {
+                        print("Mouse in door: ", door.id);
+                        print("Door Coords: ", door.coords);
+                        print("Door Length: ", door.length);
+                        print("Door Width: ", door.width);
+                        print("Door Heading: ", door.heading.get());
+                    }
+                }
             }
         }
     }
@@ -1582,7 +1626,7 @@ void GameManager::setCamera(sh_ptr<camera> c) {
     cam = std::move(c);
 }
 
-void GameManager::setWorld(sh_ptr<world> w) {
+void GameManager::setWorld(sh_ptr<World> w) {
     world_ptr = std::move(w);
 }
 
