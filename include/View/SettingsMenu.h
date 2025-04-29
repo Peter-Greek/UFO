@@ -105,6 +105,9 @@ private:
         sList_t args = split(resolution, "x");
         return std::stoi(args[0]) == width && std::stoi(args[1]) == height;
     }
+    static bool isFPSActive(int fps) {
+       return targetFPS == fps;
+    }
 
     std::pair <int, int> getScreenResolution() {
         // get current display size and apply it as the args
@@ -136,17 +139,23 @@ private:
             }},
             //toggle_t for fullscreen
             setting_variant_t{std::in_place_type<toggle_t>, "Fullscreen", setting_t{"fs", FULL_SCREEN_ENABLED}},
-            setting_variant_t{std::in_place_type<toggle_t>, "VSync", setting_t{"vsync", false}},
+//            setting_variant_t{std::in_place_type<toggle_t>, "VSync", setting_t{"vsync", false}},
             setting_variant_t{std::in_place_type<toggle_t>, "Audio", setting_t{"sound", AUDIO_ENABLED}},
 
             setting_variant_t{std::in_place_type<slider_t>, slider_t{"Music Volume", {"MusicVol", VOLUME_MUSIC}, 0.0f, 100.0f, 1.0f, true, true}},
             setting_variant_t{std::in_place_type<slider_t>, slider_t{"Effects Volume", {"SFXVolume", VOLUME_SFX}, 0.0f, 100.0f, 1.0f, true, true}},
+//            setting_variant_t{std::in_place_type<dropdown_t>, "FPS Limit", settings_t{
+//                    {"30", isFPSActive(30)},
+//                    {"60", isFPSActive(60)},
+//                    {"90", isFPSActive(90)},
+//                    {"120", isFPSActive(120)},
+//                    {"144", isFPSActive(144)}
+//            }},
 
-
-            setting_variant_t{std::in_place_type<dropdown_t>, "Language", settings_t{
-                    {"English", true},
-                    {"Spanish", false}
-            }},
+//            setting_variant_t{std::in_place_type<dropdown_t>, "Language", settings_t{
+//                    {"English", true},
+//                    {"Spanish", false}
+//            }},
     };
 
 

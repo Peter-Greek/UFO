@@ -361,7 +361,9 @@ int SettingsMenu::initialize_SDL_process(SDL_Window *passed_window) {
                                         break;
                                     }
                                 }
-
+                            }else if (settingName == "FPS Limit") {
+                                targetFPS = std::stoi(optionName);
+                                TriggerEvent("UFO::ChangeConfigValue", "targetFPS");
                             }
 
                             break;

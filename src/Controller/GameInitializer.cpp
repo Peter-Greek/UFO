@@ -441,9 +441,9 @@ void GameInitializer::End(GAME_RESULT result) {
 }
 
 void GameInitializer::Debug() {
-    if (!debugTexts.empty()) {
-        return;
-    }
+//    if (!debugTexts.empty()) {
+//        return;
+//    }
     print("Debug Mode: ", debugMode);
     // General Debug Text
     std::string fpsTextContent = "FPS: " + std::to_string(64);
@@ -457,6 +457,7 @@ void GameInitializer::Debug() {
     debugTexts.push_back(gameTimeText);
 
     AddEventHandler("SDL::OnUpdate", [gameTimeText, fpsText, this](float deltaMs) {
+        print("FPS: ", 1000.0f/deltaMs);
         std::string fpsTextContent = "FPS: " + std::to_string(1000.0f/deltaMs);
         fpsText->setText(fpsTextContent);
         std::string gameTimeContent = "Time: " + std::to_string(sch->getGameTime());
@@ -769,11 +770,11 @@ void GameInitializer::ShutdownSettingsMenu() {
     }
 }
 
-void GameInitializer::CreateLeaderboardMenu() {/*
+void GameInitializer::CreateLeaderboardMenu() {
     ShutdownMainMenu();
     gameState = LEADERBOARD_MENU;
     auto menuTxd = attachMappedProcess<TxdLoader>("LEADERBOARD_MENU::TEXTURE", "../resource/GFX/screens/SpaceBackground.png");
-    lMenu = attachProcess<LeaderboardMenu>((*gameStorage)["saves"], menuTxd);*/
+    lMenu = attachProcess<LeaderboardMenu>((*gameStorage)["saves"], menuTxd);
 }
 
 void GameInitializer::ShutdownLeaderboardMenu() {/*

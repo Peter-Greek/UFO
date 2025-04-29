@@ -102,6 +102,13 @@ int main(int argc, char* argv[])
         scheduler->shutdown();
     });
 
+    viewProcess->AddEventHandler("UFO::OnConfigUpdate", [scheduler](const std::string configName) {
+        if (configName == "targetFPS") {
+            scheduler->setTargetFPS(targetFPS);
+            print("Target FPS set to: ", targetFPS);
+        }
+    });
+
     // Auto room from PNG
 //    scheduler->setTimeout(2000, [gameInitializer]() {
 //        print("Creating Room from PNG");
