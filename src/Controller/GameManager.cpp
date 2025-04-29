@@ -1540,6 +1540,78 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
                     proj->AddEventHandler("ENTITY::ABORT", [b, proj, this]() {
                         b->removeProjectile(proj);
                     });
+                    if(b->inRageMode()) {
+                        //Spawn 4 slower projectiles, one in each cardinal direction, (nsew)
+                        vector2 pVeln = angleToVector2(h) * getScaledCoords({0.30, 0.30}).length();
+
+                        sh_ptr_e projn = b->spawnProjectile(spawnCoords);
+                        pM->attachProcess(projn);
+                        attachEntity(projn);
+                        projn->spawn();
+                        projn->setVelocity(pVeln);
+
+                        projn->AddEventHandler("ENTITY::SUCCEED", [b, projn, this]() {
+                            b->removeProjectile(projn);
+                        });
+
+                        projn->AddEventHandler("ENTITY::ABORT", [b, projn, this]() {
+                            b->removeProjectile(projn);
+                        });
+                        
+                        vector2 pVels = -angleToVector2(h) * getScaledCoords({0.30, 0.30}).length();
+
+                        sh_ptr_e projs = b->spawnProjectile(spawnCoords);
+                        pM->attachProcess(projs);
+                        attachEntity(projs);
+                        projs->spawn();
+                        projs->setVelocity(pVels);
+
+                        projs->AddEventHandler("ENTITY::SUCCEED", [b, projs, this]() {
+                            b->removeProjectile(projs);
+                        });
+
+                        projs->AddEventHandler("ENTITY::ABORT", [b, projs, this]() {
+                            b->removeProjectile(projs);
+                        });
+                        
+                        vector2 pVele = angleToVector2(h) * getScaledCoords({0.30, 0.30}).length();
+                        double projey = pVele.getY();
+                        pVele.y = pVele.getX();
+                        pVele.x = -projey;
+
+                        sh_ptr_e proje = b->spawnProjectile(spawnCoords);
+                        pM->attachProcess(proje);
+                        attachEntity(proje);
+                        proje->spawn();
+                        proje->setVelocity(pVele);
+
+                        proje->AddEventHandler("ENTITY::SUCCEED", [b, proje, this]() {
+                            b->removeProjectile(proje);
+                        });
+
+                        proje->AddEventHandler("ENTITY::ABORT", [b, proje, this]() {
+                            b->removeProjectile(proje);
+                        });
+                        
+                        vector2 pVelw = angleToVector2(h) * getScaledCoords({0.30, 0.30}).length();
+                        double projwx = pVelw.getX();
+                        pVelw.x = pVelw.getY();
+                        pVelw.y = -projwx;
+
+                        sh_ptr_e projw = b->spawnProjectile(spawnCoords);
+                        pM->attachProcess(projw);
+                        attachEntity(projw);
+                        projw->spawn();
+                        projw->setVelocity(pVelw);
+
+                        projw->AddEventHandler("ENTITY::SUCCEED", [b, projw, this]() {
+                            b->removeProjectile(projw);
+                        });
+
+                        projw->AddEventHandler("ENTITY::ABORT", [b, projw, this]() {
+                            b->removeProjectile(projw);
+                        });
+                    }
                 }
             }
             continue;

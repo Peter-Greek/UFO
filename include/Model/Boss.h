@@ -19,7 +19,7 @@ private:
     int minionCount = 0;
     int projectileCount = 0;
     int maxMinions = 5;
-    int maxProjectiles = 5;
+    int maxProjectiles = 10;
     passFunc_t passFunc;
 
     int timeBetweenSpawnsProjectile = 5000;
