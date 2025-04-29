@@ -40,15 +40,13 @@ void Boss::update(float deltaMs) {
 
     if (getHearts() < getMaxHearts() / 2) {
         inRage += deltaMs;
+        timeBetweenSpawnsMinion = 10000;
     } else {
         inRage = 0;
     }
 }
 
 bool Boss::inRageMode() const {
-    // I am thinking in rage mode the boss will shoot projectiles faster and spawn minions faster
-    // also have it shoot projectiles in all directions (maybe make the projectiles slower so they stay on the screen longer)
-
     return inRage > 0;
 }
 
@@ -126,7 +124,7 @@ int Boss::getToSpawnProjectileCount() const {
 }
 
 bool Boss::canSpawnProjectile() const {
-    return lastProjectileSpawnTime >= (inRageMode() ? timeBetweenSpawnsProjectile/3 : timeBetweenSpawnsProjectile) && projectileCount < maxProjectiles;
+    return lastProjectileSpawnTime >= (inRageMode() ? timeBetweenSpawnsProjectile/3 : timeBetweenSpawnsProjectile) && projectileCount + 4 < maxProjectiles;
 }
 
 sh_ptr_e Boss::spawnProjectile(vector2 coords) {
