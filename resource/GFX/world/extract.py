@@ -133,12 +133,12 @@ for filename in os.listdir(ROOMS_FOLDER):
 
     print(f"Processed {filename}")
 
-# Create world.json
+# Create worldOld.json
 world_json = {
     "rooms": sorted(all_rooms, key=lambda r: r["name"].lower())
 }
 
-with open('world.json', 'w') as f:
+with open('worldOld.json', 'w') as f:
     json.dump(world_json, f, indent=4)
 
-print("All rooms processed and world.json created")
+print("All rooms processed and worldOld.json created")

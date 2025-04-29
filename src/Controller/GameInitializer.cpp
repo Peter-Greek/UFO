@@ -356,8 +356,8 @@ void GameInitializer::Start(){
     // Create Random AT (Debug)
     for (int i = 0; i < 200; i++) {
         // random location for the AT
-//        vector2 coords = {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))};
-//        auto at = attachGameProcess<AT>(coords);
+        vector2 coords = {static_cast<float>(random(0, SCREEN_WIDTH)), static_cast<float>(random(0, SCREEN_HEIGHT))};
+        auto at = attachGameProcess<AT>(coords);
     }
 
 
@@ -459,7 +459,6 @@ void GameInitializer::Debug() {
     debugTexts.push_back(gameTimeText);
 
     AddEventHandler("SDL::OnUpdate", [gameTimeText, fpsText, this](float deltaMs) {
-        print("FPS: ", 1000.0f/deltaMs);
         std::string fpsTextContent = "FPS: " + std::to_string(1000.0f/deltaMs);
         fpsText->setText(fpsTextContent);
         std::string gameTimeContent = "Time: " + std::to_string(sch->getGameTime());
@@ -549,6 +548,7 @@ void GameInitializer::LoadTextures() {
     auto wTxd13 = attachGameMappedProcess<TxdLoader>("WORLD::startRoom::TEXTURE", "../resource/GFX/world/rooms/startRoom.png");
     auto wTxd14 = attachGameMappedProcess<TxdLoader>("WORLD::verticalHallway::TEXTURE", "../resource/GFX/world/rooms/verticalHallway.png");
 
+    auto wTxd15 = attachGameMappedProcess<TxdLoader>("WORLD::fullMap1::TEXTURE", "../resource/GFX/world/rooms/fullMap1.png");
 
 
     // Create AT Texture
@@ -584,9 +584,11 @@ void GameInitializer::LoadAudio() {
 void GameInitializer::LoadEntitiesFromWorld(sh_ptr<World> w) {
     print("Loading Entities from World");
 //    w->loadWorld(); // loads the world
-    w->generateWorld(6);
+    w->generateWorld(1);
     json worldEntityList = w->getAllEntities();
-
+    if (1) {
+        return;
+    }
     for (auto &worldE : worldEntityList) {
         int hearts = 0;
         if (worldE["hearts"] == nullptr) {

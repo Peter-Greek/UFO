@@ -202,61 +202,63 @@ bool World::generateWorld(int roomCount) {
     if (!placeStartRoom()) {
         error("Failed to place start room.");
         return false;
+    }else {
+        print("Placed start room.");
     }
 
-    if (0) return true; // debug purpose
+    if (1) return true; // debug purpose
 
-    int placed = 1; // start room counts as 1
-    int tot = 1;
-    while (placed < roomCount) {
-
-        int lastIndex = (int) roomList.size() - 1;
-        RoomData* lastRoom = roomList[lastIndex]; // last room in the list
-        nextRoomData_t res_data = chooseNextRoom(lastRoom, roomCount - placed);
-
-        if (res_data.first.first == nullptr) {
-            print("ERROR: chooseNextRoom returned nullptr, stopping generation.");
-            return false;
-        }
-
-
-        RoomData* nextRoom = placeRoom(res_data.first.second); // place the new room template
-        attachRooms(res_data.first.first, nextRoom, res_data.second);
-
-        if (doesRoomOverlap(nextRoom)) {
-            print("Room overlaps, removing it.");
-
-            if (isDebug()) {
-                if (seed != -1) {
-                    seed++;
-                    srand(seed);
-                }
-            }
-
-            for (auto& d : nextRoom->real_doors) {
-                if (d.attached) {
-                    d.attached = false;
-
-                    auto* door = d.targetDoor;
-                    if (door != nullptr) {
-                        door->attached = false;
-                        door->targetDoor = nullptr;
-                    }
-
-                    d.targetDoor = nullptr;
-                }
-            }
-
-            roomList.pop_back();
-            continue;
-        }
-
-
-        tot += 1;
-//        if (tot > 12) break;
-        if (nextRoom->type == "room") { placed++; }
-//        break; // debug purpose
-    }
+//    int placed = 1; // start room counts as 1
+//    int tot = 1;
+//    while (placed < roomCount) {
+//
+//        int lastIndex = (int) roomList.size() - 1;
+//        RoomData* lastRoom = roomList[lastIndex]; // last room in the list
+//        nextRoomData_t res_data = chooseNextRoom(lastRoom, roomCount - placed);
+//
+//        if (res_data.first.first == nullptr) {
+//            print("ERROR: chooseNextRoom returned nullptr, stopping generation.");
+//            return false;
+//        }
+//
+//
+//        RoomData* nextRoom = placeRoom(res_data.first.second); // place the new room template
+//        attachRooms(res_data.first.first, nextRoom, res_data.second);
+//
+//        if (doesRoomOverlap(nextRoom)) {
+//            print("Room overlaps, removing it.");
+//
+//            if (isDebug()) {
+//                if (seed != -1) {
+//                    seed++;
+//                    srand(seed);
+//                }
+//            }
+//
+//            for (auto& d : nextRoom->real_doors) {
+//                if (d.attached) {
+//                    d.attached = false;
+//
+//                    auto* door = d.targetDoor;
+//                    if (door != nullptr) {
+//                        door->attached = false;
+//                        door->targetDoor = nullptr;
+//                    }
+//
+//                    d.targetDoor = nullptr;
+//                }
+//            }
+//
+//            roomList.pop_back();
+//            continue;
+//        }
+//
+//
+//        tot += 1;
+////        if (tot > 12) break;
+//        if (nextRoom->type == "room") { placed++; }
+////        break; // debug purpose
+//    }
 
     finalizeWorld();
 //    worldData.save();
@@ -265,7 +267,7 @@ bool World::generateWorld(int roomCount) {
 
 bool World::placeStartRoom() {
     for (auto& r : roomTemplates) {
-        if (r.id == "startRoom") {
+        if (r.id == "fullMap1") {
             placeRoom(r);
             return true;
         }
@@ -459,7 +461,7 @@ RoomData* World::placeRoom(RoomData& roomData) {
 
     recenterRoom(newRoom, {0, 0}); // dereference when passing
 
-    if (roomData.id == "startRoom") {
+    if (roomData.id == "fullMap1") {
         worldData.get()["spawnPoint"] = newRoom->center;
     }
 

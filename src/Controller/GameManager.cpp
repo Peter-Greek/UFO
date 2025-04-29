@@ -1601,7 +1601,7 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
                         projn->AddEventHandler("ENTITY::ABORT", [b, projn, this]() {
                             b->removeProjectile(projn);
                         });
-                        
+
                         vector2 pVels = -angleToVector2(h) * getScaledCoords({0.30, 0.30}).length();
 
                         sh_ptr_e projs = b->spawnProjectile(spawnCoords);
@@ -1617,7 +1617,7 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
                         projs->AddEventHandler("ENTITY::ABORT", [b, projs, this]() {
                             b->removeProjectile(projs);
                         });
-                        
+
                         vector2 pVele = angleToVector2(h) * getScaledCoords({0.30, 0.30}).length();
                         double projey = pVele.getY();
                         pVele.y = pVele.getX();
@@ -1636,7 +1636,7 @@ void GameManager::handleBossUpdate(const sh_ptr_e& e, float deltaMs) {
                         proje->AddEventHandler("ENTITY::ABORT", [b, proje, this]() {
                             b->removeProjectile(proje);
                         });
-                        
+
                         vector2 pVelw = angleToVector2(h) * getScaledCoords({0.30, 0.30}).length();
                         double projwx = pVelw.getX();
                         pVelw.x = pVelw.getY();
