@@ -1,99 +1,91 @@
-**PREREQUISITES**
+# UFO — A 2D Sci-Fi Survival Game
 
-- GCC
-- CMAKE (www.cmake.org)
-- SDL 2.0 (www.libsdl.org)
-- SDL2_image
-- SDL2_gfx
-- SDL2_ttf
-- SDL2_mixer
+## **Overview**
 
-**Linux**
+**UFO** is a 2D top-down sci-fi survival game developed as part of the **CSCI-437** final project at William & Mary. Built using **C++** and **SDL2**, UFO challenges players to explore, survive, and escape from a hostile alien planet. The project emphasizes component-based design, event-driven architecture, and full lifecycle game development — from design to implementation, testing, and presentation.
 
-Just install the packages above with your distributions package manager and
-everything should work out of the box.  Only resort to compiling from source
-if no suitable package exists.  Also, do not forget to install the 'devel'
-package for SDL2.
+This game was created by a team of 4 students over the course of the semester, with each member contributing equally to all areas: **design**, **coding**, **art**, **testing**, and **documentation**.
 
-Git clone the package from your fork. Enter the cloned directory, Make a subdir 
-'Debug', and in 'Debug' type: 'cmake ..'.  This should generate the makefiles.  
-Once succesfully generated, you can now compile the code with 'make'.
+---
 
-**Windows**
+## **Game Description**
 
-To make install easy, we will use MSYS2 and mingw64.
+In **UFO**, you play as a stranded **U**ndercover **F**erret **O**pperative who must navigate an alien spaceship filled with enemies, environmental hazards, and limited resources. The ultimate goal is to **gather enough AT (Alien Technology)** to **escape** the ship, all while managing oxygen, avoiding enemies, and strategically upgrading your gear.
 
-1) Install MSYS2: https://www.msys2.org/
-2) Open the MSYS2 MINGW64 terminal (not the MSYS2 UCRT64 terminal)
-2) Install mingw64:    pacman -S mingw-w64-x86_64-toolchain
-3) Install cmake:      pacman -S mingw-w64-x86_64-cmake
-4) Install git:        pacman -S git
-5) Install SDL2:       pacman -S mingw-w64-x86_64-SDL2
-6) Install SDL2 gfx:   pacman -S mingw-w64-x86_64-SDL2_gfx
-7) Install SDL2 image: pacman -S mingw-w64-x86_64-SDL2_image
-8) Install SDL2 ttf:   pacman -S mingw-w64-x86_64-SDL2_ttf
-9) Install SDL2 ttf:   pacman -S mingw-w64-x86_64-SDL2_mixer
-10) Optional: add <msys2 install path>/mingw64/bin to your path if you also want to be able to run your code by double clicking.  To add to your path, open "Edit environment variables" -> select Path -> Edit -> New -> Browse
+### **Core Features**
+- Top-down 2D gameplay using **SDL2** and **C++**
+- Modular **Entity-Component System** architecture
+- Fully implemented **ChatBox** system for command-line interactions
+- Upgrade system with abilities like **shield**, **invisibility**, **AT cannon**
+- **Boss battles** with unique minion and projectile mechanics
+- Save/load functionality with a custom **SaveSelector UI**
+- Configurable settings through the **SettingsMenu**
+- **LeaderboardMenu** with multiple sorting criteria
+- Visual assets loaded via **TxdLoader** and **AsepriteLoader**
+- Audio layered via **AudioLoader**
 
-We will use the MSYS2 MINGW64 terminal for **all** steps. To access your c:\ drive use:
+---
 
-cd /c/
+## **Project Structure**
 
-Next, git clone the skeleton code to your location of choice (git clone https://code.wm.edu/<username>/CSCI437-Pong.git), and use cd /c/<path> to
-enter the location in msys2.  If you get an error that git does not support 'https', then you probably copy-pasted an invisible character before
-https; just delete all spaces between 'clone' and 'https', and re-add a new space; this will delete the invisible character.
+- [`bin/`](./bin) — Main compiled executable  
+- [`cmake/`](./cmake) — CMake build configuration  
+- [`include/`](./include) — Header files  
+- [`resource/`](./resource) — Game assets (textures, audio, fonts, etc.)  
+- [`src/`](./src) — All game logic, entities, systems, and UI code
 
-1) Make the directory in which we will compile the pong skeleton code.  Inside
-your pong source directory make a directory 'Debug'
 
-mkdir Debug
+---
 
-2) Next, generate make files:
+## **Build Instructions**
 
-cd Debug
+### **Dependencies**
+
+Install the following:
+
+- GCC or MinGW (Windows)
+- CMake
+- SDL2 libraries: `SDL2`, `SDL2_image`, `SDL2_gfx`, `SDL2_ttf`, `SDL2_mixer`
+
+### **Linux**
+
+Use your package manager to install the dependencies (e.g. `apt`, `dnf`, `pacman`). Then:
+
+```bash
+git clone https://github.com/Peter-Greek/UFO.git
+cd UFO
+mkdir Debug && cd Debug
+cmake ..
+make
+```
+
+### **Windows (MSYS2)**
+
+Install [MSYS2](https://www.msys2.org/) and use the `MINGW64` terminal:
+
+```bash
+pacman -S mingw-w64-x86_64-toolchain cmake git \
+  mingw-w64-x86_64-SDL2 \
+  mingw-w64-x86_64-SDL2_image \
+  mingw-w64-x86_64-SDL2_gfx \
+  mingw-w64-x86_64-SDL2_ttf \
+  mingw-w64-x86_64-SDL2_mixer
+
+git clone https://github.com/Peter-Greek/UFO.git
+cd UFO
+mkdir Debug && cd Debug
 cmake.exe -G "MinGW Makefiles" ..
-
-3) The above step should find a C++ compiler and the SDL2 libraries.  Next we
-can compile the code:
-
 mingw32-make.exe
+```
 
-4) We can now test the code:
+---
 
-./helloworld.exe
+## **License**
 
-NOTE: it is possible that the helloworld window is hidden behind your console window.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
-***helloworld***
+---
 
-If the above worked without error, it should  produce a 'helloworld' executable that will open a blue
-window.  You can change the color of pressing 'r', 'g', or 'b'.  You can quit
-by pressing 'q'.
+## **Contact**
 
-***bitmap***
-
-The bitmap program, loads a bitmap (resource/bitmap.png).  You can module its
-color with 'r', 'g', and 'b', and rotate it with 'z' and 'x'.
-
-***text***
-
-Loads a font (resource/font/Arial.ttf).  Same keys are 'bitmap'.
-
-***geom***
-
-Draws a box, a circle, and draws lines.  You can enable/disable each with 'b',
-'c', and 'l' respectively.
-
-
-**ADDING FILES**
-
-- If you want to add an executable, just add the corresponding .cpp file in the 'bin' subdirectory, and _rerun_ 'cmake .' to update the Makefiles.
-- If you want to add a source file, just add the corresponding .cpp file in the 'src' subdirectory, and _rerun_ 'cmake .' to update the Makefile.
-- If you want to add a header file, just add the corresponding .h file to the 'include' subdirectory. You do not need to update the Makefile.
-
-
-**ADVANCED COMPILING**
-
-The above instructions will compile your executable with all debug information embedded and compiler optimizations minimized.  To compile a 'release' version, just create a subdirectory 'Release' instead of 'Debug' and follow the same instructions as above. Note: in release mode certain safety checks are disabled and 'assert' statement are ignored. Hence, it is recommended to test your code in 'Debug' mode, and only when everything works, compile it in the 'Release' mode.
-
-If you want to use additional external libraries, you will need to add them to 'CMakeLists.txt' (line 48). Please refer to the CMake documentation for more information on how to include libraries to your project with CMake.
+For academic use or questions, contact [Peter Greek](https://github.com/Peter-Greek) or open an issue on [GitHub](https://github.com/Peter-Greek/UFO/issues).
